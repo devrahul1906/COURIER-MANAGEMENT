@@ -32,7 +32,6 @@
         .form-group { margin-bottom: 20px; text-align: left; position: relative; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
         
-        /* Overlap Fix for Input Wrappers (Added !important to padding to prevent override) */
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-wrapper svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: #6b7280; }
         .input-wrapper input { width: 100%; padding: 12px 15px 12px 45px !important; border: 1.5px solid #ced4da; border-radius: 8px; font-size: 14px; transition: 0.2s; }
@@ -60,7 +59,7 @@
         .welcome-text h2 { font-size: 24px; color: #111827; font-weight: 700; margin-bottom: 4px; }
         .welcome-text p { font-size: 14px; color: #6b7280; }
 
-        /* FULL COLOR CLICKABLE KPI CARDS */
+        /* CARDS */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
         .card { border-radius: 12px; padding: 25px 20px; cursor: pointer; transition: 0.2s; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
@@ -87,7 +86,6 @@
         th, td { padding: 12px 15px; border-bottom: 1px solid #dee2e6; text-align: left; font-size: 13px; }
         th { background-color: #f8f9fa; font-weight: 600; color: #495057; white-space: nowrap; }
         
-        /* Inline Status Tags */
         .tag-pending { color: #d97706; background: #fef3c7; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .tag-assigned { color: #1d4ed8; background: #dbeafe; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .tag-transit { color: #c2410c; background: #ffedd5; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
@@ -158,7 +156,6 @@
             </div>
         </div>
         
-        <!-- FOOTER -->
         <div class="footer">
             © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
         </div>
@@ -224,7 +221,7 @@
                 </div>
             </div>
 
-            <!-- 1. PENDING INVOICE LIST (Export ONLY for Total Pending) -->
+            <!-- 1. PENDING INVOICE LIST -->
             <div id="invoice-list-section" class="list-section">
                 <div class="section-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
@@ -239,7 +236,7 @@
                 </table>
             </div>
 
-            <!-- 2. ASSIGNED LIST (With Export) -->
+            <!-- 2. ASSIGNED LIST -->
             <div id="assigned-list-section" class="list-section">
                 <div class="section-header">
                     <h2>Assigned Invoices (Pending Docket)</h2>
@@ -254,7 +251,7 @@
                 </table>
             </div>
 
-            <!-- 3. TRANSIT LIST (With Export) -->
+            <!-- 3. TRANSIT LIST -->
             <div id="pod-list-section" class="list-section">
                 <div class="section-header">
                     <h2>In Transit Invoices (Upload Status)</h2>
@@ -269,7 +266,7 @@
                 </table>
             </div>
 
-            <!-- 4. DISPATCHED BILLS FULL TIMELINE (With Export) -->
+            <!-- 4. DISPATCHED BILLS FULL TIMELINE (UPDATED LAYOUT) -->
             <div id="dispatched-list-section" class="list-section">
                 <div class="section-header">
                     <h2>Dispatched Bills (Full Journey)</h2>
@@ -283,10 +280,10 @@
                         <tr>
                             <th>#</th>
                             <th>Invoice No.</th>
-                            <th>Courier Partner</th>
                             <th>IN Time</th>
+                            <th>Courier Partner</th>
                             <th>Courier Assigned</th>
-                            <th>In-Transit</th>
+                            <th>In-Transit (Physical Dispatch)</th>
                             <th>POD Submission</th>
                             <th>Final Status</th>
                             <th>Remarks</th> 
@@ -297,13 +294,12 @@
             </div>
         </div>
         
-        <!-- FOOTER -->
         <div class="footer">
             © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
         </div>
     </div>
 
-    <!-- 3. ASSIGN COURIER MODAL -->
+    <!-- MODALS -->
     <div id="assignCourierModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -357,7 +353,6 @@
         </div>
     </div>
 
-    <!-- 4. FILL DOCKET MODAL -->
     <div id="fillDocketModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -383,7 +378,6 @@
         </div>
     </div>
 
-    <!-- 5. UPLOAD MODAL -->
     <div id="uploadPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -430,11 +424,16 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby5LkVEwwNo6J23YXg_sBd_op-4F7o-dJU32r2qib6TnOyiAEGvSXEDJuqwww-pwnL9/exec"; 
         
         let loggedInUser = "";
+        let loggedInUserRole = ""; 
         let cachedPendingBills = []; 
         let cachedAssignedBills = []; 
         let cachedTransitBills = []; 
         let cachedDispatchedBills = []; 
         let currentViewMode = "today"; 
+
+        function isStandardUser() {
+            return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1;
+        }
 
         function handleUploadTypeChange() {
             const type = document.getElementById('uploadType').value;
@@ -515,7 +514,9 @@
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
                     loggedInUser = usernameInput; 
-                    document.getElementById('userProfileDisplay').innerHTML = `<span style="background: #143482; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px;">👤</span> <span>${usernameInput}</span> ▼`;
+                    loggedInUserRole = data.role || "Standard";
+
+                    document.getElementById('userProfileDisplay').innerHTML = `<span style="background: #143482; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px;">👤</span> <span>${usernameInput} (${loggedInUserRole})</span> ▼`;
                     document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${usernameInput} 👋`;
                     
                     cachedPendingBills = data.pendingBills; cachedAssignedBills = data.assignedBills; 
@@ -535,7 +536,7 @@
         
         function logoutSystem() {
             document.getElementById('loginForm').reset();
-            loggedInUser = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = [];
+            loggedInUser = ""; loggedInUserRole = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = [];
             document.getElementById('profileDropdown').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('login-view').style.display = 'flex'; showDashboardCards(); 
@@ -560,7 +561,11 @@
             const tableBody = document.getElementById('invoiceTableBody'); tableBody.innerHTML = ""; 
 
             const btnExport = document.getElementById('btnExportPending');
-            btnExport.style.display = (type === 'total') ? 'inline-block' : 'none';
+            if (isStandardUser()) {
+                btnExport.style.display = 'none';
+            } else {
+                btnExport.style.display = (type === 'total') ? 'inline-block' : 'none';
+            }
 
             let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => String(b.scanTime).startsWith(getTodayString())) : cachedPendingBills;
             document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices (All Time)";
@@ -573,6 +578,10 @@
 
         function showAssignedList() {
             hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block';
+            
+            const btnExport = document.querySelector('#assigned-list-section .btn-export');
+            if (btnExport) btnExport.style.display = isStandardUser() ? 'none' : 'inline-block';
+
             const tableBody = document.getElementById('assignedTableBody'); tableBody.innerHTML = ""; 
             if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
             cachedAssignedBills.forEach((item, index) => {
@@ -582,6 +591,10 @@
 
         function showPodList() {
             hideAllLists(); document.getElementById('pod-list-section').style.display = 'block';
+            
+            const btnExport = document.querySelector('#pod-list-section .btn-export');
+            if (btnExport) btnExport.style.display = isStandardUser() ? 'none' : 'inline-block';
+
             const tableBody = document.getElementById('podTableBody'); tableBody.innerHTML = ""; 
             if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
             cachedTransitBills.forEach((item, index) => {
@@ -590,7 +603,17 @@
         }
 
         function showDispatchedList() {
+            // Authorization Check for Standard User
+            if (isStandardUser()) {
+                alert("you are not authorized for this session, for more updated please connect your Administration.");
+                return;
+            }
+
             hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
+            
+            const btnExport = document.querySelector('#dispatched-list-section .btn-export');
+            if (btnExport) btnExport.style.display = isStandardUser() ? 'none' : 'inline-block';
+
             const tableBody = document.getElementById('dispatchedTableBody'); tableBody.innerHTML = ""; 
             if(cachedDispatchedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Dispatched bills yet.</td></tr>"; return; }
             
@@ -600,11 +623,12 @@
                 else if(item.status === 'Misplaced') statusTag = '<span class="tag-misplaced">Misplaced</span>';
                 else statusTag = '<span class="tag-delivered">Delivered</span>';
 
+                // New sequence: IN Time is column 3, Courier Partner is column 4
                 tableBody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.partner}</td>
                     <td style="color:#b45309;">${item.scanTime}</td>
+                    <td>${item.partner}</td>
                     <td style="color:#1d4ed8;">${item.assignTime}</td>
                     <td style="color:#c2410c;">${item.transitTime}</td>
                     <td style="color:#15803d; font-weight:600;">${item.podTime}</td>
