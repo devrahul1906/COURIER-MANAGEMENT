@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courier Management System | HATVET PHARMA</title>
+    <style>
+        /* --- GENERAL SETTINGS --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; min-height: 100vh; overflow-x: hidden; }
+
+        /* --- FOOTER STYLES --- */
+        .footer { text-align: center; padding: 15px; font-size: 13px; color: #6c757d; background-color: #ffffff; border-top: 1px solid #e0e0e0; width: 100%; margin-top: auto; }
+
+        /* --- LOGIN VIEW STYLES --- */
+        #login-view { display: flex; flex-direction: column; min-height: 100vh; }
+        .header-container { padding: 20px 30px; }
+        .top-header-card { background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-left svg { width: 40px; height: 40px; fill: #143482; }
+        .header-titles h1 { font-size: 24px; font-weight: 800; color: #143482; margin: 0; }
+        .header-titles h2 { font-size: 13px; font-weight: 600; color: #6b7280; margin: 2px 0 0 0; }
+        .datetime-badge { background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 8px 15px; border-radius: 6px; font-size: 14px; font-weight: 500; }
+
+        .login-main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { background-color: #ffffff; width: 100%; max-width: 420px; padding: 40px; border-radius: 16px; border: 1px solid #eaeaea; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center; }
+        .login-logo { margin-bottom: 15px; }
+        .login-logo svg { width: 50px; height: 50px; fill: #143482; }
+        .login-card h2 { color: #143482; font-size: 22px; font-weight: 800; margin-bottom: 5px; }
+        .tagline { color: #6b7280; font-size: 13px; font-weight: 500; margin-bottom: 30px; }
+        
+        .form-group { margin-bottom: 20px; text-align: left; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        
+        /* Overlap Fix for Input Wrappers (Added !important to padding to prevent override) */
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: #6b7280; }
+        .input-wrapper input { width: 100%; padding: 12px 15px 12px 45px !important; border: 1.5px solid #ced4da; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+        .input-wrapper input:focus { outline: none; border-color: #143482; }
+        
+        .form-group select, .form-group input[type="text"], .form-group input[type="number"] { width: 100%; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; }
+        .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 16px; user-select: none; color: #6b7280; }
+        
+        .btn-login { background-color: #143482; color: white; border: none; width: 100%; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(20, 52, 130, 0.2); }
+        .btn-login:hover { background-color: #0f2866; transform: translateY(-1px); }
+
+        /* --- DASHBOARD VIEW STYLES --- */
+        #dashboard-view { display: none; flex-direction: column; min-height: 100vh; }
+        .dash-top-bar { background-color: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header-right-items { display: flex; align-items: center; gap: 15px; }
+        
+        .user-profile-container { position: relative; cursor: pointer; }
+        .user-profile { display: flex; align-items: center; gap: 8px; background: #f3f4f6; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; color: #1f2937; border: 1px solid #e5e7eb; }
+        .dropdown-menu { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px rgba(0,0,0,0.05); border-radius: 8px; width: 140px; z-index: 100; }
+        .dropdown-menu button { width: 100%; padding: 10px 15px; background: none; border: none; text-align: left; font-size: 13px; font-weight: 600; color: #dc2626; cursor: pointer; border-radius: 8px; }
+        .dropdown-menu button:hover { background: #fef2f2; }
+
+        .main-workspace { padding: 30px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .welcome-section { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; }
+        .welcome-text h2 { font-size: 24px; color: #111827; font-weight: 700; margin-bottom: 4px; }
+        .welcome-text p { font-size: 14px; color: #6b7280; }
+
+        /* FULL COLOR CLICKABLE KPI CARDS */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .card { border-radius: 12px; padding: 25px 20px; cursor: pointer; transition: 0.2s; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
+        .card-pending { background-color: #fef3c7; border: 1px solid #fde68a; } .card-pending .card-header, .card-pending .card-trend { color: #b45309; } .card-pending .card-value { color: #92400e; }
+        .card-assigned { background-color: #dbeafe; border: 1px solid #bfdbfe; } .card-assigned .card-header, .card-assigned .card-trend { color: #1d4ed8; } .card-assigned .card-value { color: #1e3a8a; }
+        .card-transit { background-color: #ffedd5; border: 1px solid #fed7aa; } .card-transit .card-header, .card-transit .card-trend { color: #c2410c; } .card-transit .card-value { color: #9a3412; }
+        .card-dispatched { background-color: #dcfce7; border: 1px solid #bbf7d0; } .card-dispatched .card-header, .card-dispatched .card-trend { color: #15803d; } .card-dispatched .card-value { color: #166534; }
+        .card-header { font-size: 15px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .card-value { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+        .card-trend { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+
+        /* LIST & TABLE STYLES */
+        .list-section { display: none; background: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e0e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-header h2 { color: #143482; font-size: 20px; }
+        
+        .header-buttons { display: flex; gap: 10px; }
+        .btn-export { background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-export:hover { background: #059669; }
+        .btn-back { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-back:hover { background: #e5e7eb; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #dee2e6; text-align: left; font-size: 13px; }
+        th { background-color: #f8f9fa; font-weight: 600; color: #495057; white-space: nowrap; }
+        
+        /* Inline Status Tags */
+        .tag-pending { color: #d97706; background: #fef3c7; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .tag-assigned { color: #1d4ed8; background: #dbeafe; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .tag-transit { color: #c2410c; background: #ffedd5; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .tag-delivered { color: #15803d; background: #dcfce7; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .tag-rto { color: #991b1b; background: #fee2e2; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .tag-misplaced { color: #374151; background: #e5e7eb; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        
+        .btn-assign { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-docket { background: #0891b2; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-pod { background: #d97706; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; }
+
+        /* MODALS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-box { background: #ffffff; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-header { background: #143482; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 18px; margin: 0; }
+        .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { background: #e5e7eb; color: #374151; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-submit { background: #143482; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .file-input-box { border: 2px dashed #ced4da; padding: 20px; text-align: center; border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN VIEW -->
+    <div id="login-view">
+        <div class="header-container">
+            <div class="top-header-card">
+                <div class="header-left">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 9v6l10 5 10-5V9l-10 5-10-5z"></path></svg>
+                    <div class="header-titles">
+                        <h1>HATVET PHARMA PVT. LTD.</h1>
+                        <h2>COURIER MANAGEMENT SYSTEM</h2>
+                    </div>
+                </div>
+                <div class="datetime-badge" id="loginCompactTime">Loading Date...</div>
+            </div>
+        </div>
+
+        <div class="login-main">
+            <div class="login-card">
+                <div class="login-logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 9v6l10 5 10-5V9l-10 5-10-5z"></path></svg>
+                </div>
+                <h2>Courier Management System</h2>
+                <div class="tagline">Secure • Fast • Reliable</div>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Employee ID / Username</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            <input type="text" id="username" placeholder="Enter Username" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            <input type="password" id="password" placeholder="Enter Password" required>
+                            <span class="eye-icon" onclick="togglePassword()">👁</span>
+                        </div>
+                    </div>
+                    <button type="submit" id="loginBtn" class="btn-login">Sign In</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="footer">
+            © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD VIEW -->
+    <div id="dashboard-view">
+        <div class="dash-top-bar">
+            <div class="header-left">
+                <svg viewBox="0 0 24 24" style="width: 35px; height: 35px; fill: #143482;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 9v6l10 5 10-5V9l-10 5-10-5z"></path></svg>
+                <div class="header-titles">
+                    <h1 style="font-size: 20px; font-weight: 800; color: #143482; margin: 0;">HATVET PHARMA PVT. LTD.</h1>
+                    <h2 style="font-size: 12px; font-weight: 600; color: #6b7280; margin: 0;">COURIER MANAGEMENT SYSTEM</h2>
+                </div>
+            </div>
+            <div class="header-right-items">
+                <div class="datetime-badge" id="dashCompactTime">Loading Date...</div>
+                <div class="user-profile-container" onclick="toggleDropdown()">
+                    <div class="user-profile" id="userProfileDisplay">
+                        <span style="background: #143482; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px;">👤</span>
+                        <span>User</span> ▼
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <button onclick="logoutSystem()">🚪 Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-workspace">
+            <div class="welcome-section">
+                <div class="welcome-text">
+                    <h2 id="welcomeGreeting">Greeting 👋</h2>
+                    <p>Here's your courier management overview for today.</p>
+                </div>
+            </div>
+
+            <div id="dashboard-home-cards" class="card-grid">
+                <div class="card card-pending" onclick="showInvoiceList('today')">
+                    <div class="card-header"><span>Today's Pending Bills</span></div>
+                    <div class="card-value" id="todayPendingCount">0</div>
+                    <div class="card-trend">↑ Action Required</div>
+                </div>
+                <div class="card card-pending" onclick="showInvoiceList('total')">
+                    <div class="card-header"><span>Total Pending Bills</span></div>
+                    <div class="card-value" id="totalPendingCount">0</div>
+                    <div class="card-trend">Overall backlog</div>
+                </div>
+                <div class="card card-assigned" onclick="showAssignedList()">
+                    <div class="card-header"><span>Courier Assigned</span></div>
+                    <div class="card-value" id="assignedCount">0</div>
+                    <div class="card-trend">Awaiting Docket No</div>
+                </div>
+                <div class="card card-transit" onclick="showPodList()">
+                    <div class="card-header"><span>POD Pending</span></div>
+                    <div class="card-value" id="transitCount">0</div>
+                    <div class="card-trend">In Transit - Awaiting Delivery</div>
+                </div>
+                <div class="card card-dispatched" onclick="showDispatchedList()">
+                    <div class="card-header"><span>Dispatch Bills</span></div>
+                    <div class="card-value" id="dispatchCount">0</div>
+                    <div class="card-trend">Successfully completed</div>
+                </div>
+            </div>
+
+            <!-- 1. PENDING INVOICE LIST (Export ONLY for Total Pending) -->
+            <div id="invoice-list-section" class="list-section">
+                <div class="section-header">
+                    <h2 id="invoiceListTitle">Pending Invoices</h2>
+                    <div class="header-buttons">
+                        <button id="btnExportPending" class="btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Total_Pending_Invoices.csv')">📥 Export Excel</button>
+                        <button class="btn-back" onclick="showDashboardCards()">Back to Dashboard</button>
+                    </div>
+                </div>
+                <table id="invoiceTable">
+                    <thead><tr><th>#</th><th>Invoice No.</th><th>In-Time (Scan Time)</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="invoiceTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 2. ASSIGNED LIST (With Export) -->
+            <div id="assigned-list-section" class="list-section">
+                <div class="section-header">
+                    <h2>Assigned Invoices (Pending Docket)</h2>
+                    <div class="header-buttons">
+                        <button class="btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">📥 Export Excel</button>
+                        <button class="btn-back" onclick="showDashboardCards()">Back to Dashboard</button>
+                    </div>
+                </div>
+                <table id="assignedTable">
+                    <thead><tr><th>#</th><th>Invoice No.</th><th>Courier Partner</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="assignedTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 3. TRANSIT LIST (With Export) -->
+            <div id="pod-list-section" class="list-section">
+                <div class="section-header">
+                    <h2>In Transit Invoices (Upload Status)</h2>
+                    <div class="header-buttons">
+                        <button class="btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">📥 Export Excel</button>
+                        <button class="btn-back" onclick="showDashboardCards()">Back to Dashboard</button>
+                    </div>
+                </div>
+                <table id="podTable">
+                    <thead><tr><th>#</th><th>Invoice No.</th><th>Courier Partner</th><th>Docket No.</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="podTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 4. DISPATCHED BILLS FULL TIMELINE (With Export) -->
+            <div id="dispatched-list-section" class="list-section">
+                <div class="section-header">
+                    <h2>Dispatched Bills (Full Journey)</h2>
+                    <div class="header-buttons">
+                        <button class="btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">📥 Export Excel</button>
+                        <button class="btn-back" onclick="showDashboardCards()">Back to Dashboard</button>
+                    </div>
+                </div>
+                <table id="dispatchedTable" style="min-width: 1000px;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Invoice No.</th>
+                            <th>Courier Partner</th>
+                            <th>Pending Time</th>
+                            <th>Assigned Time</th>
+                            <th>Transit Time</th>
+                            <th>Update Time</th>
+                            <th>Final Status</th>
+                            <th>Remarks</th> 
+                        </tr>
+                    </thead>
+                    <tbody id="dispatchedTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="footer">
+            © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
+        </div>
+    </div>
+
+    <!-- 3. ASSIGN COURIER MODAL -->
+    <div id="assignCourierModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Assign Courier Service</h3>
+                <button type="button" class="close-btn" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="courierForm" onsubmit="submitCourierAssignment(event)">
+                    <div class="form-group">
+                        <label>Invoice Number</label>
+                        <input type="text" id="popupInvoiceNo" readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label>Select Courier Partner</label>
+                        <select id="courierPartner" required>
+                            <option value="">-- Select Partner --</option>
+                            <option value="DTDC">DTDC</option>
+                            <option value="BlueDart">Blue Dart</option>
+                            <option value="Delhivery">Delhivery</option>
+                            <option value="EcomExpress">Ecom Express</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Courier Weight (kg)</label>
+                            <input type="number" id="courierWeight" step="0.1" placeholder="e.g., 2.5" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Size / Dimensions</label>
+                            <input type="text" id="courierSize" placeholder="e.g., L x W x H" required>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Origin</label>
+                            <input type="text" id="courierOrigin" value="Meerut" readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold;">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Destination (City)</label>
+                            <input type="text" id="courierDest" placeholder="Enter Destination City" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeAssignModal()">Cancel</button>
+                        <button type="submit" id="saveCourierBtn" class="btn-submit">Assign Courier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FILL DOCKET MODAL -->
+    <div id="fillDocketModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Fill Docket Number</h3>
+                <button type="button" class="close-btn" onclick="closeDocketModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="docketForm" onsubmit="submitDocket(event)">
+                    <div class="form-group">
+                        <label>Invoice Number</label>
+                        <input type="text" id="docketInvoiceNo" readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label>Enter Docket / AWB Number</label>
+                        <input type="text" id="docketNumber" placeholder="e.g., AWB123456789" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeDocketModal()">Cancel</button>
+                        <button type="submit" id="saveDocketBtn" class="btn-submit">Submit & Shift to Transit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. UPLOAD MODAL -->
+    <div id="uploadPodModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Update Final Status (Upload File)</h3>
+                <button type="button" class="close-btn" onclick="closePodModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="podForm" onsubmit="submitPodUpload(event)">
+                    <div class="form-group">
+                        <label>Invoice Number</label>
+                        <input type="text" id="podInvoiceNo" readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select Status</label>
+                        <select id="uploadType" required onchange="handleUploadTypeChange()">
+                            <option value="Delivered">Delivered (POD)</option>
+                            <option value="RTO">RTO (Return to Origin)</option>
+                            <option value="Misplaced">Misplaced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="remarkGroup" style="display: none;">
+                        <label>Remarks <span style="color: red;">*</span> (Mandatory for RTO / Misplaced)</label>
+                        <input type="text" id="podRemark" placeholder="Enter specific reason / details...">
+                    </div>
+
+                    <div class="form-group file-input-box">
+                        <label>Select File (Image or PDF required for all cases)</label>
+                        <br>
+                        <input type="file" id="podFile" accept="image/*,application/pdf" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closePodModal()">Cancel</button>
+                        <button type="submit" id="savePodBtn" class="btn-submit">Upload & Update Status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // !! MAKE SURE TO PASTE YOUR WEB APP URL HERE !!
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby5LkVEwwNo6J23YXg_sBd_op-4F7o-dJU32r2qib6TnOyiAEGvSXEDJuqwww-pwnL9/exec"; 
+        
+        let loggedInUser = "";
+        let cachedPendingBills = []; 
+        let cachedAssignedBills = []; 
+        let cachedTransitBills = []; 
+        let cachedDispatchedBills = []; 
+        let currentViewMode = "today"; 
+
+        function handleUploadTypeChange() {
+            const type = document.getElementById('uploadType').value;
+            const remarkGroup = document.getElementById('remarkGroup');
+            const remarkInput = document.getElementById('podRemark');
+            
+            if (type === 'RTO' || type === 'Misplaced') {
+                remarkGroup.style.display = 'block';
+                remarkInput.required = true;
+            } else {
+                remarkGroup.style.display = 'none';
+                remarkInput.required = false;
+                remarkInput.value = ''; 
+            }
+        }
+
+        function exportTableToCSV(tableId, filename) {
+            let csv = [];
+            let rows = document.querySelectorAll(`#${tableId} tr`);
+            
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) {
+                    if (cols[j].innerText === 'Action' || cols[j].querySelector('button')) continue;
+                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                }
+                csv.push(row.join(","));
+            }
+
+            let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+            let downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function togglePassword() {
+            const pwd = document.getElementById("password");
+            pwd.type = pwd.type === "password" ? "text" : "password";
+        }
+
+        function getTodayString() {
+            const now = new Date();
+            let day = String(now.getDate()).padStart(2, '0'), month = String(now.getMonth() + 1).padStart(2, '0');
+            return `${day}/${month}/${now.getFullYear()}`;
+        }
+
+        function getGreeting() {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) return "Good Morning";
+            if (hour >= 12 && hour < 17) return "Good Afternoon";
+            if (hour >= 17 && hour < 21) return "Good Evening";
+            return "Good Night";
+        }
+
+        function updateDashboardCounts() {
+            const todayStr = getTodayString();
+            const todayBills = cachedPendingBills.filter(bill => String(bill.scanTime).startsWith(todayStr));
+            document.getElementById('todayPendingCount').innerText = todayBills.length;
+            document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
+            document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
+            document.getElementById('transitCount').innerText = cachedTransitBills.length;
+            document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.innerHTML = "Authenticating & Loading..."; loginBtn.disabled = true;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', body: JSON.stringify({ action: 'login', username: usernameInput, password: passwordInput }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === "success") {
+                    loggedInUser = usernameInput; 
+                    document.getElementById('userProfileDisplay').innerHTML = `<span style="background: #143482; color: white; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px;">👤</span> <span>${usernameInput}</span> ▼`;
+                    document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${usernameInput} 👋`;
+                    
+                    cachedPendingBills = data.pendingBills; cachedAssignedBills = data.assignedBills; 
+                    cachedTransitBills = data.transitBills; cachedDispatchedBills = data.dispatchedBills || [];
+                    
+                    updateDashboardCounts(); 
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('dashboard-view').style.display = 'flex';
+                } else { alert("Error: " + data.message); }
+            }).catch(error => alert("Login Server error.")).finally(() => { loginBtn.innerHTML = "Sign In"; loginBtn.disabled = false; });
+        }
+
+        function toggleDropdown() {
+            const dp = document.getElementById('profileDropdown'); dp.style.display = dp.style.display === 'block' ? 'none' : 'block';
+        }
+        window.onclick = function(e) { if (!e.target.closest('.user-profile-container')) document.getElementById('profileDropdown').style.display = 'none'; }
+        
+        function logoutSystem() {
+            document.getElementById('loginForm').reset();
+            loggedInUser = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = [];
+            document.getElementById('profileDropdown').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex'; showDashboardCards(); 
+        }
+
+        function hideAllLists() {
+            document.getElementById('dashboard-home-cards').style.display = 'none';
+            document.getElementById('invoice-list-section').style.display = 'none';
+            document.getElementById('assigned-list-section').style.display = 'none';
+            document.getElementById('pod-list-section').style.display = 'none';
+            document.getElementById('dispatched-list-section').style.display = 'none';
+        }
+
+        function showDashboardCards() {
+            hideAllLists(); document.getElementById('dashboard-home-cards').style.display = 'grid'; 
+            document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser} 👋`;
+        }
+
+        function showInvoiceList(type) {
+            hideAllLists(); currentViewMode = type; 
+            document.getElementById('invoice-list-section').style.display = 'block';
+            const tableBody = document.getElementById('invoiceTableBody'); tableBody.innerHTML = ""; 
+
+            const btnExport = document.getElementById('btnExportPending');
+            btnExport.style.display = (type === 'total') ? 'inline-block' : 'none';
+
+            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => String(b.scanTime).startsWith(getTodayString())) : cachedPendingBills;
+            document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices (All Time)";
+
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
+            listToDisplay.forEach((item, index) => {
+                tableBody.innerHTML += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="tag-pending">Pending</span></td><td><button class="btn-assign" onclick="openAssignModal('${item.invoiceNo}')">Assign Courier</button></td></tr>`;
+            });
+        }
+
+        function showAssignedList() {
+            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block';
+            const tableBody = document.getElementById('assignedTableBody'); tableBody.innerHTML = ""; 
+            if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            cachedAssignedBills.forEach((item, index) => {
+                tableBody.innerHTML += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.partner}</td><td><span class="tag-assigned">Assigned</span></td><td><button class="btn-docket" onclick="openDocketModal('${item.invoiceNo}')">Fill Docket No</button></td></tr>`;
+            });
+        }
+
+        function showPodList() {
+            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block';
+            const tableBody = document.getElementById('podTableBody'); tableBody.innerHTML = ""; 
+            if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            cachedTransitBills.forEach((item, index) => {
+                tableBody.innerHTML += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.partner}</td><td>${item.docket}</td><td><span class="tag-transit">In Transit</span></td><td><button class="btn-pod" onclick="openPodModal('${item.invoiceNo}')">Upload Update</button></td></tr>`;
+            });
+        }
+
+        function showDispatchedList() {
+            hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
+            const tableBody = document.getElementById('dispatchedTableBody'); tableBody.innerHTML = ""; 
+            if(cachedDispatchedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Dispatched bills yet.</td></tr>"; return; }
+            
+            cachedDispatchedBills.forEach((item, index) => {
+                let statusTag = '';
+                if(item.status === 'RTO') statusTag = '<span class="tag-rto">RTO</span>';
+                else if(item.status === 'Misplaced') statusTag = '<span class="tag-misplaced">Misplaced</span>';
+                else statusTag = '<span class="tag-delivered">Delivered</span>';
+
+                tableBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo}</b></td>
+                    <td>${item.partner}</td>
+                    <td style="color:#b45309;">${item.scanTime}</td>
+                    <td style="color:#1d4ed8;">${item.assignTime}</td>
+                    <td style="color:#c2410c;">${item.transitTime}</td>
+                    <td style="color:#15803d; font-weight:600;">${item.podTime}</td>
+                    <td>${statusTag}</td>
+                    <td>${item.remark || '-'}</td>
+                </tr>`;
+            });
+        }
+
+        // --- MODAL LOGICS ---
+        function openAssignModal(invoiceNo) { document.getElementById('popupInvoiceNo').value = invoiceNo; document.getElementById('assignCourierModal').style.display = 'flex'; }
+        function closeAssignModal() { document.getElementById('assignCourierModal').style.display = 'none'; document.getElementById('courierForm').reset(); }
+        
+        function submitCourierAssignment(event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveCourierBtn'); btn.innerHTML = "Saving..."; btn.disabled = true;
+            const payload = { action: 'assignCourier', invoiceNo: document.getElementById('popupInvoiceNo').value, partner: document.getElementById('courierPartner').value, weight: document.getElementById('courierWeight').value, size: document.getElementById('courierSize').value, origin: document.getElementById('courierOrigin').value, destination: document.getElementById('courierDest').value, assignedBy: loggedInUser };
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
+            .then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    alert(`Success! Invoice assigned.`);
+                    cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== payload.invoiceNo); cachedAssignedBills.push({ invoiceNo: payload.invoiceNo, partner: payload.partner });
+                    updateDashboardCounts(); closeAssignModal(); showInvoiceList(currentViewMode); 
+                } else { alert("Error: " + data.message); }
+            }).catch(err => alert("Network error.")).finally(() => { btn.innerHTML = "Assign Courier"; btn.disabled = false; });
+        }
+
+        function openDocketModal(invoiceNo) { document.getElementById('docketInvoiceNo').value = invoiceNo; document.getElementById('fillDocketModal').style.display = 'flex'; }
+        function closeDocketModal() { document.getElementById('fillDocketModal').style.display = 'none'; document.getElementById('docketForm').reset(); }
+        
+        function submitDocket(event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveDocketBtn'); btn.innerHTML = "Submitting..."; btn.disabled = true;
+            const payload = { action: 'fillDocket', invoiceNo: document.getElementById('docketInvoiceNo').value, docketNo: document.getElementById('docketNumber').value, filledBy: loggedInUser };
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
+            .then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    alert(`Docket saved! Moved to Transit.`);
+                    let itemPartner = cachedAssignedBills.find(i => i.invoiceNo === payload.invoiceNo).partner;
+                    cachedAssignedBills = cachedAssignedBills.filter(i => i.invoiceNo !== payload.invoiceNo);
+                    cachedTransitBills.push({ invoiceNo: payload.invoiceNo, partner: itemPartner, docket: payload.docketNo });
+                    updateDashboardCounts(); closeDocketModal(); showAssignedList(); 
+                } else { alert("Error: " + data.message); }
+            }).catch(err => alert("Network error.")).finally(() => { btn.innerHTML = "Submit & Shift to Transit"; btn.disabled = false; });
+        }
+
+        function openPodModal(invoiceNo) { 
+            document.getElementById('podInvoiceNo').value = invoiceNo; 
+            document.getElementById('uploadPodModal').style.display = 'flex'; 
+            handleUploadTypeChange(); 
+        }
+        function closePodModal() { document.getElementById('uploadPodModal').style.display = 'none'; document.getElementById('podForm').reset(); }
+        function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); }); }
+        
+        async function submitPodUpload(event) {
+            event.preventDefault();
+            const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Uploading... Please Wait"; btn.disabled = true;
+            
+            const fileInput = document.getElementById('podFile'); const file = fileInput.files[0]; 
+            const invoiceNo = document.getElementById('podInvoiceNo').value;
+            const uploadType = document.getElementById('uploadType').value; 
+            const remarkInput = document.getElementById('podRemark').value; 
+            
+            try {
+                const base64Data = await getBase64(file);
+                const payload = { 
+                    action: 'uploadPOD', invoiceNo: invoiceNo, fileName: invoiceNo + "_" + uploadType + "_" + file.name, 
+                    mimeType: file.type, fileBase64: base64Data, uploadedBy: loggedInUser, 
+                    uploadType: uploadType, remarks: remarkInput 
+                };
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    alert(`Status (${uploadType}) Updated Successfully!\nFile Link: ${data.url}`);
+                    let itemData = cachedTransitBills.find(i => i.invoiceNo === invoiceNo);
+                    cachedTransitBills = cachedTransitBills.filter(i => i.invoiceNo !== invoiceNo);
+                    const rightNow = new Date().toLocaleString();
+                    cachedDispatchedBills.push({ 
+                        invoiceNo: invoiceNo, partner: itemData.partner, podTime: rightNow, scanTime: 'Just Now', 
+                        assignTime: 'Just Now', transitTime: 'Just Now', status: uploadType, remark: remarkInput 
+                    });
+                    updateDashboardCounts(); closePodModal(); showPodList(); 
+                } else { alert("Error: " + data.message); }
+            } catch (err) { alert("Upload failed."); } 
+            finally { btn.innerHTML = "Upload & Update Status"; btn.disabled = false; }
+        }
+
+        // --- LIVE CLOCK ---
+        function updateDateTime() {
+            const now = new Date();
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            let d = String(now.getDate()).padStart(2, '0'), m = now.getMonth(), y = now.getFullYear();
+            let hh = now.getHours(), mm = String(now.getMinutes()).padStart(2, '0');
+            let ampm = hh >= 12 ? 'PM' : 'AM'; hh = hh % 12 || 12;
+
+            const timeStr = `${d} ${months[m]} ${y} | ${days[now.getDay()]} | ${hh}:${mm} ${ampm}`;
+            document.getElementById('loginCompactTime').innerText = timeStr;
+            document.getElementById('dashCompactTime').innerText = timeStr;
+        }
+        updateDateTime(); setInterval(updateDateTime, 1000);
+    </script>
+</body>
+</html>
