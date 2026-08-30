@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier Management System | HATVET PHARMA</title>
-    <!-- ADDING SHEET.JS LIBRARY FOR BULK EXCEL UPLOAD -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* --- GENERAL SETTINGS --- */
         :root {
             --primary: #143482;
             --primary-hover: #0f2866;
@@ -23,11 +21,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); min-height: 100vh; overflow-x: hidden; color: var(--text-main); display: flex; flex-direction: column; }
 
-        /* --- SVG STYLES --- */
         .icon { width: 18px; height: 18px; fill: currentColor; }
         .icon-lg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* --- TOAST NOTIFICATION --- */
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 300px; padding: 16px; border-radius: 8px; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease-out forwards; }
         .toast.success { border-left-color: var(--success); }
@@ -37,7 +33,6 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
 
-        /* --- SPLIT LOGIN PAGE --- */
         #login-view { display: flex; height: 100vh; width: 100vw; }
         .login-left { flex: 1; background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 40px; position: relative; overflow: hidden; text-align: center; }
         .login-left-top { position: absolute; top: 40px; left: 40px; display: flex; align-items: center; gap: 15px; z-index: 2; }
@@ -57,8 +52,8 @@
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px; text-align: left; }
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-wrapper svg.icon-left { position: absolute; left: 14px; color: #94a3b8; }
-        .input-wrapper input { width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; transition: 0.2s; background: #f8fafc; }
-        .input-wrapper input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
+        .input-wrapper input, .input-wrapper select { width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; transition: 0.2s; background: #f8fafc; }
+        .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
         .eye-icon { position: absolute; right: 14px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; padding: 5px; border-radius: 50%; transition: 0.2s; }
         .eye-icon:hover { background: #f1f5f9; color: var(--primary); }
         .login-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 13px; }
@@ -71,9 +66,8 @@
         .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .inline-error { color: var(--danger); font-size: 13px; margin-bottom: 15px; display: none; background: #fef2f2; padding: 12px; border-radius: 6px; border: 1px solid #fecaca; }
-        .login-footer { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 13px; color: #94a3b8; }
+        .login-footer { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 12px; color: #94a3b8; }
 
-        /* --- DASHBOARD VIEW --- */
         #dashboard-view { display: none; flex-direction: column; min-height: 100vh; flex-grow: 1; }
         .top-navbar { background: #fff; border-bottom: 1px solid var(--border); padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .brand { display: flex; align-items: center; gap: 15px; }
@@ -96,12 +90,17 @@
         .welcome-text p { font-size: 14px; color: var(--text-muted); }
         .date-display { font-size: 13px; font-weight: 600; color: var(--primary); background: #eff6ff; padding: 8px 16px; border-radius: 8px; border: 1px solid #bfdbfe; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; } }
+        
         .kpi-card { border-radius: 12px; padding: 20px; border: 1px solid transparent; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.08); }
         .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .kpi-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; opacity: 0.9; }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; justify-content: center; align-items: center; opacity: 0.9; }
+        .kpi-icon svg { width: 26px; height: 26px; stroke-width: 2; }
         .kpi-value { font-size: 32px; font-weight: 800; margin-bottom: 5px; }
         .kpi-desc { font-size: 12px; font-weight: 600; }
         
@@ -121,7 +120,6 @@
         .table-header h2 { font-size: 18px; color: var(--text-main); margin: 0; }
         .table-actions { display: flex; gap: 10px; align-items: center; }
         
-        /* Stylized Search Box */
         .search-box { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; transition: 0.2s; min-width: 220px; }
         .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
 
@@ -164,8 +162,6 @@
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .dispatch-checkbox { width: 16px; height: 16px; cursor: pointer; }
-
-        /* Dashboard Footer Styling */
         .dashboard-footer { text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); background: #fff; margin-top: auto; }
     </style>
 </head>
@@ -173,7 +169,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- 1. LOGIN VIEW -->
     <div id="login-view">
         <div class="login-left">
             <div class="login-left-top">
@@ -223,14 +218,12 @@
                     </button>
                 </form>
             </div>
-            <!-- Login Page Footer -->
             <div class="login-footer">
                 © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
             </div>
         </div>
     </div>
 
-    <!-- 2. DASHBOARD VIEW -->
     <div id="dashboard-view">
         <div class="top-navbar">
             <div class="brand">
@@ -242,6 +235,11 @@
             </div>
             
             <div class="user-nav">
+                <button class="btn-outline" onclick="showSOP()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--primary); border-color: #cbd5e1; margin-right: 5px;">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    Read SOP
+                </button>
+                
                 <div class="user-profile">
                     <div class="avatar" id="avatarInitial">U</div>
                     <div class="user-info">
@@ -267,27 +265,31 @@
             <!-- KPI CARDS -->
             <div id="dashboard-home-cards" class="kpi-grid">
                 <div class="kpi-card card-pending" onclick="showInvoiceList('today')">
-                    <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
                     <div class="kpi-value" id="todayPendingCount">0</div><div class="kpi-desc">Action Required</div>
                 </div>
                 <div class="kpi-card card-pending" onclick="showInvoiceList('total')">
-                    <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div></div>
                     <div class="kpi-value" id="totalPendingCount">0</div><div class="kpi-desc">Overall Backlog</div>
                 </div>
                 <div class="kpi-card card-assigned" onclick="showAssignedList()">
-                    <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
                     <div class="kpi-value" id="assignedCount">0</div><div class="kpi-desc">Awaiting Physical Dispatch</div>
                 </div>
                 <div class="kpi-card card-transit" onclick="showPodList()">
-                    <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
                     <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
                 </div>
                 <div class="kpi-card card-delivered" onclick="showDeliveredList()">
-                    <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
                     <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD Submission Pending</div>
                 </div>
+                <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()">
+                    <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                    <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
+                </div>
                 <div class="kpi-card card-dispatched" onclick="showDispatchedList()">
-                    <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div></div>
+                    <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
                     <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
                 </div>
             </div>
@@ -331,7 +333,7 @@
                     </table>
                 </div>
                 <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit Selected to Dispatch</button>
+                    <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
                 </div>
             </div>
 
@@ -375,6 +377,28 @@
                     </table>
                 </div>
             </div>
+            
+            <!-- NEW DISPUTED LIST (UPDATED FOR ACTION BUTTON) -->
+            <div id="disputed-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Disputed / Exceptions</h2>
+                    <div class="table-actions">
+                        <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="disputedTable" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Docket No.</th><th>Courier Partner</th><th>Status</th><th>Remark</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disputedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
             <!-- 5. DISPATCHED BILLS -->
             <div id="dispatched-list-section" class="table-wrapper">
@@ -398,9 +422,87 @@
                     </table>
                 </div>
             </div>
+
+            <!-- SOP & WORKFLOW SECTION -->
+            <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
+                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP) & Workflow: HATVET Pharma Courier Management System</h2>
+                    <div class="table-actions">
+                        <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
+                    </div>
+                </div>
+                <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
+                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
+                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Identify Pending Work:</b> The warehouse/dispatch team logs into the system to view the Today's Pending or Total Pending dashboard cards, which display invoices waiting for courier assignment.</li>
+                        <li><b>Export Data:</b> The team clicks Export CSV to download the pending invoices list.</li>
+                        <li><b>Data Preparation:</b> The team prepares the master Excel file (Format.xlsx) by entering mandatory details against each Invoice No: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and the assigned Docket No.</li>
+                        <li><b>Bulk Upload:</b>
+                            <ul>
+                                <li>Click the Upload Invoices Details button.</li>
+                                <li>Select the prepared .xlsx file and click Process Upload.</li>
+                            </ul>
+                        </li>
+                        <li><b>System Validation:</b> The system maps the uploaded data against pending invoices. A confirmation modal displays the valid records. Clicking Confirm & Assign moves these invoices to the Courier Assigned stage.</li>
+                    </ul>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
+                    <p><b>Status:</b> Courier Assigned -> In Transit</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Review Assigned Shipments:</b> When the courier pickup vehicle arrives, the team navigates to the Courier Assigned tab.</li>
+                        <li><b>Physical Verification:</b> The team physically hands over the boxes to the courier personnel and checks the corresponding boxes in the system via the leftmost checkboxes.</li>
+                        <li><b>Confirm Dispatch:</b> Click Submit Selected to Dispatch. The system updates the timestamps and moves these shipments to the In Transit queue.</li>
+                    </ul>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Delivery Updates</h3>
+                    <p><b>Status:</b> In Transit -> Delivered / Disputed / RTO<br>The logistics team monitors the In Transit queue and updates the final status based on customer confirmation or courier tracking portals. Click Update Status to choose one of four scenarios:</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Scenario A: Standard Delivery (Complete)</b>
+                            <ul>
+                                <li>Select Delivered.</li>
+                                <li>Upload intermediate delivery confirmation (e.g., screenshot of courier portal or WhatsApp text).</li>
+                                <li>The invoice moves to the Delivered Bills queue.</li>
+                            </ul>
+                        </li>
+                        <li><b>Scenario B: Short Delivered (Partial Delivery)</b>
+                            <ul>
+                                <li>Select Short Delivered.</li>
+                                <li>Input the Expected Boxes (total dispatched) and Received Boxes (actual handed to the party).</li>
+                                <li>Enter a mandatory remark regarding the missing items.</li>
+                                <li><b>System Automation:</b> The system splits the invoice. The received portion moves to Delivered Bills, while the missing portion automatically generates a new invoice number (e.g., INV-123-SHORT) and moves to the Disputed / Short queue.</li>
+                            </ul>
+                        </li>
+                        <li><b>Scenario C & D: RTO (Return to Origin) or Misplaced</b>
+                            <ul>
+                                <li>Select RTO or Misplaced.</li>
+                                <li>Enter mandatory remarks (e.g., "Consignee Not Available" or "Lost at Hub").</li>
+                                <li>The invoice bypasses the delivery queue and moves directly to Dispatched Bills (Graveyard) as a closed exception.</li>
+                            </ul>
+                        </li>
+                    </ul>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: POD Collection & Final Closure</h3>
+                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills (Completed)</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Collect Final POD:</b> Once the hard copy or final digitally signed POD is received from the courier partner, navigate to the Delivered Bills queue.</li>
+                        <li><b>Upload Final Document:</b> Click Upload POD, attach the official PDF/Image, and submit.</li>
+                        <li><b>Archive:</b> The invoice is marked as "Delivered (POD)" and permanently archived in the Dispatched Bills queue, completing its lifecycle.</li>
+                    </ul>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
+                    <p><b>Status:</b> Disputed / Short Queue</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Monitor Missing Inventory:</b> The administration team checks the red Disputed / Short dashboard card daily to monitor partial shipments.</li>
+                        <li><b>Raise Claims:</b> The team uses this list to formally raise claims, register complaints, or issue Debit Notes to the respective courier partners for the exact missing box quantities documented in the system remarks.</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Dashboard Footer -->
         <div class="dashboard-footer">
             © 2026 Hatvet Pharma Pvt. Ltd. | Developed & Maintained by Sharma R.
         </div>
@@ -501,7 +603,7 @@
         </div>
     </div>
 
-    <!-- Transit to Delivered/Dispatched Update Status Modal -->
+    <!-- Transit to Delivered/Disputed Update Status Modal -->
     <div id="uploadPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -519,10 +621,24 @@
                         <label>Select Status</label>
                         <select id="uploadType" required onchange="handleUploadTypeChange()">
                             <option value="Delivered">Delivered</option>
+                            <option value="Short Delivered">Short Delivered (Partial Delivery)</option>
                             <option value="RTO">RTO (Return to Origin)</option>
                             <option value="Misplaced">Misplaced</option>
                         </select>
                     </div>
+                    
+                    <!-- BOX QUANTITY INPUTS FOR SHORT DELIVERY -->
+                    <div id="shortDeliveryGroup" style="display: none; display: flex; gap: 15px; margin-bottom: 22px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Total Boxes</label>
+                            <input type="number" id="expectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Received Boxes</label>
+                            <input type="number" id="receivedBoxes" min="0" placeholder="e.g. 3" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
+                        </div>
+                    </div>
+                    
                     <div class="form-group" id="remarkGroup" style="display: none;">
                         <label>Remarks <span style="color: red;">*</span></label>
                         <input type="text" id="podRemark" placeholder="Reason for RTO/Misplaced...">
@@ -566,15 +682,46 @@
             </div>
         </div>
     </div>
+    
+    <!-- Resolve Dispute Modal (NEW) -->
+    <div id="resolveModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Resolve Dispute / Exception</h3>
+                <button type="button" class="close-btn" onclick="closeResolveModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resolveForm" onsubmit="submitResolveDispute(event)">
+                    <input type="hidden" id="resolveInvNo">
+                    <input type="hidden" id="resolveDocket">
+                    <div class="form-group">
+                        <label>Invoice Number</label>
+                        <input type="text" id="resolveInvDisplay" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label>Select Resolution Action</label>
+                        <select id="resolveAction" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Final Remarks / Receiving details</label>
+                        <input type="text" id="resolveFinalRemark" placeholder="e.g. Received at warehouse intact..." required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeResolveModal()">Cancel</button>
+                        <button type="submit" id="saveResolveBtn" class="action-btn btn-primary">Close Case</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // !! YOUR WEB APP URL !!
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby5LkVEwwNo6J23YXg_sBd_op-4F7o-dJU32r2qib6TnOyiAEGvSXEDJuqwww-pwnL9/exec"; 
         
         let loggedInUser = ""; let loggedInUserRole = ""; 
         let cachedPendingBills = []; let cachedAssignedBills = []; 
         let cachedTransitBills = []; let cachedDispatchedBills = []; 
-        let cachedDeliveredBills = []; 
+        let cachedDeliveredBills = []; let cachedDisputedBills = [];
         let currentViewMode = "today"; 
         let pendingBulkAssignments = []; 
 
@@ -607,16 +754,31 @@
             const remarkGroup = document.getElementById('remarkGroup');
             const remarkInput = document.getElementById('podRemark');
             const fileLabel = document.getElementById('transitFileLabel');
+            const shortGroup = document.getElementById('shortDeliveryGroup');
 
             if (type === 'RTO' || type === 'Misplaced') { 
                 remarkGroup.style.display = 'block'; 
                 remarkInput.required = true; 
                 fileLabel.innerText = "Select Document (PDF/Image)";
+                shortGroup.style.display = 'none';
+                document.getElementById('expectedBoxes').required = false;
+                document.getElementById('receivedBoxes').required = false;
+            } else if (type === 'Short Delivered') {
+                remarkGroup.style.display = 'block'; 
+                remarkInput.required = true; 
+                remarkInput.placeholder = "Mention missing details/items...";
+                fileLabel.innerText = "Select POD with Shortage Remark";
+                shortGroup.style.display = 'flex';
+                document.getElementById('expectedBoxes').required = true;
+                document.getElementById('receivedBoxes').required = true;
             } else { 
                 remarkGroup.style.display = 'none'; 
                 remarkInput.required = false; 
                 remarkInput.value = ''; 
                 fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
+                shortGroup.style.display = 'none';
+                document.getElementById('expectedBoxes').required = false;
+                document.getElementById('receivedBoxes').required = false;
             }
         }
 
@@ -641,7 +803,7 @@
         function exportTableToCSV(tableId, filename) {
             let csv = []; let rows = document.querySelectorAll(`#${tableId} tr`);
             for (let i = 0; i < rows.length; i++) {
-                if(rows[i].style.display === "none") continue; // Exclude hidden search rows
+                if(rows[i].style.display === "none") continue; 
                 let row = [], cols = rows[i].querySelectorAll("td, th");
                 for (let j = 0; j < cols.length; j++) {
                     if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]')) continue;
@@ -667,6 +829,7 @@
             document.getElementById('transitCount').innerText = cachedTransitBills.length;
             document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
             document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
+            document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
         }
 
         function handleLogin(event) {
@@ -692,7 +855,7 @@
                     
                     cachedPendingBills = data.pendingBills; cachedAssignedBills = data.assignedBills; 
                     cachedTransitBills = data.transitBills; cachedDeliveredBills = data.deliveredBills || [];
-                    cachedDispatchedBills = data.dispatchedBills || []; 
+                    cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
                     
                     updateDashboardCounts(); 
                     document.getElementById('login-view').style.display = 'none'; document.getElementById('dashboard-view').style.display = 'flex';
@@ -712,7 +875,7 @@
                 document.getElementById('password').value = savedPass;
                 document.getElementById('rememberMe').checked = true;
             }
-            loggedInUser = ""; loggedInUserRole = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = [];
+            loggedInUser = ""; loggedInUserRole = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = [];
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; showDashboardCards(); 
         }
 
@@ -721,7 +884,10 @@
             document.querySelectorAll('.table-wrapper').forEach(el => el.style.display = 'none');
         }
 
-        function showDashboardCards() { hideAllLists(); document.getElementById('dashboard-home-cards').style.display = 'grid'; }
+        function showDashboardCards() { 
+            hideAllLists(); 
+            document.getElementById('dashboard-home-cards').style.display = 'grid'; 
+        }
 
         function showInvoiceList(type) {
             hideAllLists(); currentViewMode = type; 
@@ -818,6 +984,27 @@
                 </tr>`;
             });
         }
+        
+        function showDisputedList() {
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
+            hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block';
+            let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('disputedTableBody'); tableBody.innerHTML = ""; 
+            if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            
+            cachedDisputedBills.forEach((item, index) => {
+                tableBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b style="color:#dc2626;">${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td>${item.partner}</td>
+                    <td><span class="badge bg-rto">${item.status}</span></td>
+                    <td>${item.remark || '-'}</td>
+                    <td><button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button></td>
+                </tr>`;
+            });
+        }
 
         function showDispatchedList() {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
@@ -827,8 +1014,7 @@
             if(cachedDispatchedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No Completed / Exception bills yet.</td></tr>"; return; }
             
             cachedDispatchedBills.forEach((item, index) => {
-                let sTag = item.status === 'RTO' ? '<span class="badge bg-rto">RTO</span>' : 
-                           item.status === 'Misplaced' ? '<span class="badge" style="background:#e5e7eb; color:#374151;">Misplaced</span>' : 
+                let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : 
                            `<span class="badge bg-delivered">${item.status}</span>`;
                            
                 tableBody.innerHTML += `<tr>
@@ -1010,9 +1196,33 @@
         }
         function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
 
+        function openResolveModal(inv, docket, status) {
+            document.getElementById('resolveInvNo').value = inv;
+            document.getElementById('resolveDocket').value = docket || '';
+            document.getElementById('resolveInvDisplay').value = inv;
+            
+            const actionSelect = document.getElementById('resolveAction');
+            actionSelect.innerHTML = ''; 
+            
+            if (status.includes("RTO") || status.includes("Misplaced")) {
+                actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`;
+                if(status.includes("Misplaced")) {
+                     actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
+                }
+            } else if (status.includes("Disputed") || status.includes("Missing") || status.includes("Short")) {
+                actionSelect.innerHTML += `<option value="Received to Party">Received to Party (Delivered)</option>`;
+                actionSelect.innerHTML += `<option value="Return to Origin">Return to Origin (Received at Warehouse)</option>`;
+                actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
+            } else {
+                actionSelect.innerHTML += `<option value="Case Closed">Close Case</option>`;
+            }
+            
+            document.getElementById('resolveModal').style.display = 'flex';
+        }
+        function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
+
         function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e); }); }
         
-        // 1. Submit from In-Transit (Moving to Delivered OR Dispatched/Exceptions)
         async function submitPodUpload(e) {
             e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
             const uploadType = document.getElementById('uploadType').value; 
@@ -1020,17 +1230,32 @@
             const oldDocketNo = document.getElementById('podOldDocketNo').value;
             const remarkInput = document.getElementById('podRemark').value; 
             
+            const expectedBoxes = document.getElementById('expectedBoxes').value;
+            const receivedBoxes = document.getElementById('receivedBoxes').value;
+            
             let base64Data = ""; let fileName = ""; let mimeType = "";
             const file = document.getElementById('podFile').files[0]; 
             
             if (file) {
                 base64Data = await getBase64(file);
-                fileName = invoiceNo + "_" + uploadType + "_" + file.name;
+                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name;
                 mimeType = file.type;
             }
 
             try {
-                const payload = { action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput };
+                const payload = { 
+                    action: 'uploadPOD', 
+                    invoiceNo: invoiceNo, 
+                    oldDocketNo: oldDocketNo, 
+                    fileName: fileName, 
+                    mimeType: mimeType, 
+                    fileBase64: base64Data, 
+                    uploadedBy: loggedInUser, 
+                    uploadType: uploadType, 
+                    remarks: remarkInput,
+                    expectedBoxes: expectedBoxes, 
+                    receivedBoxes: receivedBoxes
+                };
                 
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
                 const data = await res.json();
@@ -1043,18 +1268,38 @@
                         cachedTransitBills.splice(itemIndex, 1);
                         
                         itemToMove.podTime = new Date().toLocaleString();
-                        itemToMove.status = uploadType;
-                        itemToMove.remark = remarkInput;
-
-                        if (uploadType === "Delivered") { cachedDeliveredBills.push(itemToMove); } 
-                        else { cachedDispatchedBills.push(itemToMove); }
+                        
+                        if (uploadType === "Short Delivered") {
+                            itemToMove.status = "Delivered (Partial)";
+                            itemToMove.remark = remarkInput + ` | Rcvd: ${receivedBoxes}/${expectedBoxes}`;
+                            cachedDeliveredBills.push(itemToMove);
+                            
+                            cachedDisputedBills.push({
+                                invoiceNo: itemToMove.invoiceNo + "-SHORT",
+                                docket: itemToMove.docket,
+                                partner: itemToMove.partner,
+                                drName: itemToMove.drName,
+                                ledgerName: itemToMove.ledgerName,
+                                pinCode: itemToMove.pinCode,
+                                transitTime: itemToMove.transitTime || "N/A",
+                                status: "Disputed (Missing)",
+                                remark: `Missing Boxes: ${expectedBoxes - receivedBoxes}`
+                            });
+                        } else if (uploadType === "Delivered") {
+                            itemToMove.status = uploadType;
+                            itemToMove.remark = remarkInput;
+                            cachedDeliveredBills.push(itemToMove); 
+                        } else {
+                            itemToMove.status = uploadType;
+                            itemToMove.remark = remarkInput;
+                            cachedDisputedBills.push(itemToMove);
+                        }
                     }
                     updateDashboardCounts(); closePodModal(); showPodList(); 
                 } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
-        // 2. Submit Final POD from Delivered tab
         async function submitFinalPodUpload(e) {
             e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Uploading..."; btn.disabled = true;
             const file = document.getElementById('finalPodFile').files[0]; 
@@ -1081,6 +1326,54 @@
                     updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); 
                 } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Upload failed.", "error"); } finally { btn.innerHTML = "Submit POD"; btn.disabled = false; }
+        }
+
+        async function submitResolveDispute(e) {
+            e.preventDefault(); 
+            const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
+            const invoiceNo = document.getElementById('resolveInvNo').value;
+            const docketNo = document.getElementById('resolveDocket').value;
+            const actionStatus = document.getElementById('resolveAction').value;
+            const remark = document.getElementById('resolveFinalRemark').value;
+            
+            try {
+                const payload = { 
+                    action: 'resolveDispute', 
+                    invoiceNo: invoiceNo, 
+                    docketNo: docketNo, 
+                    resolutionStatus: actionStatus, 
+                    resolutionRemark: remark,
+                    resolvedBy: loggedInUser
+                };
+                
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    showToast("Success", "Case Resolved Successfully!");
+                    let itemIndex = cachedDisputedBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                    if (itemIndex > -1) {
+                        let itemToMove = cachedDisputedBills[itemIndex];
+                        cachedDisputedBills.splice(itemIndex, 1);
+                        
+                        itemToMove.remark = itemToMove.remark + " | " + remark;
+                        
+                        if (actionStatus === "Received to Party") {
+                            itemToMove.status = "Delivered";
+                            cachedDeliveredBills.push(itemToMove);
+                        } else {
+                            itemToMove.status = "Closed: " + actionStatus;
+                            cachedDispatchedBills.push(itemToMove);
+                        }
+                    }
+                    updateDashboardCounts(); closeResolveModal(); showDisputedList(); 
+                } else { showToast("Error", data.message, "error"); }
+            } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
+        }
+
+        function showSOP() {
+            hideAllLists();
+            document.getElementById('sop-section').style.display = 'block';
         }
 
         // --- LIVE CLOCK ---
