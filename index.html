@@ -156,7 +156,7 @@
         .modal-header h3 { font-size: 16px; margin: 0; color: var(--primary); }
         .close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1; }
         .modal-body { padding: 20px; }
-        .form-group select, .modal-box input[type="text"], .modal-box input[type="password"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
+        .form-group select, .modal-box input[type="text"], .modal-box input[type="date"], .modal-box input[type="password"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
         .modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
         .file-input-box { border: 2px dashed #ced4da; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; background: #f8fafc; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -280,15 +280,15 @@
                     <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
                     <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
                 </div>
-                <div class="kpi-card card-delivered" onclick="showDeliveredList()">
+                <div class="kpi-card card-delivered" onclick="openDateRangeModal('delivered')">
                     <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
-                    <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD Submission Pending</div>
+                    <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD / Action Pending</div>
                 </div>
                 <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()">
                     <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
                     <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
                 </div>
-                <div class="kpi-card card-dispatched" onclick="showDispatchedList()">
+                <div class="kpi-card card-dispatched" onclick="openDateRangeModal('dispatched')">
                     <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
                     <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
                 </div>
@@ -327,7 +327,7 @@
                     <table id="assignedTable" style="min-width: 1000px;">
                         <thead><tr>
                             <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
-                            <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Status</th>
+                            <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
                         </tr></thead>
                         <tbody id="assignedTableBody"></tbody>
                     </table>
@@ -349,7 +349,7 @@
                 </div>
                 <div class="table-responsive">
                     <table id="podTable" style="min-width: 1000px;">
-                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody id="podTableBody"></tbody>
                     </table>
                 </div>
@@ -369,8 +369,8 @@
                     <table id="deliveredTable" style="min-width: 1200px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>In-Transit Time</th><th>Status</th><th>Action</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="deliveredTableBody"></tbody>
@@ -378,7 +378,7 @@
                 </div>
             </div>
             
-            <!-- NEW DISPUTED LIST (UPDATED FOR ACTION BUTTON) -->
+            <!-- NEW DISPUTED LIST -->
             <div id="disputed-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Disputed / Exceptions</h2>
@@ -392,7 +392,7 @@
                     <table id="disputedTable" style="min-width: 1000px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Docket No.</th><th>Courier Partner</th><th>Status</th><th>Remark</th><th>Action</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="disputedTableBody"></tbody>
@@ -414,8 +414,8 @@
                     <table id="dispatchedTable" style="min-width: 1200px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Transit Time</th><th>Final Status</th><th>Remarks</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                <th>Courier Partner</th><th>Close Time</th><th>Final Status</th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchedTableBody"></tbody>
@@ -426,77 +426,77 @@
             <!-- SOP & WORKFLOW SECTION -->
             <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
-                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP) & Workflow: HATVET Pharma Courier Management System</h2>
+                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP) & Workflow: HATVET Pharma Courier Management System[cite: 5]</h2>
                     <div class="table-actions">
                         <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
                     </div>
                 </div>
                 <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
-                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
+                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.[cite: 5]</p>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
-                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment[cite: 5]</h3>
+                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned[cite: 5]</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Identify Pending Work:</b> The warehouse/dispatch team logs into the system to view the Today's Pending or Total Pending dashboard cards, which display invoices waiting for courier assignment.</li>
-                        <li><b>Export Data:</b> The team clicks Export CSV to download the pending invoices list.</li>
-                        <li><b>Data Preparation:</b> The team prepares the master Excel file (Format.xlsx) by entering mandatory details against each Invoice No: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and the assigned Docket No.</li>
+                        <li><b>Identify Pending Work:</b> The warehouse/dispatch team logs into the system to view the Today's Pending or Total Pending dashboard cards, which display invoices waiting for courier assignment.[cite: 5]</li>
+                        <li><b>Export Data:</b> The team clicks Export CSV to download the pending invoices list.[cite: 5]</li>
+                        <li><b>Data Preparation:</b> The team prepares the master Excel file (Format.xlsx) by entering mandatory details against each Invoice No: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and the assigned Docket No.[cite: 5]</li>
                         <li><b>Bulk Upload:</b>
                             <ul>
-                                <li>Click the Upload Invoices Details button.</li>
-                                <li>Select the prepared .xlsx file and click Process Upload.</li>
+                                <li>Click the Upload Invoices Details button.[cite: 5]</li>
+                                <li>Select the prepared .xlsx file and click Process Upload.[cite: 5]</li>
                             </ul>
                         </li>
-                        <li><b>System Validation:</b> The system maps the uploaded data against pending invoices. A confirmation modal displays the valid records. Clicking Confirm & Assign moves these invoices to the Courier Assigned stage.</li>
+                        <li><b>System Validation:</b> The system maps the uploaded data against pending invoices.[cite: 5] A confirmation modal displays the valid records.[cite: 5] Clicking Confirm & Assign moves these invoices to the Courier Assigned stage.[cite: 5]</li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
-                    <p><b>Status:</b> Courier Assigned -> In Transit</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)[cite: 5]</h3>
+                    <p><b>Status:</b> Courier Assigned -> In Transit[cite: 5]</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Review Assigned Shipments:</b> When the courier pickup vehicle arrives, the team navigates to the Courier Assigned tab.</li>
-                        <li><b>Physical Verification:</b> The team physically hands over the boxes to the courier personnel and checks the corresponding boxes in the system via the leftmost checkboxes.</li>
-                        <li><b>Confirm Dispatch:</b> Click Submit Selected to Dispatch. The system updates the timestamps and moves these shipments to the In Transit queue.</li>
+                        <li><b>Review Assigned Shipments:</b> When the courier pickup vehicle arrives, the team navigates to the Courier Assigned tab.[cite: 5]</li>
+                        <li><b>Physical Verification:</b> The team physically hands over the boxes to the courier personnel and checks the corresponding boxes in the system via the leftmost checkboxes.[cite: 5]</li>
+                        <li><b>Confirm Dispatch:</b> Click Submit Selected to Dispatch.[cite: 5] The system updates the timestamps and moves these shipments to the In Transit queue.[cite: 5]</li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Delivery Updates</h3>
-                    <p><b>Status:</b> In Transit -> Delivered / Disputed / RTO<br>The logistics team monitors the In Transit queue and updates the final status based on customer confirmation or courier tracking portals. Click Update Status to choose one of four scenarios:</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Delivery Updates[cite: 5]</h3>
+                    <p><b>Status:</b> In Transit -> Delivered / Disputed / RTO[cite: 5]<br>The logistics team monitors the In Transit queue and updates the final status based on customer confirmation or courier tracking portals.[cite: 5] Click Update Status to choose one of four scenarios:[cite: 5]</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Scenario A: Standard Delivery (Complete)</b>
+                        <li><b>Scenario A: Standard Delivery (Complete)[cite: 5]</b>
                             <ul>
-                                <li>Select Delivered.</li>
-                                <li>Upload intermediate delivery confirmation (e.g., screenshot of courier portal or WhatsApp text).</li>
-                                <li>The invoice moves to the Delivered Bills queue.</li>
+                                <li>Select Delivered.[cite: 5]</li>
+                                <li>Upload intermediate delivery confirmation (e.g., screenshot of courier portal or WhatsApp text).[cite: 5]</li>
+                                <li>The invoice moves to the Delivered Bills queue.[cite: 5]</li>
                             </ul>
                         </li>
-                        <li><b>Scenario B: Short Delivered (Partial Delivery)</b>
+                        <li><b>Scenario B: Short Delivered (Partial Delivery)[cite: 5]</b>
                             <ul>
-                                <li>Select Short Delivered.</li>
-                                <li>Input the Expected Boxes (total dispatched) and Received Boxes (actual handed to the party).</li>
-                                <li>Enter a mandatory remark regarding the missing items.</li>
-                                <li><b>System Automation:</b> The system splits the invoice. The received portion moves to Delivered Bills, while the missing portion automatically generates a new invoice number (e.g., INV-123-SHORT) and moves to the Disputed / Short queue.</li>
+                                <li>Select Short Delivered.[cite: 5]</li>
+                                <li>Input the Expected Boxes (total dispatched) and Received Boxes (actual handed to the party).[cite: 5]</li>
+                                <li>Enter a mandatory remark regarding the missing items.[cite: 5]</li>
+                                <li><b>System Automation:</b> The system splits the invoice.[cite: 5] The received portion moves to Delivered Bills, while the missing portion automatically generates a new invoice number (e.g., INV-123-SHORT) and moves to the Disputed / Short queue.[cite: 5]</li>
                             </ul>
                         </li>
-                        <li><b>Scenario C & D: RTO (Return to Origin) or Misplaced</b>
+                        <li><b>Scenario C & D: RTO (Return to Origin) or Misplaced[cite: 5]</b>
                             <ul>
-                                <li>Select RTO or Misplaced.</li>
-                                <li>Enter mandatory remarks (e.g., "Consignee Not Available" or "Lost at Hub").</li>
-                                <li>The invoice bypasses the delivery queue and moves directly to Dispatched Bills (Graveyard) as a closed exception.</li>
+                                <li>Select RTO or Misplaced.[cite: 5]</li>
+                                <li>Enter mandatory remarks (e.g., "Consignee Not Available" or "Lost at Hub").[cite: 5]</li>
+                                <li>The invoice bypasses the delivery queue and moves directly to Dispatched Bills (Graveyard) as a closed exception.[cite: 5]</li>
                             </ul>
                         </li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: POD Collection & Final Closure</h3>
-                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills (Completed)</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: POD Collection & Final Closure[cite: 5]</h3>
+                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills (Completed)[cite: 5]</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Collect Final POD:</b> Once the hard copy or final digitally signed POD is received from the courier partner, navigate to the Delivered Bills queue.</li>
-                        <li><b>Upload Final Document:</b> Click Upload POD, attach the official PDF/Image, and submit.</li>
-                        <li><b>Archive:</b> The invoice is marked as "Delivered (POD)" and permanently archived in the Dispatched Bills queue, completing its lifecycle.</li>
+                        <li><b>Collect Final POD:</b> Once the hard copy or final digitally signed POD is received from the courier partner, navigate to the Delivered Bills queue.[cite: 5]</li>
+                        <li><b>Upload Final Document:</b> Click Upload POD, attach the official PDF/Image, and submit.[cite: 5]</li>
+                        <li><b>Archive:</b> The invoice is marked as "Delivered (POD)" and permanently archived in the Dispatched Bills queue, completing its lifecycle.[cite: 5]</li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
-                    <p><b>Status:</b> Disputed / Short Queue</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims[cite: 5]</h3>
+                    <p><b>Status:</b> Disputed / Short Queue[cite: 5]</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Monitor Missing Inventory:</b> The administration team checks the red Disputed / Short dashboard card daily to monitor partial shipments.</li>
-                        <li><b>Raise Claims:</b> The team uses this list to formally raise claims, register complaints, or issue Debit Notes to the respective courier partners for the exact missing box quantities documented in the system remarks.</li>
+                        <li><b>Monitor Missing Inventory:</b> The administration team checks the red Disputed / Short dashboard card daily to monitor partial shipments.[cite: 5]</li>
+                        <li><b>Raise Claims:</b> The team uses this list to formally raise claims, register complaints, or issue Debit Notes to the respective courier partners for the exact missing box quantities documented in the system remarks.[cite: 5]</li>
                     </ul>
                 </div>
             </div>
@@ -509,6 +509,35 @@
     </div>
 
     <!-- MODALS -->
+    
+    <!-- Date Range Modal -->
+    <div id="dateRangeModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Select Date Range</h3>
+                <button type="button" class="close-btn" onclick="closeDateRangeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                    Select a date range to view the records. Leave blank to view all records.
+                </p>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Start Date</label>
+                        <input type="date" id="filterStartDate" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">End Date</label>
+                        <input type="date" id="filterEndDate" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 0; background: none; border-top: none;">
+                    <button type="button" class="btn-outline" onclick="closeDateRangeModal()">Cancel</button>
+                    <button type="button" class="action-btn btn-primary" onclick="applyDateFilterAndShow()">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bulk Upload Modal -->
     <div id="bulkUploadModal" class="modal-overlay">
@@ -603,7 +632,7 @@
         </div>
     </div>
 
-    <!-- Transit to Delivered/Disputed Update Status Modal -->
+    <!-- Transit Update Status Modal -->
     <div id="uploadPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -619,24 +648,12 @@
                     </div>
                     <div class="form-group">
                         <label>Select Status</label>
+                        <!-- Short Delivery option removed as per request -->
                         <select id="uploadType" required onchange="handleUploadTypeChange()">
                             <option value="Delivered">Delivered</option>
-                            <option value="Short Delivered">Short Delivered (Partial Delivery)</option>
                             <option value="RTO">RTO (Return to Origin)</option>
                             <option value="Misplaced">Misplaced</option>
                         </select>
-                    </div>
-                    
-                    <!-- BOX QUANTITY INPUTS FOR SHORT DELIVERY -->
-                    <div id="shortDeliveryGroup" style="display: none; display: flex; gap: 15px; margin-bottom: 22px;">
-                        <div style="flex: 1;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Total Boxes</label>
-                            <input type="number" id="expectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Received Boxes</label>
-                            <input type="number" id="receivedBoxes" min="0" placeholder="e.g. 3" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
-                        </div>
                     </div>
                     
                     <div class="form-group" id="remarkGroup" style="display: none;">
@@ -656,11 +673,11 @@
         </div>
     </div>
 
-    <!-- Final POD Upload Modal (From Delivered -> Dispatched) -->
+    <!-- Action Modal for Delivered Bills (POD Upload OR Short Delivery) -->
     <div id="finalPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>Upload Final POD</h3>
+                <h3>Update Final Status</h3>
                 <button type="button" class="close-btn" onclick="closeFinalPodModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -670,20 +687,45 @@
                         <label>Invoice Number</label>
                         <input type="text" id="finalPodInvoiceNo" readonly style="background-color: #f1f5f9; font-weight: bold;">
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Select Action</label>
+                        <select id="finalActionType" required onchange="handleFinalActionChange()">
+                            <option value="Full Delivery POD">Upload Full Delivery POD</option>
+                            <option value="Short Delivered">Short Delivered (Partial Delivery)</option>
+                        </select>
+                    </div>
+
+                    <div id="finalShortDeliveryGroup" style="display: none; display: flex; gap: 15px; margin-bottom: 22px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Total Boxes</label>
+                            <input type="number" id="finalExpectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Received Boxes</label>
+                            <input type="number" id="finalReceivedBoxes" min="0" placeholder="e.g. 3" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="finalRemarkGroup" style="display: none;">
+                        <label>Remarks <span style="color: red;">*</span></label>
+                        <input type="text" id="finalPodRemark" placeholder="Mention missing details/items...">
+                    </div>
+                    
                     <div class="form-group file-input-box">
-                        <label style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Select POD Document (PDF/Image)</label>
+                        <label id="finalFileLabel" style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Select POD Document (PDF/Image)</label>
                         <input type="file" id="finalPodFile" accept="image/*,application/pdf" required>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeFinalPodModal()">Cancel</button>
-                        <button type="submit" id="saveFinalPodBtn" class="action-btn btn-success" style="background:var(--success);">Submit POD</button>
+                        <button type="submit" id="saveFinalPodBtn" class="action-btn btn-success" style="background:var(--success);">Update Status</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
     
-    <!-- Resolve Dispute Modal (NEW) -->
+    <!-- Resolve Dispute Modal -->
     <div id="resolveModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -700,8 +742,14 @@
                     </div>
                     <div class="form-group">
                         <label>Select Resolution Action</label>
-                        <select id="resolveAction" required></select>
+                        <select id="resolveAction" required onchange="handleResolveActionChange()"></select>
                     </div>
+                    
+                    <div class="form-group" id="resolveDateGroup" style="display: none;">
+                        <label>Receiving Date <span style="color: red;">*</span></label>
+                        <input type="date" id="resolveReceiveDate">
+                    </div>
+                    
                     <div class="form-group">
                         <label>Final Remarks / Receiving details</label>
                         <input type="text" id="resolveFinalRemark" placeholder="e.g. Received at warehouse intact..." required>
@@ -724,6 +772,7 @@
         let cachedDeliveredBills = []; let cachedDisputedBills = [];
         let currentViewMode = "today"; 
         let pendingBulkAssignments = []; 
+        let targetTabForDateRange = "";
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('hatvetUser');
@@ -754,31 +803,16 @@
             const remarkGroup = document.getElementById('remarkGroup');
             const remarkInput = document.getElementById('podRemark');
             const fileLabel = document.getElementById('transitFileLabel');
-            const shortGroup = document.getElementById('shortDeliveryGroup');
 
             if (type === 'RTO' || type === 'Misplaced') { 
                 remarkGroup.style.display = 'block'; 
                 remarkInput.required = true; 
                 fileLabel.innerText = "Select Document (PDF/Image)";
-                shortGroup.style.display = 'none';
-                document.getElementById('expectedBoxes').required = false;
-                document.getElementById('receivedBoxes').required = false;
-            } else if (type === 'Short Delivered') {
-                remarkGroup.style.display = 'block'; 
-                remarkInput.required = true; 
-                remarkInput.placeholder = "Mention missing details/items...";
-                fileLabel.innerText = "Select POD with Shortage Remark";
-                shortGroup.style.display = 'flex';
-                document.getElementById('expectedBoxes').required = true;
-                document.getElementById('receivedBoxes').required = true;
             } else { 
                 remarkGroup.style.display = 'none'; 
                 remarkInput.required = false; 
                 remarkInput.value = ''; 
                 fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
-                shortGroup.style.display = 'none';
-                document.getElementById('expectedBoxes').required = false;
-                document.getElementById('receivedBoxes').required = false;
             }
         }
 
@@ -889,6 +923,42 @@
             document.getElementById('dashboard-home-cards').style.display = 'grid'; 
         }
 
+        // --- DATE FILTER LOGIC ---
+        function openDateRangeModal(tabName) {
+            targetTabForDateRange = tabName;
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('dateRangeModal').style.display = 'flex';
+        }
+        function closeDateRangeModal() {
+            document.getElementById('dateRangeModal').style.display = 'none';
+        }
+        function applyDateFilterAndShow() {
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            closeDateRangeModal();
+            
+            if (targetTabForDateRange === 'delivered') {
+                showDeliveredList(start, end);
+            } else if (targetTabForDateRange === 'dispatched') {
+                showDispatchedList(start, end);
+            }
+        }
+        function isDateInRange(dateStr, start, end) {
+            if (!start && !end) return true;
+            if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
+            
+            const itemDate = new Date(dateStr);
+            if (isNaN(itemDate.getTime())) return true; 
+            
+            const sDate = start ? new Date(start + "T00:00:00") : null;
+            const eDate = end ? new Date(end + "T23:59:59") : null;
+
+            if (sDate && itemDate < sDate) return false;
+            if (eDate && itemDate > eDate) return false;
+            return true;
+        }
+
         function showInvoiceList(type) {
             hideAllLists(); currentViewMode = type; 
             document.getElementById('invoice-list-section').style.display = 'block';
@@ -919,7 +989,7 @@
             hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block';
             let sb = document.getElementById('assignedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('assignedTableBody'); tableBody.innerHTML = ""; 
-            if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
             
             cachedAssignedBills.forEach((item, index) => {
                 tableBody.innerHTML += `<tr>
@@ -928,9 +998,11 @@
                     <td><b>${item.invoiceNo}</b></td>
                     <td>${item.drName || '-'}</td>
                     <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
                     <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.partner}</td>
                     <td>${item.docket || '-'}</td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-assigned">Assigned</span></td>
                 </tr>`;
             });
@@ -945,42 +1017,51 @@
             hideAllLists(); document.getElementById('pod-list-section').style.display = 'block';
             let sb = document.getElementById('transitSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('podTableBody'); tableBody.innerHTML = ""; 
-            if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
             cachedTransitBills.forEach((item, index) => {
                 tableBody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.invoiceNo}</b></td>
                     <td>${item.drName || '-'}</td>
                     <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
                     <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.partner}</td>
                     <td>${item.docket || '-'}</td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-transit">In Transit</span></td>
                     <td><button class="action-btn btn-info" onclick="openPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Status</button></td>
                 </tr>`;
             });
         }
         
-        function showDeliveredList() {
+        function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
             hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block';
             let sb = document.getElementById('deliveredSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('deliveredTableBody'); tableBody.innerHTML = ""; 
-            if(cachedDeliveredBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No Delivered bills yet.</td></tr>"; return; }
             
-            cachedDeliveredBills.forEach((item, index) => {
+            let listToDisplay = cachedDeliveredBills;
+            if(startDate || endDate) {
+                listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
+            }
+            
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
+            
+            listToDisplay.forEach((item, index) => {
                 let sTag = '<span class="badge bg-delivered">Delivered</span>';
                 tableBody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.invoiceNo}</b></td>
                     <td>${item.drName || '-'}</td>
                     <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
                     <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.docket || '-'}</td>
                     <td>${item.partner}</td>
-                    <td style="color:#c2410c;">${item.transitTime}</td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td>${sTag}</td>
-                    <td><button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Upload POD</button></td>
+                    <td><button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Action</button></td>
                 </tr>`;
             });
         }
@@ -990,15 +1071,19 @@
             hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block';
             let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('disputedTableBody'); tableBody.innerHTML = ""; 
-            if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
             
             cachedDisputedBills.forEach((item, index) => {
                 tableBody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b style="color:#dc2626;">${item.invoiceNo}</b></td>
                     <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.docket || '-'}</td>
                     <td>${item.partner}</td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-rto">${item.status}</span></td>
                     <td>${item.remark || '-'}</td>
                     <td><button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button></td>
@@ -1006,14 +1091,20 @@
             });
         }
 
-        function showDispatchedList() {
+        function showDispatchedList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
             hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
             let sb = document.getElementById('dispatchedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('dispatchedTableBody'); tableBody.innerHTML = ""; 
-            if(cachedDispatchedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No Completed / Exception bills yet.</td></tr>"; return; }
             
-            cachedDispatchedBills.forEach((item, index) => {
+            let listToDisplay = cachedDispatchedBills;
+            if(startDate || endDate) {
+                listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
+            }
+            
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            
+            listToDisplay.forEach((item, index) => {
                 let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : 
                            `<span class="badge bg-delivered">${item.status}</span>`;
                            
@@ -1022,10 +1113,11 @@
                     <td><b>${item.invoiceNo}</b></td>
                     <td>${item.drName || '-'}</td>
                     <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
                     <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.docket || '-'}</td>
                     <td>${item.partner}</td>
-                    <td style="color:#c2410c;">${item.transitTime}</td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td>${sTag}</td>
                     <td>${item.remark || '-'}</td>
                 </tr>`;
@@ -1066,7 +1158,7 @@
                                 groupedData[uniqueKey] = {
                                     invoiceNo: invNo, partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "",
                                     weight: String(rowUpper["WEIGHT"] || ""), size: String(rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || ""),
-                                    origin: "Meerut", destination: rowUpper["CITY"] || rowUpper["DESTINATION"] || "",
+                                    origin: "Meerut", city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "",
                                     drName: rowUpper["DR NAME"] || "", ledgerName: rowUpper["LEDGER NAME"] || "",
                                     pinCode: String(rowUpper["PIN CODE"] || ""), docketNo: excelDocket
                                 };
@@ -1124,8 +1216,8 @@
                     assignments.forEach(a => {
                         cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); 
                         cachedAssignedBills.push({ 
-                            invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo,
-                            drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode 
+                            invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city,
+                            drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: new Date().toLocaleString()
                         });
                     });
                     updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); 
@@ -1167,6 +1259,7 @@
                         if (itemIndex > -1) {
                             let itemToMove = cachedAssignedBills[itemIndex];
                             cachedAssignedBills.splice(itemIndex, 1);
+                            itemToMove.actionTime = new Date().toLocaleString();
                             cachedTransitBills.push(itemToMove);
                         }
                     });
@@ -1189,26 +1282,66 @@
         }
         function closePodModal() { document.getElementById('uploadPodModal').style.display = 'none'; document.getElementById('podForm').reset(); }
         
+        // Final Status Modal handlers (Delivered Bills tab)
+        function handleFinalActionChange() {
+            const type = document.getElementById('finalActionType').value;
+            const shortGrp = document.getElementById('finalShortDeliveryGroup');
+            const remGrp = document.getElementById('finalRemarkGroup');
+            const exp = document.getElementById('finalExpectedBoxes');
+            const rec = document.getElementById('finalReceivedBoxes');
+            const rem = document.getElementById('finalPodRemark');
+            const fileLabel = document.getElementById('finalFileLabel');
+
+            if(type === 'Short Delivered') {
+                shortGrp.style.display = 'flex';
+                remGrp.style.display = 'block';
+                exp.required = true; rec.required = true; rem.required = true;
+                fileLabel.innerText = "Select POD with Shortage Remark";
+            } else {
+                shortGrp.style.display = 'none';
+                remGrp.style.display = 'none';
+                exp.required = false; rec.required = false; rem.required = false;
+                fileLabel.innerText = "Select POD Document (PDF/Image)";
+            }
+        }
+
         function openFinalPodModal(inv, docket) { 
             document.getElementById('finalPodInvoiceNo').value = inv; 
             document.getElementById('finalPodOldDocketNo').value = docket || ''; 
+            document.getElementById('finalActionType').value = 'Full Delivery POD';
+            handleFinalActionChange();
             document.getElementById('finalPodModal').style.display = 'flex'; 
         }
         function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
+
+        function handleResolveActionChange() {
+            const actionSelect = document.getElementById('resolveAction').value;
+            const dateGroup = document.getElementById('resolveDateGroup');
+            const dateInput = document.getElementById('resolveReceiveDate');
+            if (actionSelect.includes("Received") || actionSelect.includes("Return to Origin") || actionSelect.includes("Delivered to client")) {
+                dateGroup.style.display = 'block';
+                dateInput.required = true;
+            } else {
+                dateGroup.style.display = 'none';
+                dateInput.required = false;
+            }
+        }
 
         function openResolveModal(inv, docket, status) {
             document.getElementById('resolveInvNo').value = inv;
             document.getElementById('resolveDocket').value = docket || '';
             document.getElementById('resolveInvDisplay').value = inv;
+            document.getElementById('resolveReceiveDate').value = '';
             
             const actionSelect = document.getElementById('resolveAction');
             actionSelect.innerHTML = ''; 
             
-            if (status.includes("RTO") || status.includes("Misplaced")) {
+            if (status.includes("RTO")) {
                 actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`;
-                if(status.includes("Misplaced")) {
-                     actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
-                }
+            } else if (status.includes("Misplaced")) {
+                actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`;
+                actionSelect.innerHTML += `<option value="Delivered to client">Delivered to client (Pending POD)</option>`;
+                actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
             } else if (status.includes("Disputed") || status.includes("Missing") || status.includes("Short")) {
                 actionSelect.innerHTML += `<option value="Received to Party">Received to Party (Delivered)</option>`;
                 actionSelect.innerHTML += `<option value="Return to Origin">Return to Origin (Received at Warehouse)</option>`;
@@ -1217,6 +1350,7 @@
                 actionSelect.innerHTML += `<option value="Case Closed">Close Case</option>`;
             }
             
+            handleResolveActionChange();
             document.getElementById('resolveModal').style.display = 'flex';
         }
         function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
@@ -1229,9 +1363,6 @@
             const invoiceNo = document.getElementById('podInvoiceNo').value;
             const oldDocketNo = document.getElementById('podOldDocketNo').value;
             const remarkInput = document.getElementById('podRemark').value; 
-            
-            const expectedBoxes = document.getElementById('expectedBoxes').value;
-            const receivedBoxes = document.getElementById('receivedBoxes').value;
             
             let base64Data = ""; let fileName = ""; let mimeType = "";
             const file = document.getElementById('podFile').files[0]; 
@@ -1252,9 +1383,7 @@
                     fileBase64: base64Data, 
                     uploadedBy: loggedInUser, 
                     uploadType: uploadType, 
-                    remarks: remarkInput,
-                    expectedBoxes: expectedBoxes, 
-                    receivedBoxes: receivedBoxes
+                    remarks: remarkInput
                 };
                 
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
@@ -1267,31 +1396,13 @@
                         let itemToMove = cachedTransitBills[itemIndex];
                         cachedTransitBills.splice(itemIndex, 1);
                         
-                        itemToMove.podTime = new Date().toLocaleString();
+                        itemToMove.actionTime = new Date().toLocaleString();
+                        itemToMove.status = uploadType;
+                        itemToMove.remark = remarkInput;
                         
-                        if (uploadType === "Short Delivered") {
-                            itemToMove.status = "Delivered (Partial)";
-                            itemToMove.remark = remarkInput + ` | Rcvd: ${receivedBoxes}/${expectedBoxes}`;
-                            cachedDeliveredBills.push(itemToMove);
-                            
-                            cachedDisputedBills.push({
-                                invoiceNo: itemToMove.invoiceNo + "-SHORT",
-                                docket: itemToMove.docket,
-                                partner: itemToMove.partner,
-                                drName: itemToMove.drName,
-                                ledgerName: itemToMove.ledgerName,
-                                pinCode: itemToMove.pinCode,
-                                transitTime: itemToMove.transitTime || "N/A",
-                                status: "Disputed (Missing)",
-                                remark: `Missing Boxes: ${expectedBoxes - receivedBoxes}`
-                            });
-                        } else if (uploadType === "Delivered") {
-                            itemToMove.status = uploadType;
-                            itemToMove.remark = remarkInput;
+                        if (uploadType === "Delivered") {
                             cachedDeliveredBills.push(itemToMove); 
                         } else {
-                            itemToMove.status = uploadType;
-                            itemToMove.remark = remarkInput;
                             cachedDisputedBills.push(itemToMove);
                         }
                     }
@@ -1301,31 +1412,71 @@
         }
 
         async function submitFinalPodUpload(e) {
-            e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Uploading..."; btn.disabled = true;
-            const file = document.getElementById('finalPodFile').files[0]; 
+            e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
+            
+            const actionType = document.getElementById('finalActionType').value;
             const invoiceNo = document.getElementById('finalPodInvoiceNo').value;
             const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
             
+            const expBoxes = document.getElementById('finalExpectedBoxes').value;
+            const recBoxes = document.getElementById('finalReceivedBoxes').value;
+            const rem = document.getElementById('finalPodRemark').value;
+
+            const file = document.getElementById('finalPodFile').files[0]; 
+            
             try {
                 const base64Data = await getBase64(file);
-                const payload = { action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: invoiceNo + "_POD_" + file.name, mimeType: file.type, fileBase64: base64Data, uploadedBy: loggedInUser };
+                const payload = { 
+                    action: 'uploadFinalPOD', 
+                    invoiceNo: invoiceNo, 
+                    oldDocketNo: oldDocketNo, 
+                    fileName: invoiceNo + "_POD_" + file.name, 
+                    mimeType: file.type, 
+                    fileBase64: base64Data, 
+                    uploadedBy: loggedInUser,
+                    uploadType: actionType, 
+                    expectedBoxes: expBoxes, 
+                    receivedBoxes: recBoxes, 
+                    remarks: rem
+                };
                 
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
                 const data = await res.json();
                 
                 if(data.status === 'success') {
-                    showToast("Success", `POD Uploaded Successfully!`);
+                    showToast("Success", `Status Updated Successfully!`);
                     let itemIndex = cachedDeliveredBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo);
                     if (itemIndex > -1) {
                         let itemToMove = cachedDeliveredBills[itemIndex];
                         cachedDeliveredBills.splice(itemIndex, 1);
                         
-                        itemToMove.status = 'Delivered (POD)';
-                        cachedDispatchedBills.push(itemToMove);
+                        if (actionType === 'Short Delivered') {
+                            itemToMove.status = 'Delivered (Partial)';
+                            itemToMove.actionTime = new Date().toLocaleString();
+                            itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`;
+                            cachedDispatchedBills.push(itemToMove);
+
+                            cachedDisputedBills.push({
+                                invoiceNo: itemToMove.invoiceNo + "-SHORT",
+                                docket: itemToMove.docket,
+                                partner: itemToMove.partner,
+                                city: itemToMove.city,
+                                drName: itemToMove.drName,
+                                ledgerName: itemToMove.ledgerName,
+                                pinCode: itemToMove.pinCode,
+                                actionTime: new Date().toLocaleString(),
+                                status: "Disputed (Missing)",
+                                remark: `Missing Boxes: ${expBoxes - recBoxes}`
+                            });
+                        } else {
+                            itemToMove.status = 'Delivered (POD)';
+                            itemToMove.actionTime = new Date().toLocaleString();
+                            cachedDispatchedBills.push(itemToMove);
+                        }
                     }
                     updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); 
                 } else { showToast("Error", data.message, "error"); }
-            } catch (err) { showToast("Error", "Upload failed.", "error"); } finally { btn.innerHTML = "Submit POD"; btn.disabled = false; }
+            } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
         async function submitResolveDispute(e) {
@@ -1335,6 +1486,11 @@
             const docketNo = document.getElementById('resolveDocket').value;
             const actionStatus = document.getElementById('resolveAction').value;
             const remark = document.getElementById('resolveFinalRemark').value;
+            let receiveDateStr = document.getElementById('resolveReceiveDate').value;
+            if(receiveDateStr) {
+                 const d = new Date(receiveDateStr);
+                 receiveDateStr = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+            }
             
             try {
                 const payload = { 
@@ -1343,6 +1499,7 @@
                     docketNo: docketNo, 
                     resolutionStatus: actionStatus, 
                     resolutionRemark: remark,
+                    receiveDate: receiveDateStr,
                     resolvedBy: loggedInUser
                 };
                 
@@ -1356,9 +1513,11 @@
                         let itemToMove = cachedDisputedBills[itemIndex];
                         cachedDisputedBills.splice(itemIndex, 1);
                         
-                        itemToMove.remark = itemToMove.remark + " | " + remark;
+                        let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : "";
+                        itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText;
+                        itemToMove.actionTime = new Date().toLocaleString();
                         
-                        if (actionStatus === "Received to Party") {
+                        if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") {
                             itemToMove.status = "Delivered";
                             cachedDeliveredBills.push(itemToMove);
                         } else {
