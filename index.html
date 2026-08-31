@@ -156,7 +156,7 @@
         .modal-header h3 { font-size: 16px; margin: 0; color: var(--primary); }
         .close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1; }
         .modal-body { padding: 20px; }
-        .form-group select, .modal-box input[type="text"], .modal-box input[type="date"], .modal-box input[type="password"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
+        .form-group select, .modal-box input[type="text"], .modal-box input[type="date"], .modal-box input[type="password"], .modal-box input[type="number"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
         .modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
         .file-input-box { border: 2px dashed #ced4da; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; background: #f8fafc; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -426,77 +426,60 @@
             <!-- SOP & WORKFLOW SECTION -->
             <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
-                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP) & Workflow: HATVET Pharma Courier Management System[cite: 5]</h2>
+                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP) & Workflow: HATVET Pharma Courier Management System</h2>
                     <div class="table-actions">
                         <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
                     </div>
                 </div>
                 <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
-                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.[cite: 5]</p>
+                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment[cite: 5]</h3>
-                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned[cite: 5]</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
+                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Identify Pending Work:</b> The warehouse/dispatch team logs into the system to view the Today's Pending or Total Pending dashboard cards, which display invoices waiting for courier assignment.[cite: 5]</li>
-                        <li><b>Export Data:</b> The team clicks Export CSV to download the pending invoices list.[cite: 5]</li>
-                        <li><b>Data Preparation:</b> The team prepares the master Excel file (Format.xlsx) by entering mandatory details against each Invoice No: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and the assigned Docket No.[cite: 5]</li>
-                        <li><b>Bulk Upload:</b>
-                            <ul>
-                                <li>Click the Upload Invoices Details button.[cite: 5]</li>
-                                <li>Select the prepared .xlsx file and click Process Upload.[cite: 5]</li>
-                            </ul>
-                        </li>
-                        <li><b>System Validation:</b> The system maps the uploaded data against pending invoices.[cite: 5] A confirmation modal displays the valid records.[cite: 5] Clicking Confirm & Assign moves these invoices to the Courier Assigned stage.[cite: 5]</li>
+                        <li><b>Identify Pending Work:</b> The warehouse or dispatch team logs into the dashboard to check the Today's Pending or Total Pending cards for unassigned invoices.</li>
+                        <li><b>Export Data:</b> Click the Export CSV button to download the list of pending invoices.</li>
+                        <li><b>Data Preparation:</b> Prepare the master Excel file (Format.xlsx) by adding mandatory details: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and Docket No.</li>
+                        <li><b>Bulk Upload & Assign:</b> Click Upload Invoices Details, select the Excel file, and click Process Upload. Verify the extracted data in the popup and click Confirm & Assign to move the invoices to the Courier Assigned queue.</li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)[cite: 5]</h3>
-                    <p><b>Status:</b> Courier Assigned -> In Transit[cite: 5]</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
+                    <p><b>Status:</b> Courier Assigned -> In Transit</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Review Assigned Shipments:</b> When the courier pickup vehicle arrives, the team navigates to the Courier Assigned tab.[cite: 5]</li>
-                        <li><b>Physical Verification:</b> The team physically hands over the boxes to the courier personnel and checks the corresponding boxes in the system via the leftmost checkboxes.[cite: 5]</li>
-                        <li><b>Confirm Dispatch:</b> Click Submit Selected to Dispatch.[cite: 5] The system updates the timestamps and moves these shipments to the In Transit queue.[cite: 5]</li>
+                        <li><b>Physical Verification:</b> When the courier vehicle arrives, navigate to the Courier Assigned tab. Physically verify the loaded boxes against the system records.</li>
+                        <li><b>Confirm Dispatch:</b> Select the checkboxes next to the verified invoices and click Submit - Physical Dispatch. The system records the assignment time and moves the shipments to the In Transit queue.</li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Delivery Updates[cite: 5]</h3>
-                    <p><b>Status:</b> In Transit -> Delivered / Disputed / RTO[cite: 5]<br>The logistics team monitors the In Transit queue and updates the final status based on customer confirmation or courier tracking portals.[cite: 5] Click Update Status to choose one of four scenarios:[cite: 5]</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Intermediate Updates</h3>
+                    <p><b>Status:</b> In Transit -> Delivered Bills / Disputed<br>Monitor the In Transit tab and click Update Status based on courier tracking updates:</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Scenario A: Standard Delivery (Complete)[cite: 5]</b>
+                        <li><b>Scenario A: Delivered (Intermediate):</b> If the tracking shows delivered, select Delivered, upload a standard confirmation (like a screenshot), and submit. The invoice moves to Delivered Bills.</li>
+                        <li><b>Scenario B: Exceptions (RTO / Misplaced):</b> If the parcel is returning or lost, select RTO or Misplaced, enter mandatory remarks, and submit. The invoice is routed directly to the Disputed / Exceptions queue.</li>
+                    </ul>
+        
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: Final POD Collection & Shortage Handling</h3>
+                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills / Disputed<br>Navigate to the Delivered Bills tab when the physical POD is received. Click Update Action and choose between two paths:</p>
+                    <ul style="margin-bottom: 20px; padding-left: 20px;">
+                        <li><b>Path 1: Upload Full Delivery POD:</b> Select this if all boxes were received perfectly. Upload the signed POD image/PDF. The invoice permanently archives into the Dispatched Bills queue as complete.</li>
+                        <li><b>Path 2: Short Delivered (Partial Delivery):</b> Select this if the customer received fewer boxes than dispatched. Input the Total Boxes and the actual Received Boxes. Enter missing item details in the remarks and upload the POD with the shortage note.
                             <ul>
-                                <li>Select Delivered.[cite: 5]</li>
-                                <li>Upload intermediate delivery confirmation (e.g., screenshot of courier portal or WhatsApp text).[cite: 5]</li>
-                                <li>The invoice moves to the Delivered Bills queue.[cite: 5]</li>
-                            </ul>
-                        </li>
-                        <li><b>Scenario B: Short Delivered (Partial Delivery)[cite: 5]</b>
-                            <ul>
-                                <li>Select Short Delivered.[cite: 5]</li>
-                                <li>Input the Expected Boxes (total dispatched) and Received Boxes (actual handed to the party).[cite: 5]</li>
-                                <li>Enter a mandatory remark regarding the missing items.[cite: 5]</li>
-                                <li><b>System Automation:</b> The system splits the invoice.[cite: 5] The received portion moves to Delivered Bills, while the missing portion automatically generates a new invoice number (e.g., INV-123-SHORT) and moves to the Disputed / Short queue.[cite: 5]</li>
-                            </ul>
-                        </li>
-                        <li><b>Scenario C & D: RTO (Return to Origin) or Misplaced[cite: 5]</b>
-                            <ul>
-                                <li>Select RTO or Misplaced.[cite: 5]</li>
-                                <li>Enter mandatory remarks (e.g., "Consignee Not Available" or "Lost at Hub").[cite: 5]</li>
-                                <li>The invoice bypasses the delivery queue and moves directly to Dispatched Bills (Graveyard) as a closed exception.[cite: 5]</li>
+                                <li><b>System Automation:</b> The system splits the record. The successfully received portion moves to Dispatched Bills (Completed), while the missing boxes generate a new tracking invoice (e.g., INV-123-SHORT) and route to the Disputed / Exceptions queue.</li>
                             </ul>
                         </li>
                     </ul>
         
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: POD Collection & Final Closure[cite: 5]</h3>
-                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills (Completed)[cite: 5]</p>
+                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
+                    <p><b>Status:</b> Disputed Queue -> Delivered Bills / Dispatched Bills</p>
                     <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Collect Final POD:</b> Once the hard copy or final digitally signed POD is received from the courier partner, navigate to the Delivered Bills queue.[cite: 5]</li>
-                        <li><b>Upload Final Document:</b> Click Upload POD, attach the official PDF/Image, and submit.[cite: 5]</li>
-                        <li><b>Archive:</b> The invoice is marked as "Delivered (POD)" and permanently archived in the Dispatched Bills queue, completing its lifecycle.[cite: 5]</li>
-                    </ul>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims[cite: 5]</h3>
-                    <p><b>Status:</b> Disputed / Short Queue[cite: 5]</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Monitor Missing Inventory:</b> The administration team checks the red Disputed / Short dashboard card daily to monitor partial shipments.[cite: 5]</li>
-                        <li><b>Raise Claims:</b> The team uses this list to formally raise claims, register complaints, or issue Debit Notes to the respective courier partners for the exact missing box quantities documented in the system remarks.[cite: 5]</li>
+                        <li>The administration team monitors the red Disputed / Exceptions dashboard card daily to track RTO, Misplaced, or Short Delivery cases.</li>
+                        <li><b>Resolve Cases:</b> Click the Resolve button on a disputed invoice. Choose the appropriate resolution from the dropdown (e.g., "Received to Party", "Received at Origin", "Delivered to client", or "Claim Settled").</li>
+                        <li><b>Enter Details:</b> Fill in the Receiving Date (mandatory for received items) and Final Remarks.</li>
+                        <li><b>Case Closure Routing:</b>
+                            <ul style="margin-top: 5px;">
+                                <li>If resolved as <b>"Received to Party"</b> or <b>"Delivered to client"</b>, the invoice routes back to <b>Delivered Bills</b> pending a final POD upload.</li>
+                                <li>If resolved as <b>"Return to Origin"</b> or <b>"Claim Settled / Closed"</b>, it directly moves to <b>Dispatched Bills</b> and is permanently closed.</li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -648,7 +631,6 @@
                     </div>
                     <div class="form-group">
                         <label>Select Status</label>
-                        <!-- Short Delivery option removed as per request -->
                         <select id="uploadType" required onchange="handleUploadTypeChange()">
                             <option value="Delivered">Delivered</option>
                             <option value="RTO">RTO (Return to Origin)</option>
