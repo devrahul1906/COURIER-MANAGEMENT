@@ -905,6 +905,38 @@
             document.getElementById('dashboard-home-cards').style.display = 'grid'; 
         }
 
+        // --- DYNAMIC TRACKING LOGIC ---
+        function trackCourier(partner, docket) {
+            if (!docket || docket === '-' || docket === 'undefined') {
+                showToast("Error", "Docket number not available for tracking.", "error");
+                return;
+            }
+            
+            let trackingUrl = "";
+            let p = partner ? partner.toLowerCase() : "";
+            
+            if (p.includes("delhivery")) {
+                trackingUrl = `https://www.delhivery.com/track/package/${docket}`;
+            } else if (p.includes("blue dart") || p.includes("bluedart")) {
+                trackingUrl = `https://www.bluedart.com/web/guest/trackdartresult?trackFor=0&trackNo=${docket}`;
+            } else if (p.includes("dtdc")) {
+                trackingUrl = `https://track.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showTrakingDetails&awbNo=${docket}`; 
+            } else if (p.includes("ecom")) {
+                trackingUrl = `https://ecomexpress.in/tracking/?awb=${docket}`;
+            } else if (p.includes("safexpress")) {
+                trackingUrl = `https://www.safexpress.com/tracking?waybill=${docket}`;
+            } else if (p.includes("tirupati")) {
+                trackingUrl = `http://www.shreetirupaticourier.net/Frm_DocTrack.aspx?docno=${docket}`;
+            } else if (p.includes("trackon")) {
+                trackingUrl = `https://trackon.in/tracking/search?trackings=${docket}`;
+            } else {
+                // Generic Google Search tracking shortcut for others
+                trackingUrl = `https://www.google.com/search?q=${encodeURIComponent(partner)}+tracking+${encodeURIComponent(docket)}`;
+            }
+            
+            window.open(trackingUrl, '_blank');
+        }
+
         // --- DATE FILTER LOGIC ---
         function openDateRangeModal(tabName) {
             targetTabForDateRange = tabName;
@@ -1012,7 +1044,12 @@
                     <td>${item.docket || '-'}</td>
                     <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-transit">In Transit</span></td>
-                    <td><button class="action-btn btn-info" onclick="openPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Status</button></td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
+                            <button class="action-btn btn-info" onclick="openPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Status</button>
+                        </div>
+                    </td>
                 </tr>`;
             });
         }
@@ -1043,7 +1080,12 @@
                     <td>${item.partner}</td>
                     <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td>${sTag}</td>
-                    <td><button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Action</button></td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
+                            <button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Action</button>
+                        </div>
+                    </td>
                 </tr>`;
             });
         }
@@ -1068,7 +1110,12 @@
                     <td style="color:#c2410c;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-rto">${item.status}</span></td>
                     <td>${item.remark || '-'}</td>
-                    <td><button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button></td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
+                            <button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button>
+                        </div>
+                    </td>
                 </tr>`;
             });
         }
