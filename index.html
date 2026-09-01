@@ -266,7 +266,6 @@
                 <div class="date-display" id="dashCompactTime"></div>
             </div>
 
-            <!-- KPI CARDS -->
             <div id="dashboard-home-cards" class="kpi-grid">
                 <div class="kpi-card card-pending" onclick="showInvoiceList('today')">
                     <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
@@ -298,7 +297,6 @@
                 </div>
             </div>
 
-            <!-- 1. PENDING INVOICE LIST -->
             <div id="invoice-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
@@ -317,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- 2. ASSIGNED LIST (WITH SEARCH BOX) -->
             <div id="assigned-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Assigned Invoices</h2>
@@ -341,7 +338,6 @@
                 </div>
             </div>
 
-            <!-- 3. TRANSIT LIST -->
             <div id="pod-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>In Transit Invoices</h2>
@@ -359,7 +355,6 @@
                 </div>
             </div>
 
-            <!-- 4. DELIVERED LIST -->
             <div id="delivered-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Delivered Bills</h2>
@@ -382,7 +377,6 @@
                 </div>
             </div>
             
-            <!-- NEW DISPUTED LIST -->
             <div id="disputed-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Disputed / Exceptions</h2>
@@ -404,7 +398,6 @@
                 </div>
             </div>
 
-            <!-- 5. DISPATCHED BILLS -->
             <div id="dispatched-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Dispatched Bills (Completed / Exceptions)</h2>
@@ -427,7 +420,6 @@
                 </div>
             </div>
 
-            <!-- SOP & WORKFLOW SECTION -->
             <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
                     <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP): Courier Management System</h2>
@@ -495,9 +487,6 @@
         </div>
     </div>
 
-    <!-- MODALS -->
-    
-    <!-- Date Range Modal -->
     <div id="dateRangeModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
@@ -526,7 +515,6 @@
         </div>
     </div>
 
-    <!-- Bulk Upload Modal -->
     <div id="bulkUploadModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -550,7 +538,6 @@
         </div>
     </div>
 
-    <!-- Confirm Bulk Upload Modal -->
     <div id="confirmBulkModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 800px;">
             <div class="modal-header">
@@ -582,7 +569,6 @@
         </div>
     </div>
 
-    <!-- Confirm Physical Dispatch Modal -->
     <div id="confirmDispatchModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 450px;">
             <div class="modal-header">
@@ -601,7 +587,6 @@
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
     <div id="forgotPasswordModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
@@ -619,7 +604,6 @@
         </div>
     </div>
 
-    <!-- Transit Update Status Modal -->
     <div id="uploadPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -659,7 +643,6 @@
         </div>
     </div>
 
-    <!-- Action Modal for Delivered Bills (POD Upload OR Short Delivery) -->
     <div id="finalPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -711,7 +694,6 @@
         </div>
     </div>
     
-    <!-- Resolve Dispute Modal -->
     <div id="resolveModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -1099,7 +1081,6 @@
                     <td><span class="badge bg-transit">In Transit</span></td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
                             <button class="action-btn btn-info" onclick="openPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Status</button>
                         </div>
                     </td>
@@ -1137,7 +1118,6 @@
                     <td>${sTag}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
                             <button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Action</button>
                         </div>
                     </td>
@@ -1169,7 +1149,6 @@
                     <td>${item.remark || '-'}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn" style="background-color: #475569;" onclick="trackCourier('${item.partner}', '${item.docket}')">Track</button>
                             <button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button>
                         </div>
                     </td>
