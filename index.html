@@ -398,6 +398,7 @@
                 </div>
             </div>
 
+            <!-- MODIFIED DISPATCHED BILLS SECTION -->
             <div id="dispatched-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Dispatched Bills (Completed / Exceptions)</h2>
@@ -408,11 +409,11 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="dispatchedTable" style="min-width: 1200px;">
+                    <table id="dispatchedTable" style="min-width: 1700px;">
                         <thead>
                             <tr>
                                 <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Close Time</th><th>Final Status</th><th>Remarks</th>
+                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchedTableBody"></tbody>
@@ -1157,6 +1158,7 @@
             tableBody.innerHTML = html;
         }
 
+        // MODIFIED RENDER LOGIC FOR DISPATCHED BILLS
         function showDispatchedList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
             hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
@@ -1168,7 +1170,7 @@
                 listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
             }
             
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='14' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
             
             let html = "";
             listToDisplay.forEach((item, index) => {
@@ -1184,7 +1186,10 @@
                     <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
                     <td>${item.docket || '-'}</td>
                     <td>${item.partner}</td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td>
+                    <td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td>
+                    <td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td>
+                    <td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td>
                     <td>${sTag}</td>
                     <td>${item.remark || '-'}</td>
                 </tr>`;
