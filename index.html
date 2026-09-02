@@ -398,7 +398,6 @@
                 </div>
             </div>
 
-            <!-- MODIFIED DISPATCHED BILLS SECTION -->
             <div id="dispatched-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Dispatched Bills (Completed / Exceptions)</h2>
@@ -409,11 +408,11 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="dispatchedTable" style="min-width: 1700px;">
+                    <table id="dispatchedTable" style="min-width: 1750px;">
                         <thead>
                             <tr>
                                 <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
+                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchedTableBody"></tbody>
@@ -663,6 +662,7 @@
                         <select id="finalActionType" required onchange="handleFinalActionChange()">
                             <option value="Full Delivery POD">Upload Full Delivery POD</option>
                             <option value="Short Delivered">Short Delivered (Partial Delivery)</option>
+                            <option value="OTP based delivery - No POD Required">OTP based delivery - No POD Required</option>
                         </select>
                     </div>
 
@@ -682,7 +682,7 @@
                         <input type="text" id="finalPodRemark" placeholder="Mention missing details/items...">
                     </div>
                     
-                    <div class="form-group file-input-box">
+                    <div class="form-group file-input-box" id="finalFileGroup">
                         <label id="finalFileLabel" style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Select POD Document (PDF/Image)</label>
                         <input type="file" id="finalPodFile" accept="image/*,application/pdf" required>
                     </div>
@@ -717,6 +717,14 @@
                     <div class="form-group" id="resolveDateGroup" style="display: none;">
                         <label>Receiving Date <span style="color: red;">*</span></label>
                         <input type="date" id="resolveReceiveDate">
+                    </div>
+
+                    <div class="form-group" id="resolveApprovedByGroup" style="display: none;">
+                        <label>Approved By <span style="color: red;">*</span></label>
+                        <select id="resolveApprovedBy">
+                            <option value="">Select Approver</option>
+                            <option value="Approved by MD Sir">Approved by MD Sir</option>
+                        </select>
                     </div>
                     
                     <div class="form-group">
@@ -753,6 +761,12 @@
                 document.getElementById('loginBtn').click();
             }
         });
+
+        // --- NEW CUSTOM DATE FORMATTER (DD-MM-YYYY HH:mm:ss) ---
+        function getCurrentFormattedDate() {
+            const d = new Date();
+            return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        }
 
         function showToast(title, message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -822,7 +836,7 @@
         }
 
         function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
-        function getTodayString() { const now = new Date(); return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`; }
+        function getTodayString() { const now = new Date(); return `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`; }
         function getGreeting() { const h = new Date().getHours(); return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; }
 
         function updateDashboardCounts() {
@@ -932,7 +946,6 @@
             document.getElementById('dashboard-home-cards').style.display = 'grid'; 
         }
 
-        // --- DYNAMIC TRACKING LOGIC ---
         function trackCourier(partner, docket) {
             if (!docket || docket === '-' || docket === 'undefined') {
                 showToast("Error", "Docket number not available for tracking.", "error");
@@ -965,6 +978,33 @@
             window.open(trackingUrl, '_blank');
         }
 
+        // --- TIME CALCULATION HELPERS ---
+        function calculateTotalTime(startStr, endStr) {
+            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+            
+            function parseCustomDate(dStr) {
+                if(dStr.includes('-')) { 
+                    const parts = dStr.split(/[- :]/);
+                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]);
+                } else if (dStr.includes('/')) { 
+                    const parts = dStr.split(/[\/ :]/);
+                    if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]);
+                }
+                return new Date(dStr);
+            }
+
+            const sDate = parseCustomDate(startStr);
+            const eDate = parseCustomDate(endStr);
+            if (isNaN(sDate) || isNaN(eDate)) return '-';
+            
+            const diffMs = eDate - sDate;
+            if (diffMs < 0) return '-';
+            const diffDays = Math.floor(diffMs / 86400000);
+            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            if (diffDays > 0) return `${diffDays}d ${diffHrs}h`;
+            return `${diffHrs}h`;
+        }
+
         // --- DATE FILTER LOGIC ---
         function openDateRangeModal(tabName) {
             targetTabForDateRange = tabName;
@@ -990,7 +1030,18 @@
             if (!start && !end) return true;
             if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
             
-            const itemDate = new Date(dateStr);
+            let itemDate;
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split(/[- :]/);
+                if (parts.length >= 3) {
+                    itemDate = new Date(parts[2], parts[1] - 1, parts[0], parts[3] || 0, parts[4] || 0, parts[5] || 0);
+                } else {
+                    itemDate = new Date(dateStr);
+                }
+            } else {
+                itemDate = new Date(dateStr);
+            }
+
             if (isNaN(itemDate.getTime())) return true; 
             
             const sDate = start ? new Date(start + "T00:00:00") : null;
@@ -1170,12 +1221,14 @@
                 listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
             }
             
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='14' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
             
             let html = "";
             listToDisplay.forEach((item, index) => {
                 let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : 
                            `<span class="badge bg-delivered">${item.status}</span>`;
+                           
+                let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime);
                            
                 html += `<tr>
                     <td>${index + 1}</td>
@@ -1189,6 +1242,7 @@
                     <td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td>
                     <td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td>
                     <td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td>
+                    <td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td>
                     <td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td>
                     <td>${sTag}</td>
                     <td>${item.remark || '-'}</td>
@@ -1290,7 +1344,7 @@
                         cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); 
                         cachedAssignedBills.push({ 
                             invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city,
-                            drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: new Date().toLocaleString()
+                            drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: getCurrentFormattedDate()
                         });
                     });
                     updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); 
@@ -1332,7 +1386,7 @@
                         if (itemIndex > -1) {
                             let itemToMove = cachedAssignedBills[itemIndex];
                             cachedAssignedBills.splice(itemIndex, 1);
-                            itemToMove.actionTime = new Date().toLocaleString();
+                            itemToMove.actionTime = getCurrentFormattedDate();
                             cachedTransitBills.push(itemToMove);
                         }
                     });
@@ -1364,16 +1418,28 @@
             const rec = document.getElementById('finalReceivedBoxes');
             const rem = document.getElementById('finalPodRemark');
             const fileLabel = document.getElementById('finalFileLabel');
+            const fileGroup = document.getElementById('finalFileGroup');
+            const fileInput = document.getElementById('finalPodFile');
 
             if(type === 'Short Delivered') {
                 shortGrp.style.display = 'flex';
                 remGrp.style.display = 'block';
+                fileGroup.style.display = 'block';
                 exp.required = true; rec.required = true; rem.required = true;
+                fileInput.required = true;
                 fileLabel.innerText = "Select POD with Shortage Remark";
+            } else if (type === 'OTP based delivery - No POD Required') {
+                shortGrp.style.display = 'none';
+                remGrp.style.display = 'none';
+                fileGroup.style.display = 'none';
+                exp.required = false; rec.required = false; rem.required = false;
+                fileInput.required = false;
             } else {
                 shortGrp.style.display = 'none';
                 remGrp.style.display = 'none';
+                fileGroup.style.display = 'block';
                 exp.required = false; rec.required = false; rem.required = false;
+                fileInput.required = true;
                 fileLabel.innerText = "Select POD Document (PDF/Image)";
             }
         }
@@ -1391,12 +1457,23 @@
             const actionSelect = document.getElementById('resolveAction').value;
             const dateGroup = document.getElementById('resolveDateGroup');
             const dateInput = document.getElementById('resolveReceiveDate');
+            const appGroup = document.getElementById('resolveApprovedByGroup');
+            const appInput = document.getElementById('resolveApprovedBy');
+
             if (actionSelect.includes("Received") || actionSelect.includes("Return to Origin") || actionSelect.includes("Delivered to client")) {
                 dateGroup.style.display = 'block';
                 dateInput.required = true;
             } else {
                 dateGroup.style.display = 'none';
                 dateInput.required = false;
+            }
+
+            if (actionSelect === "Claim Settled / Closed") {
+                appGroup.style.display = 'block';
+                appInput.required = true;
+            } else {
+                appGroup.style.display = 'none';
+                appInput.required = false;
             }
         }
 
@@ -1405,6 +1482,7 @@
             document.getElementById('resolveDocket').value = docket || '';
             document.getElementById('resolveInvDisplay').value = inv;
             document.getElementById('resolveReceiveDate').value = '';
+            document.getElementById('resolveApprovedBy').value = '';
             
             const actionSelect = document.getElementById('resolveAction');
             actionSelect.innerHTML = ''; 
@@ -1469,7 +1547,7 @@
                         let itemToMove = cachedTransitBills[itemIndex];
                         cachedTransitBills.splice(itemIndex, 1);
                         
-                        itemToMove.actionTime = new Date().toLocaleString();
+                        itemToMove.actionTime = getCurrentFormattedDate();
                         itemToMove.status = uploadType;
                         itemToMove.remark = remarkInput;
                         
@@ -1498,13 +1576,22 @@
             const file = document.getElementById('finalPodFile').files[0]; 
             
             try {
-                const base64Data = await getBase64(file);
+                let base64Data = "";
+                let fileName = "";
+                let mimeType = "";
+
+                if (file) {
+                    base64Data = await getBase64(file);
+                    fileName = invoiceNo + "_POD_" + file.name;
+                    mimeType = file.type;
+                }
+                
                 const payload = { 
                     action: 'uploadFinalPOD', 
                     invoiceNo: invoiceNo, 
                     oldDocketNo: oldDocketNo, 
-                    fileName: invoiceNo + "_POD_" + file.name, 
-                    mimeType: file.type, 
+                    fileName: fileName, 
+                    mimeType: mimeType, 
                     fileBase64: base64Data, 
                     uploadedBy: loggedInUser,
                     uploadType: actionType, 
@@ -1525,7 +1612,7 @@
                         
                         if (actionType === 'Short Delivered') {
                             itemToMove.status = 'Delivered (Partial)';
-                            itemToMove.actionTime = new Date().toLocaleString();
+                            itemToMove.actionTime = getCurrentFormattedDate();
                             itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`;
                             cachedDispatchedBills.push(itemToMove);
 
@@ -1537,13 +1624,18 @@
                                 drName: itemToMove.drName,
                                 ledgerName: itemToMove.ledgerName,
                                 pinCode: itemToMove.pinCode,
-                                actionTime: new Date().toLocaleString(),
+                                actionTime: getCurrentFormattedDate(),
                                 status: "Disputed (Missing)",
                                 remark: `Missing Boxes: ${expBoxes - recBoxes}`
                             });
+                        } else if (actionType === 'OTP based delivery - No POD Required') {
+                            itemToMove.status = 'Delivered (OTP)';
+                            itemToMove.actionTime = getCurrentFormattedDate();
+                            itemToMove.remark = 'No POD required (OTP)';
+                            cachedDispatchedBills.push(itemToMove);
                         } else {
                             itemToMove.status = 'Delivered (POD)';
-                            itemToMove.actionTime = new Date().toLocaleString();
+                            itemToMove.actionTime = getCurrentFormattedDate();
                             cachedDispatchedBills.push(itemToMove);
                         }
                     }
@@ -1558,11 +1650,17 @@
             const invoiceNo = document.getElementById('resolveInvNo').value;
             const docketNo = document.getElementById('resolveDocket').value;
             const actionStatus = document.getElementById('resolveAction').value;
-            const remark = document.getElementById('resolveFinalRemark').value;
+            let remark = document.getElementById('resolveFinalRemark').value;
+            
+            const approvedBy = document.getElementById('resolveApprovedBy').value;
+            if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') {
+                remark += " | " + approvedBy;
+            }
+
             let receiveDateStr = document.getElementById('resolveReceiveDate').value;
             if(receiveDateStr) {
                  const d = new Date(receiveDateStr);
-                 receiveDateStr = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+                 receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
             }
             
             try {
@@ -1588,7 +1686,7 @@
                         
                         let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : "";
                         itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText;
-                        itemToMove.actionTime = new Date().toLocaleString();
+                        itemToMove.actionTime = getCurrentFormattedDate();
                         
                         if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") {
                             itemToMove.status = "Delivered";
