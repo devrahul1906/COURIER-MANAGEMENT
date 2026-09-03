@@ -763,6 +763,19 @@
         });
 
         // --- NEW CUSTOM DATE FORMATTER (DD-MM-YYYY HH:mm:ss) ---
+        function checkIsToday(dateStr) {
+            if(!dateStr) return false;
+            const d = new Date();
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = d.getFullYear();
+            
+            // Match common variations of today's date
+            const formats = [`${dd}-${mm}-${yy}`, `${dd}/${mm}/${yy}`, `${mm}/${dd}/${yy}`, `${mm}-${dd}-${yy}`];
+            const str = String(dateStr);
+            return formats.some(fmt => str.startsWith(fmt) || str.includes(fmt));
+        }
+
         function getCurrentFormattedDate() {
             const d = new Date();
             return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
@@ -836,12 +849,10 @@
         }
 
         function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
-        function getTodayString() { const now = new Date(); return `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`; }
         function getGreeting() { const h = new Date().getHours(); return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; }
 
         function updateDashboardCounts() {
-            const todayStr = getTodayString();
-            document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => String(bill.scanTime).startsWith(todayStr)).length;
+            document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
             document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
             document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
             document.getElementById('transitCount').innerText = cachedTransitBills.length;
@@ -1065,7 +1076,7 @@
             const btnUpload = document.getElementById('btnBulkUpload');
             btnUpload.style.display = (isStandardUser()) ? 'none' : 'flex'; 
 
-            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => String(b.scanTime).startsWith(getTodayString())) : cachedPendingBills;
+            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills;
             document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
 
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
