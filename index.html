@@ -28,6 +28,7 @@
         .toast { min-width: 300px; padding: 16px; border-radius: 8px; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease-out forwards; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
         .toast-content h4 { margin: 0 0 4px 0; font-size: 14px; color: #1e293b; }
         .toast-content p { margin: 0; font-size: 13px; color: var(--text-muted); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -42,7 +43,6 @@
         .login-center-logo { height: 85px; max-width: 100%; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); margin-bottom: 25px; border: 2px solid rgba(255,255,255,0.9); }
         .login-left h2 { font-size: 22px; font-weight: 500; margin-bottom: 10px; opacity: 0.95; }
         .login-left p.tagline { font-size: 15px; opacity: 0.8; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 40px; }
-        .login-illustration { width: 80%; max-width: 350px; opacity: 0.8; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
         
         .login-right { flex: 1; display: flex; justify-content: center; align-items: center; background: #ffffff; position: relative; }
         .login-box { width: 100%; max-width: 420px; padding: 45px; background: #fff; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); border: 1px solid #f1f5f9; }
@@ -196,6 +196,7 @@
                             <input type="text" id="username" placeholder="Enter Employee ID" required>
                         </div>
                     </div>
+                    
                     <div class="form-group">
                         <label>Password</label>
                         <div class="input-wrapper">
@@ -206,6 +207,19 @@
                             </span>
                         </div>
                     </div>
+
+<div class="form-group">
+    <label>Select Type</label>
+    <div class="input-wrapper">
+        <svg class="icon-left icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <select id="loginType" required style="padding-left: 40px; cursor: pointer;">
+            <option value="Dispatch Inventory">Dispatch Inventory</option>
+            <option value="Return Inventory">Return Inventory</option>
+        </select>
+    </div>
+</div>
                     
                     <div class="login-options">
                         <label><input type="checkbox" id="rememberMe"> Remember Me</label>
@@ -785,9 +799,14 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const iconSvg = type === 'success' 
-                ? `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
-                : `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            let iconSvg = '';
+            if(type === 'success') {
+                iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+            } else if (type === 'warning') {
+                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+            } else {
+                iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            }
             toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
             container.appendChild(toast);
             setTimeout(() => { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
@@ -901,9 +920,16 @@
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner');
             const errorDiv = document.getElementById('loginError');
-            const user = document.getElementById('username').value; const pass = document.getElementById('password').value;
+            const user = document.getElementById('username').value; 
+            const pass = document.getElementById('password').value;
+            const loginType = document.getElementById('loginType').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             
+            if (loginType === 'Return Inventory') {
+                showToast('Coming Soon', 'Return Inventory module is under development. Logics & Layouts will be updated soon.', 'warning');
+                return;
+            }
+
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
 
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: user, password: pass }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
