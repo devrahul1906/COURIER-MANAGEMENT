@@ -221,8 +221,8 @@
                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                             </svg>
                             <select id="loginType" required style="padding-left: 40px; cursor: pointer;">
-                                <option value="Dispatch Inventory">Dispatch Inventory</option>
-                                <option value="Return Inventory">Return Inventory</option>
+                                <option value="Dispatch Courier Management">Dispatch Courier Management</option>
+                                <option value="Return Courier Management">Return Courier Management</option>
                             </select>
                         </div>
                     </div>
@@ -1261,7 +1261,7 @@
 
             fetch(WEB_APP_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Inventory' }), 
+                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
@@ -1297,38 +1297,56 @@
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
                     document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser}`;
-                    
-                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; 
-                    cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || [];
-                    cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
-                    cachedReturnBills = data.returnBills || [];
-                    cachedUnplannedBills = data.unplannedBills || [];
-                    
-                    document.getElementById('login-view').style.display = 'none'; 
-                    document.getElementById('dashboard-view').style.display = 'flex';
-                    
-                    if (loginType === 'Return Inventory') {
-                        currentWorkspace = 'return';
-                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
-                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
-                        document.getElementById('dispatch-workspace').style.display = 'none';
-                        document.getElementById('return-workspace').style.display = 'block';
-                    } else {
-                        currentWorkspace = 'dispatch';
-                        document.getElementById('navbarSubtitle').innerText = "Courier Management System";
-                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
-                        document.getElementById('return-workspace').style.display = 'none';
-                        document.getElementById('dispatch-workspace').style.display = 'block';
-                    }
-                    
-                    showDashboardCards();
-                    updateDashboardCounts(); 
-                    showToast('Login Successful', `Welcome to the ${loginType} Dashboard.`, 'success');
+
+                    // Update UI for the second loading phase
+                    document.getElementById('loginText').innerText = "Loading Data...";
+
+                    // Second Fetch for heavy data loading
+                    fetch(WEB_APP_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    }).then(res2 => res2.json()).then(syncData => {
+                        cachedPendingBills = syncData.pendingBills || []; cachedAssignedBills = syncData.assignedBills || []; 
+                        cachedTransitBills = syncData.transitBills || []; cachedDeliveredBills = syncData.deliveredBills || [];
+                        cachedDispatchedBills = syncData.dispatchedBills || []; cachedDisputedBills = syncData.disputedBills || [];
+                        cachedReturnBills = syncData.returnBills || [];
+                        cachedUnplannedBills = syncData.unplannedBills || [];
+                        
+                        document.getElementById('login-view').style.display = 'none'; 
+                        document.getElementById('dashboard-view').style.display = 'flex';
+                        
+                        if (loginType === 'Return Inventory') {
+                            currentWorkspace = 'return';
+                            document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
+                            document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
+                            document.getElementById('dispatch-workspace').style.display = 'none';
+                            document.getElementById('return-workspace').style.display = 'block';
+                        } else {
+                            currentWorkspace = 'dispatch';
+                            document.getElementById('navbarSubtitle').innerText = "Courier Management System";
+                            document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
+                            document.getElementById('return-workspace').style.display = 'none';
+                            document.getElementById('dispatch-workspace').style.display = 'block';
+                        }
+                        
+                        showDashboardCards();
+                        updateDashboardCounts(); 
+                        showToast('Login Successful', `Welcome to the ${loginType} Dashboard.`, 'success');
+                    }).catch(error => {
+                        showToast("Error", "Data sync failed.", "error");
+                    }).finally(() => { 
+                        btn.disabled = false; spinner.style.display = 'none'; 
+                        document.getElementById('loginText').innerText = "Sign In";
+                    });
+
                 } else { 
                     errorDiv.innerText = data.message; errorDiv.style.display = 'block'; 
                     localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
+                    btn.disabled = false; spinner.style.display = 'none';
                 }
-            }).catch(error => showToast("Error", "Server connection failed.", "error")).finally(() => { 
+            }).catch(error => {
+                showToast("Error", "Server connection failed.", "error");
                 btn.disabled = false; spinner.style.display = 'none'; 
             });
         }
@@ -1345,7 +1363,7 @@
 
             fetch(WEB_APP_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Inventory' }), 
+                body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
@@ -2586,7 +2604,7 @@ function handleFinalActionChange() {
         function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
 
         function handleResolveActionChange() {
-            const actionSelect = document.getElementById('resolveAction').value;
+            const actionSelect = document.getElementById('resolveAction');
             const dateGroup = document.getElementById('resolveDateGroup');
             const dateInput = document.getElementById('resolveReceiveDate');
             const appGroup = document.getElementById('resolveApprovedByGroup');
