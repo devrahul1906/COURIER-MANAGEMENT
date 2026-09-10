@@ -259,10 +259,6 @@
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
                     Sync Data
                 </button>
-                <button class="btn-outline" onclick="showSOP()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--primary); border-color: #cbd5e1; margin-right: 5px;">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                    Read SOP
-                </button>
                 
                 <div class="user-profile">
                     <div class="avatar" id="avatarInitial">U</div>
@@ -438,66 +434,6 @@
                             </thead>
                             <tbody id="dispatchedTableBody"></tbody>
                         </table>
-                    </div>
-                </div>
-
-                <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
-                        <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP): Courier Management System</h2>
-                        <div class="table-actions">
-                            <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
-                        </div>
-                    </div>
-                    <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
-                        <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
-            
-                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
-                        <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
-                        <ul style="margin-bottom: 20px; padding-left: 20px;">
-                            <li><b>Identify Pending Work:</b> The warehouse or dispatch team logs into the dashboard to check the Today's Pending or Total Pending cards for unassigned invoices.</li>
-                            <li><b>Export Data:</b> Click the Export CSV button to download the list of pending invoices.</li>
-                            <li><b>Data Preparation:</b> Prepare the master Excel file (Format.xlsx) by adding mandatory details: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and Docket No.</li>
-                            <li><b>Bulk Upload & Assign:</b> Click Upload Invoices Details, select the Excel file, and click Process Upload. Verify the extracted data in the popup and click Confirm & Assign to move the invoices to the Courier Assigned queue.</li>
-                        </ul>
-            
-                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
-                        <p><b>Status:</b> Courier Assigned -> In Transit</p>
-                        <ul style="margin-bottom: 20px; padding-left: 20px;">
-                            <li><b>Physical Verification:</b> When the courier vehicle arrives, navigate to the Courier Assigned tab. Physically verify the loaded boxes against the system records.</li>
-                            <li><b>Confirm Dispatch:</b> Select the checkboxes next to the verified invoices and click Submit - Physical Dispatch. The system records the assignment time and moves the shipments to the In Transit queue.</li>
-                        </ul>
-            
-                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Intermediate Updates</h3>
-                        <p><b>Status:</b> In Transit -> Delivered Bills / Disputed<br>Monitor the In Transit tab and click Update Status based on courier tracking updates:</p>
-                        <ul style="margin-bottom: 20px; padding-left: 20px;">
-                            <li><b>Scenario A: Delivered (Intermediate):</b> If the tracking shows delivered, select Delivered, upload a standard confirmation (like a screenshot), and submit. The invoice moves to Delivered Bills.</li>
-                            <li><b>Scenario B: Exceptions (RTO / Misplaced):</b> If the parcel is returning or lost, select RTO or Misplaced, enter mandatory remarks, and submit. The invoice is routed directly to the Disputed / Exceptions queue.</li>
-                        </ul>
-            
-                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: Final POD Collection & Shortage Handling</h3>
-                        <p><b>Status:</b> Delivered Bills -> Dispatched Bills / Disputed<br>Navigate to the Delivered Bills tab when the physical POD is received. Click Update Action and choose between two paths:</p>
-                        <ul style="margin-bottom: 20px; padding-left: 20px;">
-                            <li><b>Path 1: Upload Full Delivery POD:</b> Select this if all boxes were received perfectly. Upload the signed POD image/PDF. The invoice permanently archives into the Dispatched Bills queue as complete.</li>
-                            <li><b>Path 2: Short Delivered (Partial Delivery):</b> Select this if the customer received fewer boxes than dispatched. Input the Total Boxes and the actual Received Boxes. Enter missing item details in the remarks and upload the POD with the shortage note.
-                                <ul>
-                                    <li><b>System Automation:</b> The system splits the record. The successfully received portion moves to Dispatched Bills (Completed), while the missing boxes generate a new tracking invoice (e.g., INV-123-SHORT) and route to the Disputed / Exceptions queue.</li>
-                                </ul>
-                            </li>
-                        </ul>
-            
-                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
-                        <p><b>Status:</b> Disputed Queue -> Delivered Bills OR Dispatched Bills</p>
-                        <ul style="margin-bottom: 20px; padding-left: 20px;">
-                            <li>The administration team monitors the red Disputed / Exceptions dashboard card daily to track RTO, Misplaced, or Short Delivery cases.</li>
-                            <li><b>Resolve Cases:</b> Click the Resolve button on a disputed invoice. Choose the appropriate resolution from the dropdown (e.g., "Return to Origin", "Delivered to client", or "Claim Settled").</li>
-                            <li><b>Enter Details:</b> Fill in the Receiving Date (mandatory for received items) and Final Remarks.</li>
-                            <li><b>Case Closure Routing:</b>
-                                <ul style="margin-top: 5px;">
-                                    <li>If resolved as <b>"Received to Party"</b> or <b>"Delivered to client"</b>, the invoice routes back to <b>Delivered Bills</b> pending a final POD upload.</li>
-                                    <li>If resolved as <b>"Return to Origin"</b> or <b>"Claim Settled / Closed"</b>, it directly moves to <b>Dispatched Bills</b> and is permanently closed.</li>
-                                </ul>
-                            </li>
-                        </ul>
                     </div>
                 </div>
             </div>
@@ -1112,7 +1048,7 @@
                         </select>
                     </div>
 
-                    <div id="finalShortDeliveryGroup" style="display: none; display: flex; gap: 15px; margin-bottom: 22px;">
+                    <div id="finalShortDeliveryGroup" style="display: none; gap: 15px; margin-bottom: 22px;">
                         <div style="flex: 1;">
                             <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Total Boxes</label>
                             <input type="number" id="finalExpectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
@@ -1198,6 +1134,11 @@
         let currentWorkspace = "dispatch"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
+
+        // Safe String Helper for dynamic inline buttons to prevent character breaking
+        function safeStr(val) {
+            return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('hatvetUser');
@@ -1317,7 +1258,10 @@
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
 
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: user, password: pass }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Inventory' }), 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
                     
@@ -1398,7 +1342,7 @@
 
             fetch(WEB_APP_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'login', username: user, password: pass }), 
+                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Inventory' }), 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
@@ -2254,7 +2198,7 @@
                     <td><span class="badge bg-transit">In Transit</span></td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-info" onclick="openPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Status</button>
+                            <button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button>
                         </div>
                     </td>
                 </tr>`;
@@ -2291,7 +2235,7 @@
                     <td>${sTag}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-warning" onclick="openFinalPodModal('${item.invoiceNo}', '${item.docket || ''}')">Update Action</button>
+                            <button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button>
                         </div>
                     </td>
                 </tr>`;
@@ -2322,7 +2266,7 @@
                     <td>${item.remark || '-'}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-primary" onclick="openResolveModal('${item.invoiceNo}', '${item.docket || ''}', '${item.status}')">Resolve</button>
+                            <button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button>
                         </div>
                     </td>
                 </tr>`;
@@ -2388,7 +2332,43 @@
                 fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
             }
         }
+        
+function handleFinalActionChange() {
+    const actionType = document.getElementById('finalActionType').value;
+    const shortGroup = document.getElementById('finalShortDeliveryGroup');
+    const expBox = document.getElementById('finalExpectedBoxes');
+    const recBox = document.getElementById('finalReceivedBoxes');
+    const remarkGroup = document.getElementById('finalRemarkGroup');
+    const remarkInput = document.getElementById('finalPodRemark');
+    const fileGroup = document.getElementById('finalFileGroup');
+    const fileInput = document.getElementById('finalPodFile');
 
+    if (actionType === 'Short Delivered') {
+        shortGroup.style.display = 'flex';
+        expBox.required = true;
+        recBox.required = true;
+        remarkGroup.style.display = 'block';
+        remarkInput.required = true;
+        fileGroup.style.display = 'block';
+        fileInput.required = true;
+    } else if (actionType === 'OTP based delivery - No POD Required') {
+        shortGroup.style.display = 'none';
+        expBox.required = false;
+        recBox.required = false;
+        remarkGroup.style.display = 'none';
+        remarkInput.required = false;
+        fileGroup.style.display = 'none';
+        fileInput.required = false;
+    } else {
+        shortGroup.style.display = 'none';
+        expBox.required = false;
+        recBox.required = false;
+        remarkGroup.style.display = 'none';
+        remarkInput.required = false;
+        fileGroup.style.display = 'block';
+        fileInput.required = true;
+    }
+}
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
@@ -2804,11 +2784,6 @@
                     updateDashboardCounts(); closeResolveModal(); showDisputedList(); 
                 } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
-        }
-
-        function showSOP() {
-            hideAllLists();
-            document.getElementById('sop-section').style.display = 'block';
         }
 
         // --- LIVE CLOCK ---
