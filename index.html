@@ -52,8 +52,8 @@
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px; text-align: left; }
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-wrapper svg.icon-left { position: absolute; left: 14px; color: #94a3b8; }
-        .input-wrapper input, .input-wrapper select { width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; transition: 0.2s; background: #f8fafc; }
-        .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
+        .input-wrapper input, .input-wrapper select, .input-wrapper textarea { width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; transition: 0.2s; background: #f8fafc; }
+        .input-wrapper input:focus, .input-wrapper select:focus, .input-wrapper textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
         .eye-icon { position: absolute; right: 14px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; padding: 5px; border-radius: 50%; transition: 0.2s; }
         .eye-icon:hover { background: #f1f5f9; color: var(--primary); }
         .login-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 13px; }
@@ -152,17 +152,23 @@
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; justify-content: center; align-items: center; }
         .modal-box { background: #ffffff; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideDown 0.3s ease-out; }
+        .modal-box.modal-lg { max-width: 650px; }
         .modal-header { background: #f8fafc; border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h3 { font-size: 16px; margin: 0; color: var(--primary); }
         .close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1; }
-        .modal-body { padding: 20px; }
-        .form-group select, .modal-box input[type="text"], .modal-box input[type="date"], .modal-box input[type="password"], .modal-box input[type="number"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
+        .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
+        .form-group select, .modal-box input[type="text"], .modal-box input[type="date"], .modal-box input[type="password"], .modal-box input[type="number"], .modal-box textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; transition: 0.2s; }
         .modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
         .file-input-box { border: 2px dashed #ced4da; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; background: #f8fafc; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .dispatch-checkbox { width: 16px; height: 16px; cursor: pointer; }
+        .return-pickup-checkbox { width: 16px; height: 16px; cursor: pointer; }
+        
         .dashboard-footer { text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); background: #fff; margin-top: auto; }
+        
+        .two-col { display: flex; gap: 15px; }
+        .two-col > .form-group { flex: 1; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -208,18 +214,18 @@
                         </div>
                     </div>
 
-<div class="form-group">
-    <label>Select Type</label>
-    <div class="input-wrapper">
-        <svg class="icon-left icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <select id="loginType" required style="padding-left: 40px; cursor: pointer;">
-            <option value="Dispatch Inventory">Dispatch Inventory</option>
-            <option value="Return Inventory">Return Inventory</option>
-        </select>
-    </div>
-</div>
+                    <div class="form-group">
+                        <label>Select Type</label>
+                        <div class="input-wrapper">
+                            <svg class="icon-left icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <select id="loginType" required style="padding-left: 40px; cursor: pointer;">
+                                <option value="Dispatch Inventory">Dispatch Inventory</option>
+                                <option value="Return Inventory">Return Inventory</option>
+                            </select>
+                        </div>
+                    </div>
                     
                     <div class="login-options">
                         <label><input type="checkbox" id="rememberMe"> Remember Me</label>
@@ -244,7 +250,7 @@
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" style="height: 40px; border-radius: 2px;">
                 <div class="brand-text">
                     <h1>HATVET PHARMA PVT. LTD.</h1>
-                    <h2>Courier Management System</h2>
+                    <h2 id="navbarSubtitle">Courier Management System</h2>
                 </div>
             </div>
             
@@ -275,222 +281,388 @@
             <div class="welcome-text">
                 <div>
                     <h2 id="welcomeGreeting">Greeting</h2>
-                    <p>Here's your courier management overview for today.</p>
+                    <p id="welcomeSubtext">Here's your courier management overview for today.</p>
                 </div>
                 <div class="date-display" id="dashCompactTime"></div>
             </div>
 
-            <div id="dashboard-home-cards" class="kpi-grid">
-                <div class="kpi-card card-pending" onclick="showInvoiceList('today')">
-                    <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
-                    <div class="kpi-value" id="todayPendingCount">0</div><div class="kpi-desc">Action Required</div>
-                </div>
-                <div class="kpi-card card-pending" onclick="showInvoiceList('total')">
-                    <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div></div>
-                    <div class="kpi-value" id="totalPendingCount">0</div><div class="kpi-desc">Overall Backlog</div>
-                </div>
-                <div class="kpi-card card-assigned" onclick="showAssignedList()">
-                    <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
-                    <div class="kpi-value" id="assignedCount">0</div><div class="kpi-desc">Awaiting Physical Dispatch</div>
-                </div>
-                <div class="kpi-card card-transit" onclick="showPodList()">
-                    <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
-                    <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
-                </div>
-                <div class="kpi-card card-delivered" onclick="openDateRangeModal('delivered')">
-                    <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
-                    <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD / Action Pending</div>
-                </div>
-                <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()">
-                    <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
-                    <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
-                </div>
-                <div class="kpi-card card-dispatched" onclick="openDateRangeModal('dispatched')">
-                    <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
-                    <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
-                </div>
-            </div>
-
-            <div id="invoice-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2 id="invoiceListTitle">Pending Invoices</h2>
-                    <div class="table-actions">
-                        <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('pendingSearchBox', 'invoiceTableBody', 1)">
-                        <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
-                        <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+            <div id="dispatch-workspace">
+                <div id="dashboard-home-cards" class="kpi-grid">
+                    <div class="kpi-card card-pending" onclick="showInvoiceList('today')">
+                        <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
+                        <div class="kpi-value" id="todayPendingCount">0</div><div class="kpi-desc">Action Required</div>
+                    </div>
+                    <div class="kpi-card card-pending" onclick="showInvoiceList('total')">
+                        <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div></div>
+                        <div class="kpi-value" id="totalPendingCount">0</div><div class="kpi-desc">Overall Backlog</div>
+                    </div>
+                    <div class="kpi-card card-assigned" onclick="showAssignedList()">
+                        <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
+                        <div class="kpi-value" id="assignedCount">0</div><div class="kpi-desc">Awaiting Physical Dispatch</div>
+                    </div>
+                    <div class="kpi-card card-transit" onclick="showPodList()">
+                        <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
+                        <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
+                    </div>
+                    <div class="kpi-card card-delivered" onclick="openDateRangeModal('delivered')">
+                        <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
+                        <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD / Action Pending</div>
+                    </div>
+                    <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()">
+                        <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                        <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
+                    </div>
+                    <div class="kpi-card card-dispatched" onclick="openDateRangeModal('dispatched')">
+                        <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                        <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="invoiceTable">
-                        <thead><tr><th>#</th><th>Invoice No.</th><th>In-Time (Scan Time)</th><th>Status</th></tr></thead>
-                        <tbody id="invoiceTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div id="assigned-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>Assigned Invoices</h2>
-                    <div class="table-actions">
-                        <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('assignedSearchBox', 'assignedTableBody', 2)">
-                        <button class="btn-outline btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">Export CSV</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                <div id="invoice-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2 id="invoiceListTitle">Pending Invoices</h2>
+                        <div class="table-actions">
+                            <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('pendingSearchBox', 'invoiceTableBody', 1)">
+                            <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
+                            <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="invoiceTable">
+                            <thead><tr><th>#</th><th>Invoice No.</th><th>In-Time (Scan Time)</th><th>Status</th></tr></thead>
+                            <tbody id="invoiceTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="assignedTable" style="min-width: 1000px;">
-                        <thead><tr>
-                            <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
-                            <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
-                        </tr></thead>
-                        <tbody id="assignedTableBody"></tbody>
-                    </table>
-                </div>
-                <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
-                </div>
-            </div>
 
-            <div id="pod-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>In Transit Invoices</h2>
-                    <div class="table-actions">
-                        <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('transitSearchBox', 'podTableBody', 1)">
-                        <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                <div id="assigned-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Assigned Invoices</h2>
+                        <div class="table-actions">
+                            <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('assignedSearchBox', 'assignedTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="assignedTable" style="min-width: 1000px;">
+                            <thead><tr>
+                                <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
+                            </tr></thead>
+                            <tbody id="assignedTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                        <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="podTable" style="min-width: 1000px;">
-                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
-                        <tbody id="podTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div id="delivered-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>Delivered Bills</h2>
-                    <div class="table-actions">
-                        <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
-                        <button class="btn-outline btn-export" onclick="exportTableToCSV('deliveredTable', 'Delivered_Bills.csv')">Export CSV</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                <div id="pod-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>In Transit Invoices</h2>
+                        <div class="table-actions">
+                            <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('transitSearchBox', 'podTableBody', 1)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="podTable" style="min-width: 1000px;">
+                            <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="podTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="deliveredTable" style="min-width: 1200px;">
-                        <thead>
-                            <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="deliveredTableBody"></tbody>
-                    </table>
+
+                <div id="delivered-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Delivered Bills</h2>
+                        <div class="table-actions">
+                            <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('deliveredTable', 'Delivered_Bills.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="deliveredTable" style="min-width: 1200px;">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                    <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deliveredTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+                
+                <div id="disputed-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Disputed / Exceptions</h2>
+                        <div class="table-actions">
+                            <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="disputedTable" style="min-width: 1000px;">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="disputedTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="dispatched-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Dispatched Bills (Completed / Exceptions)</h2>
+                        <div class="table-actions">
+                            <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="dispatchedTable" style="min-width: 1750px;">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                    <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dispatchedTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
+                        <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP): Courier Management System</h2>
+                        <div class="table-actions">
+                            <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
+                        <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
             
-            <div id="disputed-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>Disputed / Exceptions</h2>
-                    <div class="table-actions">
-                        <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
-                        <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
+                        <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
+                        <ul style="margin-bottom: 20px; padding-left: 20px;">
+                            <li><b>Identify Pending Work:</b> The warehouse or dispatch team logs into the dashboard to check the Today's Pending or Total Pending cards for unassigned invoices.</li>
+                            <li><b>Export Data:</b> Click the Export CSV button to download the list of pending invoices.</li>
+                            <li><b>Data Preparation:</b> Prepare the master Excel file (Format.xlsx) by adding mandatory details: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and Docket No.</li>
+                            <li><b>Bulk Upload & Assign:</b> Click Upload Invoices Details, select the Excel file, and click Process Upload. Verify the extracted data in the popup and click Confirm & Assign to move the invoices to the Courier Assigned queue.</li>
+                        </ul>
+            
+                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
+                        <p><b>Status:</b> Courier Assigned -> In Transit</p>
+                        <ul style="margin-bottom: 20px; padding-left: 20px;">
+                            <li><b>Physical Verification:</b> When the courier vehicle arrives, navigate to the Courier Assigned tab. Physically verify the loaded boxes against the system records.</li>
+                            <li><b>Confirm Dispatch:</b> Select the checkboxes next to the verified invoices and click Submit - Physical Dispatch. The system records the assignment time and moves the shipments to the In Transit queue.</li>
+                        </ul>
+            
+                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Intermediate Updates</h3>
+                        <p><b>Status:</b> In Transit -> Delivered Bills / Disputed<br>Monitor the In Transit tab and click Update Status based on courier tracking updates:</p>
+                        <ul style="margin-bottom: 20px; padding-left: 20px;">
+                            <li><b>Scenario A: Delivered (Intermediate):</b> If the tracking shows delivered, select Delivered, upload a standard confirmation (like a screenshot), and submit. The invoice moves to Delivered Bills.</li>
+                            <li><b>Scenario B: Exceptions (RTO / Misplaced):</b> If the parcel is returning or lost, select RTO or Misplaced, enter mandatory remarks, and submit. The invoice is routed directly to the Disputed / Exceptions queue.</li>
+                        </ul>
+            
+                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: Final POD Collection & Shortage Handling</h3>
+                        <p><b>Status:</b> Delivered Bills -> Dispatched Bills / Disputed<br>Navigate to the Delivered Bills tab when the physical POD is received. Click Update Action and choose between two paths:</p>
+                        <ul style="margin-bottom: 20px; padding-left: 20px;">
+                            <li><b>Path 1: Upload Full Delivery POD:</b> Select this if all boxes were received perfectly. Upload the signed POD image/PDF. The invoice permanently archives into the Dispatched Bills queue as complete.</li>
+                            <li><b>Path 2: Short Delivered (Partial Delivery):</b> Select this if the customer received fewer boxes than dispatched. Input the Total Boxes and the actual Received Boxes. Enter missing item details in the remarks and upload the POD with the shortage note.
+                                <ul>
+                                    <li><b>System Automation:</b> The system splits the record. The successfully received portion moves to Dispatched Bills (Completed), while the missing boxes generate a new tracking invoice (e.g., INV-123-SHORT) and route to the Disputed / Exceptions queue.</li>
+                                </ul>
+                            </li>
+                        </ul>
+            
+                        <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
+                        <p><b>Status:</b> Disputed Queue -> Delivered Bills OR Dispatched Bills</p>
+                        <ul style="margin-bottom: 20px; padding-left: 20px;">
+                            <li>The administration team monitors the red Disputed / Exceptions dashboard card daily to track RTO, Misplaced, or Short Delivery cases.</li>
+                            <li><b>Resolve Cases:</b> Click the Resolve button on a disputed invoice. Choose the appropriate resolution from the dropdown (e.g., "Return to Origin", "Delivered to client", or "Claim Settled").</li>
+                            <li><b>Enter Details:</b> Fill in the Receiving Date (mandatory for received items) and Final Remarks.</li>
+                            <li><b>Case Closure Routing:</b>
+                                <ul style="margin-top: 5px;">
+                                    <li>If resolved as <b>"Received to Party"</b> or <b>"Delivered to client"</b>, the invoice routes back to <b>Delivered Bills</b> pending a final POD upload.</li>
+                                    <li>If resolved as <b>"Return to Origin"</b> or <b>"Claim Settled / Closed"</b>, it directly moves to <b>Dispatched Bills</b> and is permanently closed.</li>
+                                </ul>
+                            </li>
+                        </ul>
                     </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="disputedTable" style="min-width: 1000px;">
-                        <thead>
-                            <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="disputedTableBody"></tbody>
-                    </table>
                 </div>
             </div>
 
-            <div id="dispatched-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>Dispatched Bills (Completed / Exceptions)</h2>
-                    <div class="table-actions">
-                        <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
-                        <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">Export CSV</button>
-                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+            <div id="return-workspace" style="display: none;">
+                <div id="dashboard-return-cards" class="kpi-grid">
+                    <div class="kpi-card" style="background-color: #fdf4ff; border-color: #f5d0fe; color: #701a75;" onclick="openUnplannedReturnModal()">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Unplanned Return</span>
+                            <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-value" style="font-size: 24px;">Surprise Entry</div>
+                        <div class="kpi-desc">Log unplanned received boxes</div>
                     </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="dispatchedTable" style="min-width: 1750px;">
-                        <thead>
-                            <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dispatchedTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div id="sop-section" class="table-wrapper" style="padding: 30px; background: #fff; max-width: 1000px; margin: 0 auto 30px auto; border-radius: 12px; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px;">
-                    <h2 style="color: var(--primary); font-size: 22px; margin: 0;">Standard Operating Procedure (SOP): Courier Management System</h2>
-                    <div class="table-actions">
-                        <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
+                    <div class="kpi-card card-assigned" onclick="openGenerateReturnModal()" style="background-color: #e0e7ff; border-color: #c7d2fe; color: #3730a3;">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Generate Return Request</span>
+                            <div class="kpi-icon" style="background: rgba(79, 70, 229, 0.15); color: #4f46e5;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"></path></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-value" style="font-size: 24px;">New Request</div>
+                        <div class="kpi-desc">Create a new return entry</div>
+                    </div>
+                    
+                    <div class="kpi-card card-pending" onclick="showReturnPendingList()">
+                        <div class="kpi-header"><span class="kpi-title">Pending Return</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div></div>
+                        <div class="kpi-value" id="pendingReturnCount">0</div><div class="kpi-desc">Expected Returns</div>
+                    </div>
+
+                    <div class="kpi-card card-assigned" onclick="showReturnAssignedList()" style="background-color: #eff6ff; border-color: #dbeafe; color: #1e3a8a;">
+                        <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
+                        <div class="kpi-value" id="assignedReturnCount">0</div><div class="kpi-desc">Pending Pickup</div>
+                    </div>
+
+                    <div class="kpi-card card-transit" onclick="showReturnTransitList()">
+                        <div class="kpi-header"><span class="kpi-title">In Transit (Return)</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
+                        <div class="kpi-value" id="transitReturnCount">0</div><div class="kpi-desc">Dispatched from Party</div>
+                    </div>
+
+                    <div class="kpi-card card-delivered" onclick="openDateRangeModal('returnReceived')">
+                        <div class="kpi-header"><span class="kpi-title">Return Received</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
+                        <div class="kpi-value" id="receivedReturnCount">0</div><div class="kpi-desc">Received / Settled</div>
+                    </div>
+
+                    <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showReturnDisputedList()">
+                        <div class="kpi-header"><span class="kpi-title">Dispute (Return)</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                        <div class="kpi-value" id="disputedReturnCount">0</div><div class="kpi-desc">Missing Boxes</div>
+                    </div>
+
+                    <div class="kpi-card" style="background-color: #fff1f2; border-color: #fecdd3; color: #881337;" onclick="showUnplannedList()">
+                        <div class="kpi-header"><span class="kpi-title">Unplanned Received</span><div class="kpi-icon" style="background: rgba(225, 29, 72, 0.15); color: #e11d48;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div></div>
+                        <div class="kpi-value" id="unplannedReturnCount">0</div><div class="kpi-desc">Confirmation Pending</div>
                     </div>
                 </div>
-                <div style="font-size: 14.5px; color: #334155; line-height: 1.8;">
-                    <p><b>Objective:</b> To establish a standardized, end-to-end workflow for tracking invoices from the moment they are billed to the final Proof of Delivery (POD) collection and dispute resolution.</p>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 1: Invoice Processing & Courier Assignment</h3>
-                    <p><b>Status:</b> Today's Pending / Total Pending -> Courier Assigned</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Identify Pending Work:</b> The warehouse or dispatch team logs into the dashboard to check the Today's Pending or Total Pending cards for unassigned invoices.</li>
-                        <li><b>Export Data:</b> Click the Export CSV button to download the list of pending invoices.</li>
-                        <li><b>Data Preparation:</b> Prepare the master Excel file (Format.xlsx) by adding mandatory details: Courier Partner, Weight, Dimensions, Destination City, Pin Code, and Docket No.</li>
-                        <li><b>Bulk Upload & Assign:</b> Click Upload Invoices Details, select the Excel file, and click Process Upload. Verify the extracted data in the popup and click Confirm & Assign to move the invoices to the Courier Assigned queue.</li>
-                    </ul>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 2: Physical Handover (Dispatch)</h3>
-                    <p><b>Status:</b> Courier Assigned -> In Transit</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Physical Verification:</b> When the courier vehicle arrives, navigate to the Courier Assigned tab. Physically verify the loaded boxes against the system records.</li>
-                        <li><b>Confirm Dispatch:</b> Select the checkboxes next to the verified invoices and click Submit - Physical Dispatch. The system records the assignment time and moves the shipments to the In Transit queue.</li>
-                    </ul>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 3: Logistics Tracking & Intermediate Updates</h3>
-                    <p><b>Status:</b> In Transit -> Delivered Bills / Disputed<br>Monitor the In Transit tab and click Update Status based on courier tracking updates:</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Scenario A: Delivered (Intermediate):</b> If the tracking shows delivered, select Delivered, upload a standard confirmation (like a screenshot), and submit. The invoice moves to Delivered Bills.</li>
-                        <li><b>Scenario B: Exceptions (RTO / Misplaced):</b> If the parcel is returning or lost, select RTO or Misplaced, enter mandatory remarks, and submit. The invoice is routed directly to the Disputed / Exceptions queue.</li>
-                    </ul>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 4: Final POD Collection & Shortage Handling</h3>
-                    <p><b>Status:</b> Delivered Bills -> Dispatched Bills / Disputed<br>Navigate to the Delivered Bills tab when the physical POD is received. Click Update Action and choose between two paths:</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li><b>Path 1: Upload Full Delivery POD:</b> Select this if all boxes were received perfectly. Upload the signed POD image/PDF. The invoice permanently archives into the Dispatched Bills queue as complete.</li>
-                        <li><b>Path 2: Short Delivered (Partial Delivery):</b> Select this if the customer received fewer boxes than dispatched. Input the Total Boxes and the actual Received Boxes. Enter missing item details in the remarks and upload the POD with the shortage note.
-                            <ul>
-                                <li><b>System Automation:</b> The system splits the record. The successfully received portion moves to Dispatched Bills (Completed), while the missing boxes generate a new tracking invoice (e.g., INV-123-SHORT) and route to the Disputed / Exceptions queue.</li>
-                            </ul>
-                        </li>
-                    </ul>
-        
-                    <h3 style="color: #0f2866; margin-top: 20px; margin-bottom: 10px;">Phase 5: Dispute Resolution & Claims</h3>
-                    <p><b>Status:</b> Disputed Queue -> Delivered Bills OR Dispatched Bills</p>
-                    <ul style="margin-bottom: 20px; padding-left: 20px;">
-                        <li>The administration team monitors the red Disputed / Exceptions dashboard card daily to track RTO, Misplaced, or Short Delivery cases.</li>
-                        <li><b>Resolve Cases:</b> Click the Resolve button on a disputed invoice. Choose the appropriate resolution from the dropdown (e.g., "Return to Origin", "Delivered to client", or "Claim Settled").</li>
-                        <li><b>Enter Details:</b> Fill in the Receiving Date (mandatory for received items) and Final Remarks.</li>
-                        <li><b>Case Closure Routing:</b>
-                            <ul style="margin-top: 5px;">
-                                <li>If resolved as <b>"Received to Party"</b> or <b>"Delivered to client"</b>, the invoice routes back to <b>Delivered Bills</b> pending a final POD upload.</li>
-                                <li>If resolved as <b>"Return to Origin"</b> or <b>"Claim Settled / Closed"</b>, it directly moves to <b>Dispatched Bills</b> and is permanently closed.</li>
-                            </ul>
-                        </li>
-                    </ul>
+
+                <div id="unplanned-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Unplanned Received - Confirmation Pending</h2>
+                        <div class="table-actions">
+                            <input type="text" id="unplannedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('unplannedSearchBox', 'unplannedTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('unplannedTable', 'Unplanned_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="unplannedTable" style="min-width: 1000px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>State</th><th>Boxes</th><th>Created Date</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="unplannedTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="return-pending-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Pending Returns (Expected)</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnPendingSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnPendingSearchBox', 'returnPendingTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnPendingTable', 'Pending_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnPendingTable" style="min-width: 1100px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Phone No</th><th>City</th><th>State</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead>
+                            <tbody id="returnPendingTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="return-assigned-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Courier Assigned (Returns)</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnAssignedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnAssignedSearchBox', 'returnAssignedTableBody', 3)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnAssignedTable', 'Assigned_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnAssignedTable" style="min-width: 1100px;">
+                            <thead><tr>
+                                <th><input type="checkbox" id="selectAllReturnPickup" onclick="toggleAllReturnPickup(this)" style="cursor: pointer;"></th>
+                                <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th>
+                            </tr></thead>
+                            <tbody id="returnAssignedTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                        <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmReturnPickupModal()">Confirm Pickup</button>
+                    </div>
+                </div>
+
+                <div id="return-transit-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>In Transit (Returns)</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnTransitSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnTransitSearchBox', 'returnTransitTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnTransitTable', 'Transit_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnTransitTable" style="min-width: 1100px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Dispatch Date</th><th>Action</th></tr></thead>
+                            <tbody id="returnTransitTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="return-received-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Return Received</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnReceivedTable', 'Received_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnReceivedTable" style="min-width: 1800px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
+                            <tbody id="returnReceivedTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="return-disputed-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Dispute (Return) - Missing Boxes</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnDisputedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnDisputedSearchBox', 'returnDisputedTableBody', 3)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnDisputedTable', 'Disputed_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnDisputedTable" style="min-width: 1100px;">
+                            <thead><tr><th>#</th><th>Return ID</th><th>Dr. Name</th><th>Ledger Name</th><th>Missing Boxes</th><th>City</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Date</th><th>Remark</th><th>Action</th></tr></thead>
+                            <tbody id="returnDisputedTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -501,6 +673,266 @@
         </div>
     </div>
 
+    <!-- Modals for Return Inventory -->
+    <div id="unplannedReturnModal" class="modal-overlay">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3>Unplanned Return (Parcel Received at Warehouse)</h3>
+                <button type="button" class="close-btn" onclick="closeUnplannedReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="unplannedReturnForm" onsubmit="submitUnplannedReturn(event)">
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Dr. Name <span style="color: red;">*</span></label>
+                            <input type="text" id="unpDrName" placeholder="Enter Dr. Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ledger Name <span style="color: red;">*</span></label>
+                            <input type="text" id="unpLedgerName" placeholder="Enter Ledger Name" required>
+                        </div>
+                    </div>
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>City <span style="color: red;">*</span></label>
+                            <input type="text" id="unpCity" placeholder="Enter City" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State <span style="color: red;">*</span></label>
+                            <input type="text" id="unpState" placeholder="Enter State" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>No of Boxes<span style="color: red;">*</span></label>
+                        <input type="number" id="unpBoxes" min="1" placeholder="Enter Number of Boxes Received" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeUnplannedReturnModal()">Cancel</button>
+                        <button type="submit" id="saveUnplannedBtn" class="action-btn btn-primary" style="background:#c026d3;">Submit Surprise Entry</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmUnplannedModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Confirm Unplanned Return</h3>
+                <button type="button" class="close-btn" onclick="closeConfirmUnplannedModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="confirmUnplannedForm" onsubmit="submitConfirmUnplanned(event)">
+                    <input type="hidden" id="confUnpId">
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Received Boxes</label>
+                            <input type="number" id="confUnpExpected" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Boxes (from Party)<span style="color: red;">*</span></label>
+                            <input type="number" id="confUnpActual" min="0" required placeholder="e.g. 8">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: normal; font-size: 13px; color: var(--text-main); line-height: 1.4;">
+                            <input type="checkbox" required style="width: 18px; height: 18px; margin-top: 2px;">
+                            <span>Total No. of Boxes Confirmed with the Party</span>
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeConfirmUnplannedModal()">Cancel</button>
+                        <button type="submit" id="saveConfirmUnpBtn" class="action-btn btn-success" style="background:var(--success);">Submit Confirmation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="generateReturnModal" class="modal-overlay">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3>Generate Return Request</h3>
+                <button type="button" class="close-btn" onclick="closeGenerateReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="generateReturnForm" onsubmit="submitReturnRequest(event)">
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Dr. Name <span style="color: red;">*</span></label>
+                            <input type="text" id="retDrName" placeholder="Enter Dr. Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ledger Name <span style="color: red;">*</span></label>
+                            <input type="text" id="retLedgerName" placeholder="Enter Ledger Name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>No of Boxes<span style="color: red;">*</span></label>
+                            <input type="number" id="retBoxes" min="1" placeholder="Enter Number of Boxes" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone No. <span style="color: red;">*</span></label>
+                            <input type="text" id="retPhone" placeholder="Enter Contact Number" required>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>City <span style="color: red;">*</span></label>
+                            <input type="text" id="retCity" placeholder="Enter City" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Pin Code <span style="color: red;">*</span></label>
+                            <input type="text" id="retPinCode" placeholder="Enter Pin Code" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>State <span style="color: red;">*</span></label>
+                        <input type="text" id="retState" placeholder="Enter State" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Full Address <span style="color: red;">*</span></label>
+                        <textarea id="retAddress" rows="3" placeholder="Enter Complete Pickup Address" required></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeGenerateReturnModal()">Cancel</button>
+                        <button type="submit" id="saveReturnBtn" class="action-btn btn-primary">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="assignReturnCourierModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Assign Return Courier</h3>
+                <button type="button" class="close-btn" onclick="closeAssignReturnCourierModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="assignReturnCourierForm" onsubmit="submitAssignReturnCourier(event)">
+                    <input type="hidden" id="assignReturnId">
+                    <div class="form-group">
+                        <label>Courier Partner <span style="color: red;">*</span></label>
+                        <input type="text" id="retCourierPartner" placeholder="e.g. Delhivery, Blue Dart" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Docket No <span style="color: red;">*</span></label>
+                        <input type="text" id="retDocketNo" placeholder="Enter Tracking Number" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeAssignReturnCourierModal()">Cancel</button>
+                        <button type="submit" id="saveAssignReturnBtn" class="action-btn btn-primary">Assign & Pickup</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmReturnPickupModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Confirm Return Pickup</h3>
+                <button type="button" class="close-btn" onclick="closeConfirmReturnPickupModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px 20px;">
+                <p style="color: var(--text-main); font-size: 16px; margin: 0 0 25px 0; line-height: 1.5; font-weight: 500;">
+                    Are you sure these items have been picked up by the courier from the party?
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" class="btn-outline" onclick="closeConfirmReturnPickupModal()" style="padding: 10px 20px;">CANCEL</button>
+                    <button type="button" id="confirmReturnPickupBtn" class="action-btn btn-primary" onclick="processReturnPickup()" style="padding: 10px 20px;">CONFIRM PICKUP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="receiveReturnModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Receive Return Inventory</h3>
+                <button type="button" class="close-btn" onclick="closeReceiveReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="receiveReturnForm" onsubmit="submitReceiveReturn(event)">
+                    <input type="hidden" id="recvReturnId">
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Total Expected Boxes</label>
+                            <input type="number" id="recvExpectedBoxes" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                        </div>
+                        <div class="form-group">
+                            <label>Actual Received Boxes <span style="color: red;">*</span></label>
+                            <input type="number" id="recvActualBoxes" min="0" required placeholder="e.g. 6">
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">
+                        * If actual boxes are less than expected, a new dispute record will automatically be created.
+                    </p>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeReceiveReturnModal()">Cancel</button>
+                        <button type="submit" id="saveReceiveReturnBtn" class="action-btn btn-success" style="background:var(--success);">Confirm Receiving</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="resolveReturnModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Resolve Return Dispute</h3>
+                <button type="button" class="close-btn" onclick="closeResolveReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resolveReturnForm" onsubmit="submitResolveReturnDispute(event)">
+                    <input type="hidden" id="resolveRetId">
+                    <div class="form-group">
+                        <label>Return ID</label>
+                        <input type="text" id="resolveRetIdDisplay" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label>Select Resolution Action</label>
+                        <select id="resolveRetAction" required onchange="handleResolveRetActionChange()">
+                            <option value="">Select Action</option>
+                            <option value="Received at Origin">Received at Warehouse</option>
+                            <option value="Claim Settled / Closed">Claim Settled / Closed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="resolveRetDateGroup" style="display: none;">
+                        <label id="resolveRetDateLabel">Date <span style="color: red;">*</span></label>
+                        <input type="date" id="resolveRetDate">
+                    </div>
+
+                    <div class="form-group" id="resolveRetApprovedByGroup" style="display: none;">
+                        <label>Approved By <span style="color: red;">*</span></label>
+                        <select id="resolveRetApprovedBy">
+                            <option value="">Select Approver</option>
+                            <option value="Approved by MD Sir">Approved by MD Sir</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Final Remarks (Receiver's Name)</label>
+                        <input type="text" id="resolveRetRemark" placeholder="e.g. Receiver's Name / Claim passed..." required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeResolveReturnModal()">Cancel</button>
+                        <button type="submit" id="saveResolveRetBtn" class="action-btn btn-primary">Close Case</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Dispatch Modals -->
     <div id="dateRangeModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
@@ -761,22 +1193,26 @@
         let cachedPendingBills = []; let cachedAssignedBills = []; 
         let cachedTransitBills = []; let cachedDispatchedBills = []; 
         let cachedDeliveredBills = []; let cachedDisputedBills = [];
+        let cachedReturnBills = []; let cachedUnplannedBills = [];
         let currentViewMode = "today"; 
+        let currentWorkspace = "dispatch"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('hatvetUser');
             const savedPass = localStorage.getItem('hatvetPass');
+            const savedType = localStorage.getItem('hatvetType');
+            
             if (savedUser && savedPass) {
                 document.getElementById('username').value = savedUser;
                 document.getElementById('password').value = savedPass;
+                if(savedType) document.getElementById('loginType').value = savedType;
                 document.getElementById('rememberMe').checked = true;
                 document.getElementById('loginBtn').click();
             }
         });
 
-        // --- NEW CUSTOM DATE FORMATTER (DD-MM-YYYY HH:mm:ss) ---
         function checkIsToday(dateStr) {
             if(!dateStr) return false;
             const d = new Date();
@@ -784,7 +1220,6 @@
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const yy = d.getFullYear();
             
-            // Match common variations of today's date
             const formats = [`${dd}-${mm}-${yy}`, `${dd}/${mm}/${yy}`, `${mm}/${dd}/${yy}`, `${mm}-${dd}-${yy}`];
             const str = String(dateStr);
             return formats.some(fmt => str.startsWith(fmt) || str.includes(fmt));
@@ -814,38 +1249,16 @@
 
         function isStandardUser() { return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; }
 
-        function handleUploadTypeChange() {
-            const type = document.getElementById('uploadType').value;
-            const remarkGroup = document.getElementById('remarkGroup');
-            const remarkInput = document.getElementById('podRemark');
-            const fileLabel = document.getElementById('transitFileLabel');
-
-            if (type === 'RTO' || type === 'Misplaced') { 
-                remarkGroup.style.display = 'block'; 
-                remarkInput.required = true; 
-                fileLabel.innerText = "Select Document (PDF/Image)";
-            } else { 
-                remarkGroup.style.display = 'none'; 
-                remarkInput.required = false; 
-                remarkInput.value = ''; 
-                fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
-            }
-        }
-
         function filterTable(inputId, tbodyId, colIndex) {
             let input = document.getElementById(inputId).value.toUpperCase();
             let table = document.getElementById(tbodyId);
             let tr = table.getElementsByTagName("tr");
-
             for (let i = 0; i < tr.length; i++) {
                 let td = tr[i].getElementsByTagName("td")[colIndex]; 
                 if (td) {
                     let txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(input) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
+                    if (txtValue.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } 
+                    else { tr[i].style.display = "none"; }
                 }       
             }
         }
@@ -864,20 +1277,113 @@
             let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
             let downloadLink = document.createElement("a");
             downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile);
-            downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
+            downloadLink.style.display = "none"; document.body.appendChild(downloadLink); 
+            downloadLink.click(); 
+            document.body.removeChild(downloadLink);
         }
 
         function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
         function getGreeting() { const h = new Date().getHours(); return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; }
 
         function updateDashboardCounts() {
-            document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
-            document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
-            document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
-            document.getElementById('transitCount').innerText = cachedTransitBills.length;
-            document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
-            document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
-            document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
+            if (currentWorkspace === 'dispatch') {
+                document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
+                document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
+                document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
+                document.getElementById('transitCount').innerText = cachedTransitBills.length;
+                document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
+                document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
+                document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
+            } else if (currentWorkspace === 'return') {
+                document.getElementById('pendingReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Expected Return').length;
+                document.getElementById('assignedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)').length;
+                document.getElementById('transitReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'In Transit (Return)').length;
+                document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed')).length;
+                document.getElementById('disputedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Disputed (Return)').length;
+                
+                let unpCount = document.getElementById('unplannedReturnCount');
+                if(unpCount) unpCount.innerText = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending').length;
+            }
+        }
+
+        function handleLogin(event) {
+            if(event) event.preventDefault();
+            const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner');
+            const errorDiv = document.getElementById('loginError');
+            const user = document.getElementById('username').value; 
+            const pass = document.getElementById('password').value;
+            const loginType = document.getElementById('loginType').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
+
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: user, password: pass }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === "success") {
+                    
+                    const allowed = data.allowedType ? data.allowedType.trim() : "All";
+                    if (allowed === "RESTRICTED") {
+                        errorDiv.innerText = "Access Denied: Your account is restricted.";
+                        errorDiv.style.display = 'block';
+                        btn.disabled = false; spinner.style.display = 'none';
+                        return;
+                    }
+                    if (allowed !== "All" && allowed !== loginType) {
+                        errorDiv.innerText = `Access Denied: You only have permission for ${allowed}.`;
+                        errorDiv.style.display = 'block';
+                        btn.disabled = false; spinner.style.display = 'none';
+                        return;
+                    }
+
+                    if (rememberMe) { 
+                        localStorage.setItem('hatvetUser', user); 
+                        localStorage.setItem('hatvetPass', pass);
+                        localStorage.setItem('hatvetType', loginType); 
+                    } else { 
+                        localStorage.removeItem('hatvetUser'); 
+                        localStorage.removeItem('hatvetPass'); 
+                        localStorage.removeItem('hatvetType');
+                    }
+                    
+                    loggedInUser = user; loggedInUserRole = data.role || "Standard";
+                    document.getElementById('userNameDisplay').innerText = loggedInUser;
+                    document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
+                    document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
+                    document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser}`;
+                    
+                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; 
+                    cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || [];
+                    cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
+                    cachedReturnBills = data.returnBills || [];
+                    cachedUnplannedBills = data.unplannedBills || [];
+                    
+                    document.getElementById('login-view').style.display = 'none'; 
+                    document.getElementById('dashboard-view').style.display = 'flex';
+                    
+                    if (loginType === 'Return Inventory') {
+                        currentWorkspace = 'return';
+                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
+                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
+                        document.getElementById('dispatch-workspace').style.display = 'none';
+                        document.getElementById('return-workspace').style.display = 'block';
+                    } else {
+                        currentWorkspace = 'dispatch';
+                        document.getElementById('navbarSubtitle').innerText = "Courier Management System";
+                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
+                        document.getElementById('return-workspace').style.display = 'none';
+                        document.getElementById('dispatch-workspace').style.display = 'block';
+                    }
+                    
+                    showDashboardCards();
+                    updateDashboardCounts(); 
+                    showToast('Login Successful', `Welcome to the ${loginType} Dashboard.`, 'success');
+                } else { 
+                    errorDiv.innerText = data.message; errorDiv.style.display = 'block'; 
+                    localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
+                }
+            }).catch(error => showToast("Error", "Server connection failed.", "error")).finally(() => { 
+                btn.disabled = false; spinner.style.display = 'none'; 
+            });
         }
 
         function syncData() {
@@ -896,67 +1402,33 @@
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
-                    cachedPendingBills = data.pendingBills; cachedAssignedBills = data.assignedBills; 
-                    cachedTransitBills = data.transitBills; cachedDeliveredBills = data.deliveredBills || [];
+                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; 
+                    cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || [];
                     cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
+                    cachedReturnBills = data.returnBills || [];
+                    cachedUnplannedBills = data.unplannedBills || [];
                     
                     updateDashboardCounts(); 
                     
-                    if(document.getElementById('invoice-list-section').style.display === 'block') showInvoiceList(currentViewMode);
-                    else if(document.getElementById('assigned-list-section').style.display === 'block') showAssignedList();
-                    else if(document.getElementById('pod-list-section').style.display === 'block') showPodList();
-                    else if(document.getElementById('delivered-list-section').style.display === 'block') showDeliveredList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
-                    else if(document.getElementById('disputed-list-section').style.display === 'block') showDisputedList();
-                    else if(document.getElementById('dispatched-list-section').style.display === 'block') showDispatchedList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
-                    
+                    if (currentWorkspace === 'return') {
+                        if(document.getElementById('return-pending-list-section').style.display === 'block') showReturnPendingList();
+                        else if(document.getElementById('return-assigned-list-section').style.display === 'block') showReturnAssignedList();
+                        else if(document.getElementById('return-transit-list-section').style.display === 'block') showReturnTransitList();
+                        else if(document.getElementById('return-received-list-section').style.display === 'block') showReturnReceivedList();
+                        else if(document.getElementById('return-disputed-list-section').style.display === 'block') showReturnDisputedList();
+                        else if(document.getElementById('unplanned-list-section').style.display === 'block') showUnplannedList();
+                    } else {
+                        if(document.getElementById('invoice-list-section').style.display === 'block') showInvoiceList(currentViewMode);
+                        else if(document.getElementById('assigned-list-section').style.display === 'block') showAssignedList();
+                        else if(document.getElementById('pod-list-section').style.display === 'block') showPodList();
+                        else if(document.getElementById('delivered-list-section').style.display === 'block') showDeliveredList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
+                        else if(document.getElementById('disputed-list-section').style.display === 'block') showDisputedList();
+                        else if(document.getElementById('dispatched-list-section').style.display === 'block') showDispatchedList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
+                    }
                     showToast('Synced', 'Data updated to latest.', 'success');
                 } else { showToast("Error", "Sync failed.", "error"); }
             }).catch(error => showToast("Error", "Network error.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
-        }
-
-        function handleLogin(event) {
-            if(event) event.preventDefault();
-            const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner');
-            const errorDiv = document.getElementById('loginError');
-            const user = document.getElementById('username').value; 
-            const pass = document.getElementById('password').value;
-            const loginType = document.getElementById('loginType').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            
-            if (loginType === 'Return Inventory') {
-                showToast('Coming Soon', 'Return Inventory module is under development. Logics & Layouts will be updated soon.', 'warning');
-                return;
-            }
-
-            btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
-
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: user, password: pass }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            }).then(res => res.json()).then(data => {
-                if(data.status === "success") {
-                    if (rememberMe) { localStorage.setItem('hatvetUser', user); localStorage.setItem('hatvetPass', pass); } 
-                    else { localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass'); }
-                    loggedInUser = user; loggedInUserRole = data.role || "Standard";
-                    
-                    document.getElementById('userNameDisplay').innerText = loggedInUser;
-                    document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
-                    document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
-                    document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser}`;
-                    
-                    cachedPendingBills = data.pendingBills; cachedAssignedBills = data.assignedBills; 
-                    cachedTransitBills = data.transitBills; cachedDeliveredBills = data.deliveredBills || [];
-                    cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
-                    
-                    updateDashboardCounts(); 
-                    document.getElementById('login-view').style.display = 'none'; document.getElementById('dashboard-view').style.display = 'flex';
-                    showToast('Login Successful', 'Welcome to the Dashboard.', 'success');
-                } else { 
-                    errorDiv.innerText = data.message; errorDiv.style.display = 'block'; 
-                    localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
-                }
-            }).catch(error => showToast("Error", "Server connection failed.", "error")).finally(() => { 
-                btn.disabled = false; spinner.style.display = 'none'; 
             });
         }
 
@@ -969,53 +1441,665 @@
                 document.getElementById('password').value = savedPass;
                 document.getElementById('rememberMe').checked = true;
             }
-            loggedInUser = ""; loggedInUserRole = ""; cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = [];
-            document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; showDashboardCards(); 
+            loggedInUser = ""; loggedInUserRole = ""; 
+            cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; 
+            cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = []; cachedReturnBills = []; cachedUnplannedBills = [];
+            localStorage.removeItem('hatvetType');
+            document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
 
         function hideAllLists() {
             document.getElementById('dashboard-home-cards').style.display = 'none';
+            document.getElementById('dashboard-return-cards').style.display = 'none';
             document.querySelectorAll('.table-wrapper').forEach(el => el.style.display = 'none');
         }
 
         function showDashboardCards() { 
             hideAllLists(); 
-            document.getElementById('dashboard-home-cards').style.display = 'grid'; 
+            if (currentWorkspace === 'dispatch') {
+                document.getElementById('dashboard-home-cards').style.display = 'grid'; 
+            } else if (currentWorkspace === 'return') {
+                document.getElementById('dashboard-return-cards').style.display = 'grid'; 
+            }
         }
 
-        function trackCourier(partner, docket) {
-            if (!docket || docket === '-' || docket === 'undefined') {
-                showToast("Error", "Docket number not available for tracking.", "error");
-                return;
+        function openUnplannedReturnModal() {
+            document.getElementById('unplannedReturnForm').reset();
+            document.getElementById('unplannedReturnModal').style.display = 'flex';
+        }
+        function closeUnplannedReturnModal() {
+            document.getElementById('unplannedReturnModal').style.display = 'none';
+        }
+
+        function submitUnplannedReturn(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveUnplannedBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Submitting..."; btn.disabled = true;
+
+            const requestData = {
+                drName: document.getElementById('unpDrName').value,
+                ledgerName: document.getElementById('unpLedgerName').value,
+                city: document.getElementById('unpCity').value,
+                state: document.getElementById('unpState').value,
+                boxes: document.getElementById('unpBoxes').value,
+                status: "Confirmation Pending"
+            };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify({ action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Unplanned Return logged successfully!");
+                    cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() });
+                    updateDashboardCounts();
+                    closeUnplannedReturnModal();
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
+        function showUnplannedList() {
+            hideAllLists(); 
+            document.getElementById('unplanned-list-section').style.display = 'block';
+            let sb = document.getElementById('unplannedSearchBox'); if(sb) sb.value = '';
+            
+            const tableBody = document.getElementById('unplannedTableBody'); 
+            const unplannedList = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending');
+
+            if(unplannedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
+            
+            let html = "";
+            unplannedList.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td>${item.city}</td>
+                    <td>${item.state}</td>
+                    <td><b style="color:#c026d3;">${item.boxes}</b></td>
+                    <td>${item.date}</td>
+                    <td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td>
+                    <td>
+                        <button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button>
+                    </td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function openConfirmUnplannedModal(id, reportedBoxes) {
+            document.getElementById('confirmUnplannedForm').reset();
+            document.getElementById('confUnpId').value = id;
+            document.getElementById('confUnpExpected').value = reportedBoxes;
+            document.getElementById('confirmUnplannedModal').style.display = 'flex';
+        }
+
+        function closeConfirmUnplannedModal() {
+            document.getElementById('confirmUnplannedModal').style.display = 'none';
+        }
+
+        function submitConfirmUnplanned(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveConfirmUnpBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const id = document.getElementById('confUnpId').value;
+            const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; 
+            const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
+
+            const payload = {
+                action: 'confirmUnplannedReturn',
+                unpId: id,
+                expected: expected,
+                received: received,
+                actionBy: loggedInUser
+            };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Unplanned Return confirmed successfully!");
+                    
+                    let uIndex = cachedUnplannedBills.findIndex(u => u.id === id);
+                    if (uIndex > -1) {
+                        let uItem = cachedUnplannedBills[uIndex];
+                        cachedUnplannedBills[uIndex].status = "Confirmed";
+                        
+                        let currentDate = getCurrentFormattedDate();
+                        let baseRet = {
+                            id: uItem.id, drName: uItem.drName, ledgerName: uItem.ledgerName,
+                            city: uItem.city, state: uItem.state, phone: "", pinCode: "", address: "",
+                            createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned",
+                            assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: "Confirmed Unplanned Return"
+                        };
+
+                        if (expected !== received) {
+                            let diff = Math.abs(expected - received);
+                            let isShort = expected > received;
+                            let mainStatus = isShort ? "Return Received (Partial)" : "Return Received (Excess)";
+                            let diffText = isShort ? "Missing Boxes: " + diff : "Excess Boxes: " + diff;
+                            let suffix = isShort ? "-SHORT" : "-EXCESS";
+
+                            cachedReturnBills.push({ ...baseRet, status: mainStatus, boxes: expected, rcvdBoxes: received });
+                            cachedReturnBills.push({ ...baseRet, id: uItem.id + suffix, status: "Disputed (Return)", boxes: diff, rcvdBoxes: "", remark: diffText });
+                        } else {
+                            cachedReturnBills.push({ ...baseRet, status: "Return Received", boxes: expected, rcvdBoxes: received });
+                        }
+                    }
+
+                    updateDashboardCounts();
+                    closeConfirmUnplannedModal();
+                    showUnplannedList(); 
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
+
+        function openGenerateReturnModal() {
+            document.getElementById('generateReturnForm').reset();
+            document.getElementById('generateReturnModal').style.display = 'flex';
+        }
+        function closeGenerateReturnModal() {
+            document.getElementById('generateReturnModal').style.display = 'none';
+        }
+
+        function submitReturnRequest(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveReturnBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Submitting..."; btn.disabled = true;
+
+            const requestData = {
+                drName: document.getElementById('retDrName').value,
+                ledgerName: document.getElementById('retLedgerName').value,
+                boxes: document.getElementById('retBoxes').value,
+                phone: document.getElementById('retPhone').value,
+                city: document.getElementById('retCity').value,
+                pinCode: document.getElementById('retPinCode').value,
+                state: document.getElementById('retState').value,
+                address: document.getElementById('retAddress').value,
+                status: "Expected Return",
+                date: getCurrentFormattedDate(),
+                remark: ""
+            };
+
+            const payload = { action: 'createReturn', data: requestData, createdBy: loggedInUser };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Return request generated successfully!");
+                    cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' });
+                    updateDashboardCounts();
+                    closeGenerateReturnModal();
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
+        function showReturnPendingList() {
+            hideAllLists(); 
+            document.getElementById('return-pending-list-section').style.display = 'block';
+            let sb = document.getElementById('returnPendingSearchBox'); if(sb) sb.value = '';
+            
+            const tableBody = document.getElementById('returnPendingTableBody'); 
+            const expectedReturns = cachedReturnBills.filter(r => r.status === 'Expected Return');
+
+            if(expectedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
+            
+            let html = "";
+            expectedReturns.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td>${item.boxes}</td>
+                    <td>${item.phone}</td>
+                    <td>${item.city}</td>
+                    <td>${item.state}</td>
+                    <td><span class="badge bg-pending">${item.status}</span></td>
+                    <td>${item.date}</td>
+                    <td>
+                        <button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button>
+                    </td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function openAssignReturnCourierModal(returnId) {
+            document.getElementById('assignReturnCourierForm').reset();
+            document.getElementById('assignReturnId').value = returnId;
+            document.getElementById('assignReturnCourierModal').style.display = 'flex';
+        }
+
+        function closeAssignReturnCourierModal() {
+            document.getElementById('assignReturnCourierModal').style.display = 'none';
+        }
+
+        function submitAssignReturnCourier(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveAssignReturnBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const returnId = document.getElementById('assignReturnId').value;
+            const partner = document.getElementById('retCourierPartner').value;
+            const docket = document.getElementById('retDocketNo').value;
+
+            const payload = {
+                action: 'assignReturnCourier',
+                returnId: returnId,
+                partner: partner,
+                docket: docket,
+                actionBy: loggedInUser
+            };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Courier assigned successfully!");
+                    let rIndex = cachedReturnBills.findIndex(r => r.id === returnId);
+                    if (rIndex > -1) {
+                        cachedReturnBills[rIndex].status = "Courier Assigned (Return)";
+                        cachedReturnBills[rIndex].partner = partner;
+                        cachedReturnBills[rIndex].docket = docket;
+                        cachedReturnBills[rIndex].assignDate = getCurrentFormattedDate();
+                    }
+                    updateDashboardCounts();
+                    closeAssignReturnCourierModal();
+                    showReturnPendingList(); 
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Assignment failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
+        function showReturnAssignedList() {
+            hideAllLists();
+            document.getElementById('return-assigned-list-section').style.display = 'block';
+            let sb = document.getElementById('returnAssignedSearchBox'); if(sb) sb.value = '';
+            
+            const tableBody = document.getElementById('returnAssignedTableBody'); 
+            const assignedReturns = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)');
+
+            if(assignedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
+            
+            let html = "";
+            assignedReturns.forEach((item, index) => {
+                html += `<tr>
+                    <td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td>
+                    <td>${index + 1}</td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td>${item.boxes}</td>
+                    <td>${item.city}</td>
+                    <td>${item.state}</td>
+                    <td>${item.partner || '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><span class="badge bg-assigned">${item.status}</span></td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function toggleAllReturnPickup(source) {
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        }
+
+        function openConfirmReturnPickupModal() {
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked');
+            if(checkboxes.length === 0) {
+                showToast("Warning", "Please select at least one return request to confirm pickup.", "warning"); return;
             }
+            document.getElementById('confirmReturnPickupModal').style.display = 'flex';
+        }
+
+        function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
+
+        function processReturnPickup() {
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked');
+            const itemsToDispatch = [];
+            checkboxes.forEach(cb => {
+                itemsToDispatch.push(cb.value);
+            });
+
+            const btn = document.getElementById('confirmReturnPickupBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", `${itemsToDispatch.length} return shipments picked up!`);
+                    itemsToDispatch.forEach(id => {
+                        let itemIndex = cachedReturnBills.findIndex(r => r.id === id);
+                        if (itemIndex > -1) {
+                            cachedReturnBills[itemIndex].status = "In Transit (Return)";
+                            cachedReturnBills[itemIndex].dispatchDate = getCurrentFormattedDate();
+                        }
+                    });
+                    updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList();
+                    document.getElementById('selectAllReturnPickup').checked = false; 
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => {
+                btn.innerHTML = originalText; btn.disabled = false;
+            });
+        }
+
+        function showReturnTransitList() {
+            hideAllLists();
+            document.getElementById('return-transit-list-section').style.display = 'block';
+            let sb = document.getElementById('returnTransitSearchBox'); if(sb) sb.value = '';
             
-            let trackingUrl = "";
-            let p = partner ? partner.toLowerCase() : "";
+            const tableBody = document.getElementById('returnTransitTableBody'); 
+            const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
+
+            if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
             
-            if (p.includes("delhivery")) {
-                trackingUrl = `https://www.delhivery.com/track/package/${docket}`;
-            } else if (p.includes("blue dart") || p.includes("bluedart")) {
-                trackingUrl = `https://www.bluedart.com/web/guest/trackdartresult?trackFor=0&trackNo=${docket}`;
-            } else if (p.includes("dtdc")) {
-                trackingUrl = `https://track.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showTrakingDetails&awbNo=${docket}`;
-            } else if (p.includes("shree maruti") || p.includes("maruti")) {
-                trackingUrl = `https://trackcourier.io/track-and-trace/shree-maruti-courier/${docket}`;
-            } else if (p.includes("ecom")) {
-                trackingUrl = `https://ecomexpress.in/tracking/?awb=${docket}`;
-            } else if (p.includes("safexpress")) {
-                trackingUrl = `https://www.safexpress.com/tracking?waybill=${docket}`;
-            } else if (p.includes("tirupati")) {
-                trackingUrl = `http://www.shreetirupaticourier.net/Frm_DocTrack.aspx?docno=${docket}`;
-            } else if (p.includes("trackon")) {
-                trackingUrl = `https://trackon.in/tracking/search?trackings=${docket}`;
+            let html = "";
+            transitReturns.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td>${item.boxes}</td>
+                    <td>${item.city}</td>
+                    <td>${item.state}</td>
+                    <td>${item.partner || '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><span class="badge bg-transit">${item.status}</span></td>
+                    <td style="color:#c2410c;">${item.dispatchDate || '-'}</td>
+                    <td>
+                        <button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button>
+                    </td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function openReceiveReturnModal(id, expectedBoxes) {
+            document.getElementById('receiveReturnForm').reset();
+            document.getElementById('recvReturnId').value = id;
+            document.getElementById('recvExpectedBoxes').value = expectedBoxes;
+            document.getElementById('recvActualBoxes').max = expectedBoxes;
+            document.getElementById('receiveReturnModal').style.display = 'flex';
+        }
+
+        function closeReceiveReturnModal() {
+            document.getElementById('receiveReturnModal').style.display = 'none';
+        }
+
+        function submitReceiveReturn(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveReceiveReturnBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const id = document.getElementById('recvReturnId').value;
+            const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0;
+            const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
+
+            const payload = {
+                action: 'receiveReturn',
+                returnId: id,
+                expected: expected,
+                received: received,
+                actionBy: loggedInUser
+            };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Return receiving processed successfully!");
+                    
+                    let rIndex = cachedReturnBills.findIndex(r => r.id === id);
+                    if (rIndex > -1) {
+                        if (received < expected) {
+                            cachedReturnBills[rIndex].status = "Return Received (Partial)";
+                            cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate();
+                            cachedReturnBills[rIndex].rcvdBoxes = received;
+                            
+                            let missing = expected - received;
+                            let shortItem = { ...cachedReturnBills[rIndex] };
+                            shortItem.id = id + "-SHORT";
+                            shortItem.boxes = missing;
+                            shortItem.rcvdBoxes = "";
+                            shortItem.status = "Disputed (Return)";
+                            shortItem.recvDate = getCurrentFormattedDate();
+                            shortItem.remark = "Missing Boxes: " + missing;
+                            cachedReturnBills.push(shortItem);
+                        } else {
+                            cachedReturnBills[rIndex].status = "Return Received";
+                            cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate();
+                            cachedReturnBills[rIndex].rcvdBoxes = received;
+                        }
+                    }
+
+                    updateDashboardCounts();
+                    closeReceiveReturnModal();
+                    showReturnTransitList(); 
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
+        function calculateReturnTotalTime(startStr, endStr) {
+            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+            
+            function parseCustomDate(dStr) {
+                if(dStr.includes('-')) { 
+                    const parts = dStr.split(/[- :]/);
+                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]);
+                } else if (dStr.includes('/')) { 
+                    const parts = dStr.split(/[\/ :]/);
+                    if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]);
+                }
+                return new Date(dStr);
+            }
+
+            const sDate = parseCustomDate(startStr);
+            const eDate = parseCustomDate(endStr);
+            if (isNaN(sDate) || isNaN(eDate)) return '-';
+            
+            const diffMs = eDate - sDate;
+            if (diffMs < 0) return '-';
+            const diffDays = Math.floor(diffMs / 86400000);
+            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            
+            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`;
+            return `${diffHrs} Hrs`;
+        }
+
+        function showReturnReceivedList(startDate = null, endDate = null) {
+            hideAllLists();
+            document.getElementById('return-received-list-section').style.display = 'block';
+            let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
+            
+            const tableBody = document.getElementById('returnReceivedTableBody'); 
+            
+            let listToDisplay = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed'));
+
+            if(startDate || endDate) {
+                listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate));
+            }
+
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='14' style='text-align:center;'>No received returns found.</td></tr>"; return; }
+            
+            let html = "";
+            listToDisplay.forEach((item, index) => {
+                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
+                let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate);
+
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td>
+                    <td>${item.city}, ${item.state || ''}</td>
+                    <td>${item.partner || '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><span class="badge bg-delivered">${item.status}</span></td>
+                    <td style="font-size:12px; color:#64748b;">${item.date || '-'}</td>
+                    <td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td>
+                    <td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td>
+                    <td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td>
+                    <td style="font-weight:700; font-size:13px;">${totalTimeStr}</td>
+                    <td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function showReturnDisputedList() {
+            hideAllLists();
+            document.getElementById('return-disputed-list-section').style.display = 'block';
+            let sb = document.getElementById('returnDisputedSearchBox'); if(sb) sb.value = '';
+            
+            const tableBody = document.getElementById('returnDisputedTableBody'); 
+            const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
+
+            if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
+            
+            let html = "";
+            disputedReturns.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b style="color:#dc2626;">${item.id}</b></td>
+                    <td><b>${item.drName}</b></td>
+                    <td>${item.ledgerName}</td>
+                    <td>${item.boxes}</td>
+                    <td>${item.city}</td>
+                    <td>${item.partner || '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><span class="badge bg-rto">${item.status}</span></td>
+                    <td style="color:#c2410c;">${item.recvDate || '-'}</td>
+                    <td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td>
+                    <td>
+                        <button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button>
+                    </td>
+                </tr>`;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function handleResolveRetActionChange() {
+            const actionSelect = document.getElementById('resolveRetAction').value;
+            const dateGroup = document.getElementById('resolveRetDateGroup');
+            const dateInput = document.getElementById('resolveRetDate');
+            const dateLabel = document.getElementById('resolveRetDateLabel');
+            const appGroup = document.getElementById('resolveRetApprovedByGroup');
+            const appInput = document.getElementById('resolveRetApprovedBy');
+
+            if (actionSelect === "Received at Origin") {
+                dateGroup.style.display = 'block';
+                dateLabel.innerHTML = 'Receiving Date <span style="color: red;">*</span>';
+                dateInput.required = true;
+                
+                appGroup.style.display = 'none';
+                appInput.required = false;
+                appInput.value = '';
+            } else if (actionSelect === "Claim Settled / Closed") {
+                dateGroup.style.display = 'block';
+                dateLabel.innerHTML = 'Settled/Closed Date <span style="color: red;">*</span>';
+                dateInput.required = true;
+                
+                appGroup.style.display = 'block';
+                appInput.required = true;
             } else {
-                trackingUrl = `https://trackcourier.io/track-and-trace/${docket}`;
+                dateGroup.style.display = 'none';
+                dateInput.required = false;
+                
+                appGroup.style.display = 'none';
+                appInput.required = false;
             }
-            
-            window.open(trackingUrl, '_blank');
         }
 
-        // --- TIME CALCULATION HELPERS ---
+        function openResolveReturnModal(id) {
+            document.getElementById('resolveReturnForm').reset();
+            document.getElementById('resolveRetId').value = id;
+            document.getElementById('resolveRetIdDisplay').value = id;
+            handleResolveRetActionChange(); 
+            document.getElementById('resolveReturnModal').style.display = 'flex';
+        }
+
+        function closeResolveReturnModal() {
+            document.getElementById('resolveReturnModal').style.display = 'none';
+        }
+
+        function submitResolveReturnDispute(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveResolveRetBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const id = document.getElementById('resolveRetId').value;
+            const actionStatus = document.getElementById('resolveRetAction').value;
+            let remark = document.getElementById('resolveRetRemark').value;
+
+            const approvedBy = document.getElementById('resolveRetApprovedBy').value;
+            if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') {
+                remark += " | " + approvedBy;
+            }
+
+            let actionDateStr = document.getElementById('resolveRetDate').value;
+            if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') {
+                 const d = new Date(actionDateStr);
+                 actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+                 remark += " | Date: " + actionDateStr;
+            }
+
+            const payload = {
+                action: 'resolveReturnDispute',
+                returnId: id,
+                resolutionStatus: actionStatus,
+                remark: remark, 
+                actionBy: loggedInUser
+            };
+
+            fetch(WEB_APP_URL, { 
+                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "Return Dispute Resolved!");
+                    
+                    let rIndex = cachedReturnBills.findIndex(r => r.id === id);
+                    if (rIndex > -1) {
+                        cachedReturnBills[rIndex].status = actionStatus === 'Received at Origin' ? 'Return Received (SHORT)' : 'Closed (Claim Settled)';
+                        cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); 
+                        
+                        if (actionStatus === 'Received at Origin') {
+                            cachedReturnBills[rIndex].rcvdBoxes = cachedReturnBills[rIndex].boxes; 
+                        }
+                        
+                        let currentRemark = cachedReturnBills[rIndex].remark || "";
+                        cachedReturnBills[rIndex].remark = currentRemark ? (currentRemark + " | Res: " + remark) : ("Res: " + remark);
+                    }
+
+                    updateDashboardCounts();
+                    closeResolveReturnModal();
+                    showReturnDisputedList(); 
+                } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => { 
+                btn.innerHTML = originalHTML; btn.disabled = false; 
+            });
+        }
+
         function calculateTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
             
@@ -1042,7 +2126,6 @@
             return `${diffHrs}h`;
         }
 
-        // --- DATE FILTER LOGIC ---
         function openDateRangeModal(tabName) {
             targetTabForDateRange = tabName;
             document.getElementById('filterStartDate').value = '';
@@ -1061,6 +2144,8 @@
                 showDeliveredList(start, end);
             } else if (targetTabForDateRange === 'dispatched') {
                 showDispatchedList(start, end);
+            } else if (targetTabForDateRange === 'returnReceived') {
+                showReturnReceivedList(start, end);
             }
         }
         function isDateInRange(dateStr, start, end) {
@@ -1089,7 +2174,6 @@
             return true;
         }
 
-        // --- LIGHTNING FAST DOM RENDERING UPDATES ---
         function showInvoiceList(type) {
             hideAllLists(); currentViewMode = type; 
             document.getElementById('invoice-list-section').style.display = 'block';
@@ -1246,7 +2330,6 @@
             tableBody.innerHTML = html;
         }
 
-        // MODIFIED RENDER LOGIC FOR DISPATCHED BILLS
         function showDispatchedList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
             hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
@@ -1286,6 +2369,24 @@
                 </tr>`;
             });
             tableBody.innerHTML = html;
+        }
+
+        function handleUploadTypeChange() {
+            const type = document.getElementById('uploadType').value;
+            const remarkGroup = document.getElementById('remarkGroup');
+            const remarkInput = document.getElementById('podRemark');
+            const fileLabel = document.getElementById('transitFileLabel');
+
+            if (type === 'RTO' || type === 'Misplaced') { 
+                remarkGroup.style.display = 'block'; 
+                remarkInput.required = true; 
+                fileLabel.innerText = "Select Document (PDF/Image)";
+            } else { 
+                remarkGroup.style.display = 'none'; 
+                remarkInput.required = false; 
+                remarkInput.value = ''; 
+                fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
+            }
         }
 
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
@@ -1388,7 +2489,7 @@
                 } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
         }
-        
+
         function openConfirmDispatchModal() {
             const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked');
             if(checkboxes.length === 0) {
@@ -1446,41 +2547,6 @@
         }
         function closePodModal() { document.getElementById('uploadPodModal').style.display = 'none'; document.getElementById('podForm').reset(); }
         
-        // Final Status Modal handlers (Delivered Bills tab)
-        function handleFinalActionChange() {
-            const type = document.getElementById('finalActionType').value;
-            const shortGrp = document.getElementById('finalShortDeliveryGroup');
-            const remGrp = document.getElementById('finalRemarkGroup');
-            const exp = document.getElementById('finalExpectedBoxes');
-            const rec = document.getElementById('finalReceivedBoxes');
-            const rem = document.getElementById('finalPodRemark');
-            const fileLabel = document.getElementById('finalFileLabel');
-            const fileGroup = document.getElementById('finalFileGroup');
-            const fileInput = document.getElementById('finalPodFile');
-
-            if(type === 'Short Delivered') {
-                shortGrp.style.display = 'flex';
-                remGrp.style.display = 'block';
-                fileGroup.style.display = 'block';
-                exp.required = true; rec.required = true; rem.required = true;
-                fileInput.required = true;
-                fileLabel.innerText = "Select POD with Shortage Remark";
-            } else if (type === 'OTP based delivery - No POD Required') {
-                shortGrp.style.display = 'none';
-                remGrp.style.display = 'none';
-                fileGroup.style.display = 'none';
-                exp.required = false; rec.required = false; rem.required = false;
-                fileInput.required = false;
-            } else {
-                shortGrp.style.display = 'none';
-                remGrp.style.display = 'none';
-                fileGroup.style.display = 'block';
-                exp.required = false; rec.required = false; rem.required = false;
-                fileInput.required = true;
-                fileLabel.innerText = "Select POD Document (PDF/Image)";
-            }
-        }
-
         function openFinalPodModal(inv, docket) { 
             document.getElementById('finalPodInvoiceNo').value = inv; 
             document.getElementById('finalPodOldDocketNo').value = docket || ''; 
@@ -1489,30 +2555,6 @@
             document.getElementById('finalPodModal').style.display = 'flex'; 
         }
         function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
-
-        function handleResolveActionChange() {
-            const actionSelect = document.getElementById('resolveAction').value;
-            const dateGroup = document.getElementById('resolveDateGroup');
-            const dateInput = document.getElementById('resolveReceiveDate');
-            const appGroup = document.getElementById('resolveApprovedByGroup');
-            const appInput = document.getElementById('resolveApprovedBy');
-
-            if (actionSelect.includes("Received") || actionSelect.includes("Return to Origin") || actionSelect.includes("Delivered to client")) {
-                dateGroup.style.display = 'block';
-                dateInput.required = true;
-            } else {
-                dateGroup.style.display = 'none';
-                dateInput.required = false;
-            }
-
-            if (actionSelect === "Claim Settled / Closed") {
-                appGroup.style.display = 'block';
-                appInput.required = true;
-            } else {
-                appGroup.style.display = 'none';
-                appInput.required = false;
-            }
-        }
 
         function openResolveModal(inv, docket, status) {
             document.getElementById('resolveInvNo').value = inv;
@@ -1542,6 +2584,32 @@
             document.getElementById('resolveModal').style.display = 'flex';
         }
         function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
+
+        function handleResolveActionChange() {
+            const actionSelect = document.getElementById('resolveAction').value;
+            const dateGroup = document.getElementById('resolveDateGroup');
+            const dateInput = document.getElementById('resolveReceiveDate');
+            const appGroup = document.getElementById('resolveApprovedByGroup');
+            const appInput = document.getElementById('resolveApprovedBy');
+
+            if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") {
+                dateGroup.style.display = 'block';
+                dateInput.required = true;
+                appGroup.style.display = 'none';
+                appInput.required = false;
+                appInput.value = '';
+            } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") {
+                dateGroup.style.display = 'block';
+                dateInput.required = true;
+                appGroup.style.display = 'block';
+                appInput.required = true;
+            } else {
+                dateGroup.style.display = 'none';
+                dateInput.required = false;
+                appGroup.style.display = 'none';
+                appInput.required = false;
+            }
+        }
 
         function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e); }); }
         
