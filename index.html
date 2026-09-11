@@ -1123,6 +1123,7 @@
     </div>
 
     <script>
+        // YAHAN APNA NAYA WEB APP URL PASTE KAREIN
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby5LkVEwwNo6J23YXg_sBd_op-4F7o-dJU32r2qib6TnOyiAEGvSXEDJuqwww-pwnL9/exec"; 
         
         let loggedInUser = ""; let loggedInUserRole = ""; 
@@ -1256,6 +1257,12 @@
             const pass = document.getElementById('password').value;
             const loginType = document.getElementById('loginType').value;
             const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (loginType === 'Return Courier Management' || loginType === 'Return Inventory') {
+                currentWorkspace = 'return';
+            } else {
+                currentWorkspace = 'dispatch';
+            }
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
 
@@ -1316,14 +1323,12 @@
                         document.getElementById('login-view').style.display = 'none'; 
                         document.getElementById('dashboard-view').style.display = 'flex';
                         
-                        if (loginType === 'Return Inventory') {
-                            currentWorkspace = 'return';
+                        if (currentWorkspace === 'return') {
                             document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
                             document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
                             document.getElementById('dispatch-workspace').style.display = 'none';
                             document.getElementById('return-workspace').style.display = 'block';
                         } else {
-                            currentWorkspace = 'dispatch';
                             document.getElementById('navbarSubtitle').innerText = "Courier Management System";
                             document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
                             document.getElementById('return-workspace').style.display = 'none';
@@ -1332,7 +1337,7 @@
                         
                         showDashboardCards();
                         updateDashboardCounts(); 
-                        showToast('Login Successful', `Welcome to the ${loginType} Dashboard.`, 'success');
+                        showToast('Login Successful', `Welcome to the Dashboard.`, 'success');
                     }).catch(error => {
                         showToast("Error", "Data sync failed.", "error");
                     }).finally(() => { 
