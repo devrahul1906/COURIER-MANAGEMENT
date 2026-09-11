@@ -1249,6 +1249,9 @@
             }
         }
 
+        // =========================================================================
+        // UPDATED: SINGLE API CALL FOR LOGIN AND SYNC
+        // =========================================================================
         function handleLogin(event) {
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner');
@@ -1265,10 +1268,11 @@
             }
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
+            document.getElementById('loginText').innerText = "Authenticating & Loading...";
 
             fetch(WEB_APP_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'login', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
+                body: JSON.stringify({ action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
@@ -1278,12 +1282,14 @@
                         errorDiv.innerText = "Access Denied: Your account is restricted.";
                         errorDiv.style.display = 'block';
                         btn.disabled = false; spinner.style.display = 'none';
+                        document.getElementById('loginText').innerText = "Sign In";
                         return;
                     }
                     if (allowed !== "All" && allowed !== loginType) {
                         errorDiv.innerText = `Access Denied: You only have permission for ${allowed}.`;
                         errorDiv.style.display = 'block';
                         btn.disabled = false; spinner.style.display = 'none';
+                        document.getElementById('loginText').innerText = "Sign In";
                         return;
                     }
 
@@ -1297,7 +1303,8 @@
                         localStorage.removeItem('hatvetType');
                     }
                     
-                    loggedInUser = user; loggedInUserRole = data.role || "Standard";
+                    loggedInUser = user; 
+                    loggedInUserRole = data.role || "Standard";
                     loggedInUserPermissions = data.permissions || "All"; 
                     
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
@@ -1305,56 +1312,50 @@
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
                     document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser}`;
 
-                    // Update UI for the second loading phase
-                    document.getElementById('loginText').innerText = "Loading Data...";
+                    cachedPendingBills = data.pendingBills || []; 
+                    cachedAssignedBills = data.assignedBills || []; 
+                    cachedTransitBills = data.transitBills || []; 
+                    cachedDeliveredBills = data.deliveredBills || [];
+                    cachedDispatchedBills = data.dispatchedBills || []; 
+                    cachedDisputedBills = data.disputedBills || [];
+                    cachedReturnBills = data.returnBills || [];
+                    cachedUnplannedBills = data.unplannedBills || [];
+                    
+                    document.getElementById('login-view').style.display = 'none'; 
+                    document.getElementById('dashboard-view').style.display = 'flex';
+                    
+                    if (currentWorkspace === 'return') {
+                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
+                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
+                        document.getElementById('dispatch-workspace').style.display = 'none';
+                        document.getElementById('return-workspace').style.display = 'block';
+                    } else {
+                        document.getElementById('navbarSubtitle').innerText = "Courier Management System";
+                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
+                        document.getElementById('return-workspace').style.display = 'none';
+                        document.getElementById('dispatch-workspace').style.display = 'block';
+                    }
+                    
+                    showDashboardCards();
+                    updateDashboardCounts(); 
+                    showToast('Login Successful', `Welcome to the Dashboard.`, 'success');
 
-                    // Second Fetch for heavy data loading
-                    fetch(WEB_APP_URL, { 
-                        method: 'POST', 
-                        body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                    }).then(res2 => res2.json()).then(syncData => {
-                        cachedPendingBills = syncData.pendingBills || []; cachedAssignedBills = syncData.assignedBills || []; 
-                        cachedTransitBills = syncData.transitBills || []; cachedDeliveredBills = syncData.deliveredBills || [];
-                        cachedDispatchedBills = syncData.dispatchedBills || []; cachedDisputedBills = syncData.disputedBills || [];
-                        cachedReturnBills = syncData.returnBills || [];
-                        cachedUnplannedBills = syncData.unplannedBills || [];
-                        
-                        document.getElementById('login-view').style.display = 'none'; 
-                        document.getElementById('dashboard-view').style.display = 'flex';
-                        
-                        if (currentWorkspace === 'return') {
-                            document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
-                            document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
-                            document.getElementById('dispatch-workspace').style.display = 'none';
-                            document.getElementById('return-workspace').style.display = 'block';
-                        } else {
-                            document.getElementById('navbarSubtitle').innerText = "Courier Management System";
-                            document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
-                            document.getElementById('return-workspace').style.display = 'none';
-                            document.getElementById('dispatch-workspace').style.display = 'block';
-                        }
-                        
-                        showDashboardCards();
-                        updateDashboardCounts(); 
-                        showToast('Login Successful', `Welcome to the Dashboard.`, 'success');
-                    }).catch(error => {
-                        showToast("Error", "Data sync failed.", "error");
-                    }).finally(() => { 
-                        btn.disabled = false; spinner.style.display = 'none'; 
-                        document.getElementById('loginText').innerText = "Sign In";
-                    });
+                    btn.disabled = false; spinner.style.display = 'none'; 
+                    document.getElementById('loginText').innerText = "Sign In";
 
                 } else { 
                     errorDiv.innerText = data.message; errorDiv.style.display = 'block'; 
                     localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
                     btn.disabled = false; spinner.style.display = 'none';
+                    document.getElementById('loginText').innerText = "Sign In";
                 }
             }).catch(error => {
                 showToast("Error", "Server connection failed.", "error");
                 btn.disabled = false; spinner.style.display = 'none'; 
+                document.getElementById('loginText').innerText = "Sign In";
             });
         }
+        // =========================================================================
 
         function syncData() {
             if (!loggedInUser) return;
