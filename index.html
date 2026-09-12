@@ -169,6 +169,33 @@
         
         .two-col { display: flex; gap: 15px; }
         .two-col > .form-group { flex: 1; margin-bottom: 15px; }
+
+        /* AUTOCPMPLETE STYLES */
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+            font-size: 13px;
+        }
+        .autocomplete-items div:hover {
+            background-color: #f1f5f9;
+        }
     </style>
 </head>
 <body>
@@ -441,7 +468,6 @@
             <div id="return-workspace" style="display: none;">
                 <div id="dashboard-return-cards" class="kpi-grid">
                     
-                    <!-- NEW CARD: Track Return Status -->
                     <div class="kpi-card" id="card-return-status" style="background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;" onclick="showReturnStatusList()">
                         <div class="kpi-header">
                             <span class="kpi-title">Track Status</span>
@@ -533,8 +559,8 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table id="returnPendingTable" style="min-width: 1100px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Phone No</th><th>City</th><th>State</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead>
+                        <table id="returnPendingTable" style="min-width: 1200px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Phone No</th><th>City</th><th>State</th><th>Full Address</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead>
                             <tbody id="returnPendingTableBody"></tbody>
                         </table>
                     </div>
@@ -614,7 +640,6 @@
                     </div>
                 </div>
 
-                <!-- NEW SECTION: Return Status Tracking Table -->
                 <div id="return-status-list-section" class="table-wrapper">
                     <div class="table-header">
                         <h2>Track Return Status</h2>
@@ -661,7 +686,7 @@
                         </div>
                         <div class="form-group">
                             <label>Ledger Name <span style="color: red;">*</span></label>
-                            <input type="text" id="unpLedgerName" placeholder="Enter Ledger Name" required>
+                            <input type="text" id="unpLedgerName" placeholder="Enter Ledger Name" required autocomplete="off">
                         </div>
                     </div>
                     <div class="two-col">
@@ -674,10 +699,29 @@
                             <input type="text" id="unpState" placeholder="Enter State" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>No of Boxes<span style="color: red;">*</span></label>
-                        <input type="number" id="unpBoxes" min="1" placeholder="Enter Number of Boxes Received" required>
+                    
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Ledger Code</label>
+                            <input type="text" id="unpLedgerCode" placeholder="Enter Ledger Code">
+                        </div>
+                        <div class="form-group">
+                            <label>Zone</label>
+                            <input type="text" id="unpZone" placeholder="Enter Zone">
+                        </div>
                     </div>
+                    
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>BDM Name</label>
+                            <input type="text" id="unpBdmName" placeholder="Enter BDM Name">
+                        </div>
+                        <div class="form-group">
+                            <label>No of Boxes<span style="color: red;">*</span></label>
+                            <input type="number" id="unpBoxes" min="1" placeholder="Enter Number of Boxes Received" required>
+                        </div>
+                    </div>
+                    
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeUnplannedReturnModal()">Cancel</button>
                         <button type="submit" id="saveUnplannedBtn" class="action-btn btn-primary" style="background:#c026d3;">Submit Surprise Entry</button>
@@ -687,6 +731,7 @@
         </div>
     </div>
 
+    <!-- Confirm Unplanned Return Modal - Dropdown Modified -->
     <div id="confirmUnplannedModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -706,12 +751,23 @@
                             <input type="number" id="confUnpActual" min="0" required placeholder="e.g. 8">
                         </div>
                     </div>
+                    
                     <div class="form-group" style="margin-bottom: 20px;">
-                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: normal; font-size: 13px; color: var(--text-main); line-height: 1.4;">
-                            <input type="checkbox" required style="width: 18px; height: 18px; margin-top: 2px;">
-                            <span>Total No. of Boxes Confirmed with the Party</span>
-                        </label>
+                        <label>Boxes confirmed by <span style="color: red;">*</span></label>
+                        <select id="confUnpConfirmedBy" required onchange="handleConfirmedByChange()">
+                            <option value="">Select Option</option>
+                            <option value="Doctor">Doctor</option>
+                            <option value="Assistant">Assistant</option>
+                            <option value="Office Staff">Office Staff</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
+
+                    <div class="form-group" id="confUnpOtherGroup" style="display: none; margin-bottom: 20px;">
+                        <label>Please Specify <span style="color: red;">*</span></label>
+                        <input type="text" id="confUnpOtherSpec" placeholder="Type name or details...">
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeConfirmUnplannedModal()">Cancel</button>
                         <button type="submit" id="saveConfirmUnpBtn" class="action-btn btn-success" style="background:var(--success);">Submit Confirmation</button>
@@ -721,6 +777,7 @@
         </div>
     </div>
 
+    <!-- Generate Return Request Modal - "No of boxes" removed & aligned -->
     <div id="generateReturnModal" class="modal-overlay">
         <div class="modal-box modal-lg">
             <div class="modal-header">
@@ -736,35 +793,46 @@
                         </div>
                         <div class="form-group">
                             <label>Ledger Name <span style="color: red;">*</span></label>
-                            <input type="text" id="retLedgerName" placeholder="Enter Ledger Name" required>
+                            <input type="text" id="retLedgerName" placeholder="Enter Ledger Name" required autocomplete="off">
                         </div>
                     </div>
                     
                     <div class="two-col">
                         <div class="form-group">
-                            <label>No of Boxes<span style="color: red;">*</span></label>
-                            <input type="number" id="retBoxes" min="1" placeholder="Enter Number of Boxes" required>
-                        </div>
-                        <div class="form-group">
                             <label>Phone No. <span style="color: red;">*</span></label>
                             <input type="text" id="retPhone" placeholder="Enter Contact Number" required>
+                        </div>
+                        <div class="form-group">
+                            <label>City <span style="color: red;">*</span></label>
+                            <input type="text" id="retCity" placeholder="Enter City" required>
                         </div>
                     </div>
 
                     <div class="two-col">
                         <div class="form-group">
-                            <label>City <span style="color: red;">*</span></label>
-                            <input type="text" id="retCity" placeholder="Enter City" required>
-                        </div>
-                        <div class="form-group">
                             <label>Pin Code <span style="color: red;">*</span></label>
                             <input type="text" id="retPinCode" placeholder="Enter Pin Code" required>
                         </div>
+                        <div class="form-group">
+                            <label>State <span style="color: red;">*</span></label>
+                            <input type="text" id="retState" placeholder="Enter State" required>
+                        </div>
                     </div>
                     
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Ledger Code</label>
+                            <input type="text" id="retLedgerCode" placeholder="Enter Ledger Code">
+                        </div>
+                        <div class="form-group">
+                            <label>Zone</label>
+                            <input type="text" id="retZone" placeholder="Enter Zone">
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label>State <span style="color: red;">*</span></label>
-                        <input type="text" id="retState" placeholder="Enter State" required>
+                        <label>BDM Name</label>
+                        <input type="text" id="retBdmName" placeholder="Enter BDM Name">
                     </div>
 
                     <div class="form-group">
@@ -781,6 +849,7 @@
         </div>
     </div>
 
+    <!-- Assign Return Courier Modal - "No of Boxes" added -->
     <div id="assignReturnCourierModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -790,6 +859,10 @@
             <div class="modal-body">
                 <form id="assignReturnCourierForm" onsubmit="submitAssignReturnCourier(event)">
                     <input type="hidden" id="assignReturnId">
+                    <div class="form-group">
+                        <label>No of Boxes <span style="color: red;">*</span></label>
+                        <input type="number" id="assignRetBoxes" min="1" placeholder="Enter Number of Boxes" required>
+                    </div>
                     <div class="form-group">
                         <label>Courier Partner <span style="color: red;">*</span></label>
                         <input type="text" id="retCourierPartner" placeholder="e.g. Delhivery, Blue Dart" required>
@@ -1159,23 +1232,27 @@
     </div>
 
     <script>
-        // YAHAN APNA NAYA WEB APP URL PASTE KAREIN
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyG9-CrwhnAaB_V_iRCCOnmMDWVxBGZC1aNWa5I_Hwdrqf6qslXWmVWKtKJpsNKkPdF/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnUvSX1RdBm9Ec5XYAqu-3DenzNRmCM-yWeNwFzEhCt639PU9L60Tn6fa_Knc04_JX/exec"; 
         
-        let loggedInUser = ""; let loggedInUserRole = ""; 
+        let loggedInUser = ""; 
+        let loggedInUserRole = ""; 
         let loggedInUserPermissions = "All";
-        let cachedPendingBills = []; let cachedAssignedBills = []; 
-        let cachedTransitBills = []; let cachedDispatchedBills = []; 
-        let cachedDeliveredBills = []; let cachedDisputedBills = [];
-        let cachedReturnBills = []; let cachedUnplannedBills = [];
+        let cachedPendingBills = []; 
+        let cachedAssignedBills = []; 
+        let cachedTransitBills = []; 
+        let cachedDispatchedBills = []; 
+        let cachedDeliveredBills = []; 
+        let cachedDisputedBills = [];
+        let cachedReturnBills = []; 
+        let cachedUnplannedBills = [];
+        let cachedLedgers = [];
         let currentViewMode = "today"; 
         let currentWorkspace = "dispatch"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
 
-        // Safe String Helper for dynamic inline buttons to prevent character breaking
-        function safeStr(val) {
-            return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        function safeStr(val) { 
+            return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1190,7 +1267,76 @@
                 document.getElementById('rememberMe').checked = true;
                 document.getElementById('loginBtn').click();
             }
+
+            // INIT AUTOCOMPLETE
+            setupAutocomplete('unpLedgerName', 'unpCity', 'unpState', null, 'unpLedgerCode', 'unpZone', 'unpBdmName');
+            setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName');
         });
+
+        // AUTOCOMPLETE FUNCTION
+        function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId) {
+            const inp = document.getElementById(inputId);
+            if(!inp) return;
+            
+            let currentFocus;
+            
+            inp.addEventListener("input", function(e) {
+                let a, b, val = this.value; 
+                closeAllLists();
+                if (!val) { return false;}
+                currentFocus = -1;
+                
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                
+                this.parentNode.appendChild(a);
+                this.parentNode.style.position = "relative";
+                
+                let matchCount = 0;
+                
+                for (let i = 0; i < cachedLedgers.length; i++) {
+                    if (cachedLedgers[i].ledgerName.toUpperCase().includes(val.toUpperCase())) {
+                        if(matchCount > 20) break; 
+                        
+                        let currentLedger = cachedLedgers[i]; 
+                        
+                        b = document.createElement("DIV");
+                        let regex = new RegExp("(" + val.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ")", "gi");
+                        b.innerHTML = currentLedger.ledgerName.replace(regex, "<strong>$1</strong>");
+                        
+                        if(currentLedger.city) {
+                            b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
+                        }
+                        
+                        b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
+                        
+                        b.addEventListener("click", function(e) {
+                            inp.value = this.getElementsByTagName("input")[0].value;
+                            if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
+                            if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
+                            if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
+                            if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
+                            if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
+                            if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
+                            closeAllLists();
+                        });
+                        a.appendChild(b);
+                        matchCount++;
+                    }
+                }
+            });
+            
+            function closeAllLists(elmnt) {
+                var x = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+            document.addEventListener("click", function (e) { closeAllLists(e.target); });
+        }
 
         function checkIsToday(dateStr) {
             if(!dateStr) return false;
@@ -1198,7 +1344,6 @@
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const yy = d.getFullYear();
-            
             const formats = [`${dd}-${mm}-${yy}`, `${dd}/${mm}/${yy}`, `${mm}/${dd}/${yy}`, `${mm}-${dd}-${yy}`];
             const str = String(dateStr);
             return formats.some(fmt => str.startsWith(fmt) || str.includes(fmt));
@@ -1214,19 +1359,21 @@
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             let iconSvg = '';
-            if(type === 'success') {
-                iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
-            } else if (type === 'warning') {
-                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
-            } else {
-                iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            if(type === 'success') { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; 
+            } else if (type === 'warning') { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; 
+            } else { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; 
             }
             toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
             container.appendChild(toast);
             setTimeout(() => { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        function isStandardUser() { return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; }
+        function isStandardUser() { 
+            return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; 
+        }
 
         function filterTable(inputId, tbodyId, colIndex) {
             let input = document.getElementById(inputId).value.toUpperCase();
@@ -1254,15 +1401,24 @@
                 csv.push(row.join(","));
             }
             let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
-            let downloadLink = document.createElement("a");
-            downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile);
-            downloadLink.style.display = "none"; document.body.appendChild(downloadLink); 
+            let downloadLink = document.createElement("a"); 
+            downloadLink.download = filename; 
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none"; 
+            document.body.appendChild(downloadLink); 
             downloadLink.click(); 
             document.body.removeChild(downloadLink);
         }
 
-        function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
-        function getGreeting() { const h = new Date().getHours(); return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; }
+        function togglePassword() { 
+            const pwd = document.getElementById("password"); 
+            pwd.type = pwd.type === "password" ? "text" : "password"; 
+        }
+        
+        function getGreeting() { 
+            const h = new Date().getHours(); 
+            return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; 
+        }
 
         function updateDashboardCounts() {
             if (currentWorkspace === 'dispatch') {
@@ -1285,136 +1441,120 @@
             }
         }
 
-        // =========================================================================
-        // UPDATED: SINGLE API CALL FOR LOGIN AND SYNC
-        // =========================================================================
         function handleLogin(event) {
             if(event) event.preventDefault();
-            const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner');
+            const btn = document.getElementById('loginBtn'); 
+            const spinner = document.getElementById('loginSpinner');
             const errorDiv = document.getElementById('loginError');
             const user = document.getElementById('username').value; 
             const pass = document.getElementById('password').value;
-            const loginType = document.getElementById('loginType').value;
+            const loginType = document.getElementById('loginType').value; 
             const rememberMe = document.getElementById('rememberMe').checked;
 
-            if (loginType === 'Return Courier Management' || loginType === 'Return Inventory') {
-                currentWorkspace = 'return';
-            } else {
-                currentWorkspace = 'dispatch';
-            }
+            currentWorkspace = (loginType === 'Return Courier Management' || loginType === 'Return Inventory') ? 'return' : 'dispatch';
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = "Authenticating & Loading...";
 
-            fetch(WEB_APP_URL, { 
+            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
+
+            fetch(noCacheUrl, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            }).then(res => res.json()).then(data => {
+                body: JSON.stringify({ action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' })
+            }).then(res => {
+                if (!res.ok) throw new Error("HTTP Error " + res.status);
+                return res.json();
+            }).then(data => {
                 if(data.status === "success") {
-                    
                     const allowed = data.allowedType ? data.allowedType.trim() : "All";
                     if (allowed === "RESTRICTED") {
-                        errorDiv.innerText = "Access Denied: Your account is restricted.";
-                        errorDiv.style.display = 'block';
-                        btn.disabled = false; spinner.style.display = 'none';
-                        document.getElementById('loginText').innerText = "Sign In";
-                        return;
+                        errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return;
                     }
                     if (allowed !== "All" && allowed !== loginType) {
-                        errorDiv.innerText = `Access Denied: You only have permission for ${allowed}.`;
-                        errorDiv.style.display = 'block';
-                        btn.disabled = false; spinner.style.display = 'none';
-                        document.getElementById('loginText').innerText = "Sign In";
-                        return;
+                        errorDiv.innerText = `Access Denied: You only have permission for ${allowed}.`; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return;
                     }
 
                     if (rememberMe) { 
                         localStorage.setItem('hatvetUser', user); 
-                        localStorage.setItem('hatvetPass', pass);
+                        localStorage.setItem('hatvetPass', pass); 
                         localStorage.setItem('hatvetType', loginType); 
                     } else { 
                         localStorage.removeItem('hatvetUser'); 
                         localStorage.removeItem('hatvetPass'); 
-                        localStorage.removeItem('hatvetType');
+                        localStorage.removeItem('hatvetType'); 
                     }
                     
                     loggedInUser = user; 
-                    loggedInUserRole = data.role || "Standard";
+                    loggedInUserRole = data.role || "Standard"; 
                     loggedInUserPermissions = data.permissions || "All"; 
                     
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
-                    document.getElementById('welcomeGreeting').innerText = `${getGreeting()}, ${loggedInUser}`;
+                    document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
 
                     cachedPendingBills = data.pendingBills || []; 
                     cachedAssignedBills = data.assignedBills || []; 
                     cachedTransitBills = data.transitBills || []; 
-                    cachedDeliveredBills = data.deliveredBills || [];
+                    cachedDeliveredBills = data.deliveredBills || []; 
                     cachedDispatchedBills = data.dispatchedBills || []; 
-                    cachedDisputedBills = data.disputedBills || [];
-                    cachedReturnBills = data.returnBills || [];
+                    cachedDisputedBills = data.disputedBills || []; 
+                    cachedReturnBills = data.returnBills || []; 
                     cachedUnplannedBills = data.unplannedBills || [];
-                    
+                    cachedLedgers = data.ledgerList || []; 
+
                     document.getElementById('login-view').style.display = 'none'; 
                     document.getElementById('dashboard-view').style.display = 'flex';
                     
                     if (currentWorkspace === 'return') {
-                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System";
-                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview.";
-                        document.getElementById('dispatch-workspace').style.display = 'none';
+                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System"; 
+                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview."; 
+                        document.getElementById('dispatch-workspace').style.display = 'none'; 
                         document.getElementById('return-workspace').style.display = 'block';
                     } else {
-                        document.getElementById('navbarSubtitle').innerText = "Courier Management System";
-                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today.";
-                        document.getElementById('return-workspace').style.display = 'none';
+                        document.getElementById('navbarSubtitle').innerText = "Courier Management System"; 
+                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today."; 
+                        document.getElementById('return-workspace').style.display = 'none'; 
                         document.getElementById('dispatch-workspace').style.display = 'block';
                     }
                     
-                    showDashboardCards();
+                    showDashboardCards(); 
                     updateDashboardCounts(); 
                     showToast('Login Successful', `Welcome to the Dashboard.`, 'success');
-
-                    btn.disabled = false; spinner.style.display = 'none'; 
-                    document.getElementById('loginText').innerText = "Sign In";
+                    
+                    btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
 
                 } else { 
-                    errorDiv.innerText = data.message; errorDiv.style.display = 'block'; 
-                    localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
-                    btn.disabled = false; spinner.style.display = 'none';
-                    document.getElementById('loginText').innerText = "Sign In";
+                    errorDiv.innerText = data.message; errorDiv.style.display = 'block'; localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
+                    btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
                 }
-            }).catch(error => {
-                showToast("Error", "Server connection failed.", "error");
-                btn.disabled = false; spinner.style.display = 'none'; 
-                document.getElementById('loginText').innerText = "Sign In";
+            }).catch(error => { 
+                console.error("Login Failed:", error);
+                showToast("Error", `Fix: ${error.message}`, "error"); 
+                btn.disabled = false; 
+                spinner.style.display = 'none'; 
+                document.getElementById('loginText').innerText = "Sign In"; 
             });
         }
-        // =========================================================================
 
         function syncData() {
             if (!loggedInUser) return;
-            const btn = document.getElementById('syncBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Syncing...`;
-            btn.disabled = true;
+            const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Syncing...`; btn.disabled = true;
 
             const user = document.getElementById('username').value || localStorage.getItem('hatvetUser');
             const pass = document.getElementById('password').value || localStorage.getItem('hatvetPass');
 
-            fetch(WEB_APP_URL, { 
+            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
+
+            fetch(noCacheUrl, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' }), 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' })
             }).then(res => res.json()).then(data => {
                 if(data.status === "success") {
-                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; 
-                    cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || [];
-                    cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || [];
-                    cachedReturnBills = data.returnBills || [];
-                    cachedUnplannedBills = data.unplannedBills || [];
-                    
+                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || []; cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || []; cachedReturnBills = data.returnBills || []; cachedUnplannedBills = data.unplannedBills || [];
+                    cachedLedgers = data.ledgerList || [];
+
                     updateDashboardCounts(); 
                     
                     if (currentWorkspace === 'return') {
@@ -1435,23 +1575,16 @@
                     }
                     showToast('Synced', 'Data updated to latest.', 'success');
                 } else { showToast("Error", "Sync failed.", "error"); }
-            }).catch(error => showToast("Error", "Network error.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+            }).catch(error => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
             const savedUser = localStorage.getItem('hatvetUser');
             const savedPass = localStorage.getItem('hatvetPass');
-            if (savedUser && savedPass) {
-                document.getElementById('username').value = savedUser;
-                document.getElementById('password').value = savedPass;
-                document.getElementById('rememberMe').checked = true;
-            }
+            if (savedUser && savedPass) { document.getElementById('username').value = savedUser; document.getElementById('password').value = savedPass; document.getElementById('rememberMe').checked = true; }
             loggedInUser = ""; loggedInUserRole = ""; loggedInUserPermissions = "All";
-            cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; 
-            cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = []; cachedReturnBills = []; cachedUnplannedBills = [];
+            cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = []; cachedReturnBills = []; cachedUnplannedBills = []; cachedLedgers = [];
             localStorage.removeItem('hatvetType');
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
@@ -1468,16 +1601,10 @@
                 document.getElementById('dashboard-home-cards').style.display = 'grid'; 
             } else if (currentWorkspace === 'return') {
                 document.getElementById('dashboard-return-cards').style.display = 'grid'; 
-                
                 if (loggedInUserPermissions && loggedInUserPermissions !== "All" && loggedInUserPermissions !== "") {
                     document.querySelectorAll('#dashboard-return-cards .kpi-card').forEach(card => card.style.display = 'none');
-                    
                     const allowedCards = loggedInUserPermissions.toLowerCase().split(',').map(s => s.trim());
-                    
-                    if (allowedCards.includes('track status') || allowedCards.includes('search entry')) {
-                        let c = document.getElementById('card-return-status');
-                        if (c) c.style.display = 'flex';
-                    }
+                    if (allowedCards.includes('track status') || allowedCards.includes('search entry')) { let c = document.getElementById('card-return-status'); if (c) c.style.display = 'flex'; }
                     if (allowedCards.includes('surprise entry')) document.getElementById('card-unplanned-entry').style.display = 'flex';
                     if (allowedCards.includes('new request')) document.getElementById('card-generate-return').style.display = 'flex';
                     if (allowedCards.includes('pending return')) document.getElementById('card-pending-return').style.display = 'flex';
@@ -1492,38 +1619,46 @@
             }
         }
 
-        function openUnplannedReturnModal() {
-            document.getElementById('unplannedReturnForm').reset();
-            document.getElementById('unplannedReturnModal').style.display = 'flex';
+        function openUnplannedReturnModal() { 
+            document.getElementById('unplannedReturnForm').reset(); 
+            document.getElementById('unplannedReturnModal').style.display = 'flex'; 
         }
-        function closeUnplannedReturnModal() {
-            document.getElementById('unplannedReturnModal').style.display = 'none';
+        
+        function closeUnplannedReturnModal() { 
+            document.getElementById('unplannedReturnModal').style.display = 'none'; 
         }
 
         function submitUnplannedReturn(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveUnplannedBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Submitting..."; btn.disabled = true;
-
-            const requestData = {
-                drName: document.getElementById('unpDrName').value,
-                ledgerName: document.getElementById('unpLedgerName').value,
-                city: document.getElementById('unpCity').value,
-                state: document.getElementById('unpState').value,
-                boxes: document.getElementById('unpBoxes').value,
-                status: "Confirmation Pending"
+            e.preventDefault(); 
+            const btn = document.getElementById('saveUnplannedBtn'); 
+            const originalHTML = btn.innerHTML; 
+            btn.innerHTML = "Submitting..."; 
+            btn.disabled = true;
+            
+            const requestData = { 
+                drName: document.getElementById('unpDrName').value, 
+                ledgerName: document.getElementById('unpLedgerName').value, 
+                city: document.getElementById('unpCity').value, 
+                state: document.getElementById('unpState').value, 
+                boxes: document.getElementById('unpBoxes').value, 
+                ledgerCode: document.getElementById('unpLedgerCode').value,
+                zone: document.getElementById('unpZone').value,
+                bdmName: document.getElementById('unpBdmName').value,
+                status: "Confirmation Pending" 
             };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify({ action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser })
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Unplanned Return logged successfully!");
-                    cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() });
-                    updateDashboardCounts();
-                    closeUnplannedReturnModal();
-                } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { 
+                    showToast("Success", "Unplanned Return logged successfully!"); 
+                    cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() }); 
+                    updateDashboardCounts(); 
+                    closeUnplannedReturnModal(); 
+                } else { 
+                    showToast("Error", data.message, "error"); 
+                }
             }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
             });
@@ -1531,144 +1666,148 @@
 
         function showUnplannedList() {
             hideAllLists(); 
-            document.getElementById('unplanned-list-section').style.display = 'block';
-            let sb = document.getElementById('unplannedSearchBox'); if(sb) sb.value = '';
+            document.getElementById('unplanned-list-section').style.display = 'block'; 
+            let sb = document.getElementById('unplannedSearchBox'); 
+            if(sb) sb.value = '';
             
             const tableBody = document.getElementById('unplannedTableBody'); 
             const unplannedList = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending');
-
-            if(unplannedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
             
-            let html = "";
-            unplannedList.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.city}</td>
-                    <td>${item.state}</td>
-                    <td><b style="color:#c026d3;">${item.boxes}</b></td>
-                    <td>${item.date}</td>
-                    <td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td>
-                    <td>
-                        <button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button>
-                    </td>
-                </tr>`;
+            if(unplannedList.length === 0) { 
+                tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; 
+                return; 
+            }
+            let html = ""; 
+            unplannedList.forEach((item, index) => { 
+                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`; 
             });
             tableBody.innerHTML = html;
         }
 
-        function openConfirmUnplannedModal(id, reportedBoxes) {
-            document.getElementById('confirmUnplannedForm').reset();
-            document.getElementById('confUnpId').value = id;
-            document.getElementById('confUnpExpected').value = reportedBoxes;
-            document.getElementById('confirmUnplannedModal').style.display = 'flex';
+        // Handle Confirmed By Dropdown in Unplanned Return
+        function handleConfirmedByChange() {
+            const val = document.getElementById('confUnpConfirmedBy').value;
+            const otherGrp = document.getElementById('confUnpOtherGroup');
+            const otherInp = document.getElementById('confUnpOtherSpec');
+            if(val === "Other") {
+                otherGrp.style.display = 'block';
+                otherInp.required = true;
+            } else {
+                otherGrp.style.display = 'none';
+                otherInp.required = false;
+                otherInp.value = '';
+            }
         }
 
-        function closeConfirmUnplannedModal() {
-            document.getElementById('confirmUnplannedModal').style.display = 'none';
+        function openConfirmUnplannedModal(id, reportedBoxes) { 
+            document.getElementById('confirmUnplannedForm').reset(); 
+            document.getElementById('confUnpId').value = id; 
+            document.getElementById('confUnpExpected').value = reportedBoxes; 
+            document.getElementById('confUnpConfirmedBy').value = '';
+            handleConfirmedByChange();
+            document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
+        }
+        
+        function closeConfirmUnplannedModal() { 
+            document.getElementById('confirmUnplannedModal').style.display = 'none'; 
         }
 
         function submitConfirmUnplanned(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveConfirmUnpBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            const id = document.getElementById('confUnpId').value;
+            e.preventDefault(); 
+            const btn = document.getElementById('saveConfirmUnpBtn'); 
+            const originalHTML = btn.innerHTML; 
+            btn.innerHTML = "Processing..."; 
+            btn.disabled = true;
+            
+            const id = document.getElementById('confUnpId').value; 
             const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; 
             const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
-
-            const payload = {
-                action: 'confirmUnplannedReturn',
-                unpId: id,
-                expected: expected,
-                received: received,
-                actionBy: loggedInUser
-            };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            
+            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value;
+            const confirmedBySpec = document.getElementById('confUnpOtherSpec').value;
+            const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
+            
+            const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser };
+            
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', 
+                body: JSON.stringify(payload)
             }).then(res => res.json()).then(data => {
                 if(data.status === 'success') {
                     showToast("Success", "Unplanned Return confirmed successfully!");
-                    
                     let uIndex = cachedUnplannedBills.findIndex(u => u.id === id);
                     if (uIndex > -1) {
-                        let uItem = cachedUnplannedBills[uIndex];
-                        cachedUnplannedBills[uIndex].status = "Confirmed";
-                        
+                        let uItem = cachedUnplannedBills[uIndex]; 
+                        cachedUnplannedBills[uIndex].status = "Confirmed"; 
                         let currentDate = getCurrentFormattedDate();
-                        let baseRet = {
-                            id: uItem.id, drName: uItem.drName, ledgerName: uItem.ledgerName,
-                            city: uItem.city, state: uItem.state, phone: "", pinCode: "", address: "",
-                            createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned",
-                            assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: "Confirmed Unplanned Return"
-                        };
-
+                        let baseRet = { id: uItem.id, drName: uItem.drName, ledgerName: uItem.ledgerName, city: uItem.city, state: uItem.state, phone: "", pinCode: "", address: "", createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned", assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: `Confirmed by: ${finalConfirmedBy}` };
                         if (expected !== received) {
-                            let diff = Math.abs(expected - received);
-                            let isShort = expected > received;
-                            let mainStatus = isShort ? "Return Received (Partial)" : "Return Received (Excess)";
-                            let diffText = isShort ? "Missing Boxes: " + diff : "Excess Boxes: " + diff;
-                            let suffix = isShort ? "-SHORT" : "-EXCESS";
-
-                            cachedReturnBills.push({ ...baseRet, status: mainStatus, boxes: expected, rcvdBoxes: received });
+                            let diff = Math.abs(expected - received); 
+                            let isShort = expected > received; 
+                            let mainStatus = isShort ? "Return Received (Partial)" : "Return Received (Excess)"; 
+                            let diffText = isShort ? "Missing Boxes: " + diff : "Excess Boxes: " + diff; let suffix = isShort ? "-SHORT" : "-EXCESS";
+                            cachedReturnBills.push({ ...baseRet, status: mainStatus, boxes: expected, rcvdBoxes: received }); 
                             cachedReturnBills.push({ ...baseRet, id: uItem.id + suffix, status: "Disputed (Return)", boxes: diff, rcvdBoxes: "", remark: diffText });
-                        } else {
-                            cachedReturnBills.push({ ...baseRet, status: "Return Received", boxes: expected, rcvdBoxes: received });
+                        } else { 
+                            cachedReturnBills.push({ ...baseRet, status: "Return Received", boxes: expected, rcvdBoxes: received }); 
                         }
                     }
-
-                    updateDashboardCounts();
-                    closeConfirmUnplannedModal();
-                    showUnplannedList(); 
-                } else { showToast("Error", data.message, "error"); }
+                    updateDashboardCounts(); closeConfirmUnplannedModal(); showUnplannedList(); 
+                } else { 
+                    showToast("Error", data.message, "error"); 
+                }
             }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
             });
         }
 
-
-        function openGenerateReturnModal() {
-            document.getElementById('generateReturnForm').reset();
-            document.getElementById('generateReturnModal').style.display = 'flex';
+        function openGenerateReturnModal() { 
+            document.getElementById('generateReturnForm').reset(); 
+            document.getElementById('generateReturnModal').style.display = 'flex'; 
         }
-        function closeGenerateReturnModal() {
-            document.getElementById('generateReturnModal').style.display = 'none';
+        
+        function closeGenerateReturnModal() { 
+            document.getElementById('generateReturnModal').style.display = 'none'; 
         }
 
         function submitReturnRequest(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveReturnBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Submitting..."; btn.disabled = true;
-
-            const requestData = {
-                drName: document.getElementById('retDrName').value,
-                ledgerName: document.getElementById('retLedgerName').value,
-                boxes: document.getElementById('retBoxes').value,
-                phone: document.getElementById('retPhone').value,
-                city: document.getElementById('retCity').value,
-                pinCode: document.getElementById('retPinCode').value,
-                state: document.getElementById('retState').value,
-                address: document.getElementById('retAddress').value,
-                status: "Expected Return",
-                date: getCurrentFormattedDate(),
-                remark: ""
+            e.preventDefault(); 
+            const btn = document.getElementById('saveReturnBtn'); 
+            const originalHTML = btn.innerHTML; 
+            btn.innerHTML = "Submitting..."; 
+            btn.disabled = true;
+            
+            const requestData = { 
+                drName: document.getElementById('retDrName').value, 
+                ledgerName: document.getElementById('retLedgerName').value, 
+                boxes: "", 
+                phone: document.getElementById('retPhone').value, 
+                city: document.getElementById('retCity').value, 
+                pinCode: document.getElementById('retPinCode').value, 
+                state: document.getElementById('retState').value, 
+                address: document.getElementById('retAddress').value, 
+                ledgerCode: document.getElementById('retLedgerCode').value,
+                zone: document.getElementById('retZone').value,
+                bdmName: document.getElementById('retBdmName').value,
+                status: "Expected Return", 
+                date: getCurrentFormattedDate(), 
+                remark: "" 
             };
-
+            
             const payload = { action: 'createReturn', data: requestData, createdBy: loggedInUser };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', 
+                body: JSON.stringify(payload)
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Return request generated successfully!");
-                    cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' });
-                    updateDashboardCounts();
-                    closeGenerateReturnModal();
-                } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { 
+                    showToast("Success", "Return request generated successfully!"); 
+                    cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' }); 
+                    updateDashboardCounts(); 
+                    closeGenerateReturnModal(); 
+                } else { 
+                    showToast("Error", data.message, "error"); 
+                }
             }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
             });
@@ -1676,77 +1815,60 @@
 
         function showReturnPendingList() {
             hideAllLists(); 
-            document.getElementById('return-pending-list-section').style.display = 'block';
-            let sb = document.getElementById('returnPendingSearchBox'); if(sb) sb.value = '';
+            document.getElementById('return-pending-list-section').style.display = 'block'; 
+            let sb = document.getElementById('returnPendingSearchBox'); 
+            if(sb) sb.value = '';
             
             const tableBody = document.getElementById('returnPendingTableBody'); 
             const expectedReturns = cachedReturnBills.filter(r => r.status === 'Expected Return');
-
-            if(expectedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
             
-            let html = "";
-            expectedReturns.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.boxes}</td>
-                    <td>${item.phone}</td>
-                    <td>${item.city}</td>
-                    <td>${item.state}</td>
-                    <td><span class="badge bg-pending">${item.status}</span></td>
-                    <td>${item.date}</td>
-                    <td>
-                        <button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button>
-                    </td>
-                </tr>`;
+            if(expectedReturns.length === 0) { 
+                tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; 
+            }
+            let html = ""; 
+            expectedReturns.forEach((item, index) => { 
+                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`; 
             });
             tableBody.innerHTML = html;
         }
 
-        function openAssignReturnCourierModal(returnId) {
-            document.getElementById('assignReturnCourierForm').reset();
-            document.getElementById('assignReturnId').value = returnId;
-            document.getElementById('assignReturnCourierModal').style.display = 'flex';
+        function openAssignReturnCourierModal(returnId) { 
+            document.getElementById('assignReturnCourierForm').reset(); 
+            document.getElementById('assignReturnId').value = returnId; 
+            document.getElementById('assignRetBoxes').value = '';
+            document.getElementById('assignReturnCourierModal').style.display = 'flex'; 
         }
-
-        function closeAssignReturnCourierModal() {
-            document.getElementById('assignReturnCourierModal').style.display = 'none';
+        function closeAssignReturnCourierModal() { 
+            document.getElementById('assignReturnCourierModal').style.display = 'none'; 
         }
 
         function submitAssignReturnCourier(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveAssignReturnBtn');
-            const originalHTML = btn.innerHTML;
+            e.preventDefault(); 
+            const btn = document.getElementById('saveAssignReturnBtn'); 
+            const originalHTML = btn.innerHTML; 
             btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            const returnId = document.getElementById('assignReturnId').value;
-            const partner = document.getElementById('retCourierPartner').value;
+            
+            const returnId = document.getElementById('assignReturnId').value; 
+            const boxes = document.getElementById('assignRetBoxes').value;
+            const partner = document.getElementById('retCourierPartner').value; 
             const docket = document.getElementById('retDocketNo').value;
-
-            const payload = {
-                action: 'assignReturnCourier',
-                returnId: returnId,
-                partner: partner,
-                docket: docket,
-                actionBy: loggedInUser
-            };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            
+            const payload = { action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser };
+            
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify(payload)
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Courier assigned successfully!");
-                    let rIndex = cachedReturnBills.findIndex(r => r.id === returnId);
-                    if (rIndex > -1) {
-                        cachedReturnBills[rIndex].status = "Courier Assigned (Return)";
-                        cachedReturnBills[rIndex].partner = partner;
-                        cachedReturnBills[rIndex].docket = docket;
-                        cachedReturnBills[rIndex].assignDate = getCurrentFormattedDate();
-                    }
-                    updateDashboardCounts();
-                    closeAssignReturnCourierModal();
-                    showReturnPendingList(); 
+                if(data.status === 'success') { 
+                    showToast("Success", "Courier assigned successfully!"); 
+                    let rIndex = cachedReturnBills.findIndex(r => r.id === returnId); 
+                    if (rIndex > -1) { 
+                        cachedReturnBills[rIndex].boxes = boxes;
+                        cachedReturnBills[rIndex].status = "Courier Assigned (Return)"; 
+                        cachedReturnBills[rIndex].partner = partner; 
+                        cachedReturnBills[rIndex].docket = docket; 
+                        cachedReturnBills[rIndex].assignDate = getCurrentFormattedDate(); 
+                    } 
+                    updateDashboardCounts(); closeAssignReturnCourierModal(); showReturnPendingList(); 
                 } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Assignment failed.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
@@ -1754,1201 +1876,340 @@
         }
 
         function showReturnAssignedList() {
-            hideAllLists();
-            document.getElementById('return-assigned-list-section').style.display = 'block';
+            hideAllLists(); 
+            document.getElementById('return-assigned-list-section').style.display = 'block'; 
             let sb = document.getElementById('returnAssignedSearchBox'); if(sb) sb.value = '';
             
             const tableBody = document.getElementById('returnAssignedTableBody'); 
             const assignedReturns = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)');
-
-            if(assignedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
             
-            let html = "";
-            assignedReturns.forEach((item, index) => {
-                html += `<tr>
-                    <td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td>
-                    <td>${index + 1}</td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.boxes}</td>
-                    <td>${item.city}</td>
-                    <td>${item.state}</td>
-                    <td>${item.partner || '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><span class="badge bg-assigned">${item.status}</span></td>
-                </tr>`;
+            if(assignedReturns.length === 0) { 
+                tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; 
+            }
+            let html = ""; 
+            assignedReturns.forEach((item, index) => { 
+                html += `<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`; 
             });
             tableBody.innerHTML = html;
         }
 
-        function toggleAllReturnPickup(source) {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox');
-            checkboxes.forEach(cb => cb.checked = source.checked);
+        function toggleAllReturnPickup(source) { 
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox'); 
+            checkboxes.forEach(cb => cb.checked = source.checked); 
         }
 
         function openConfirmReturnPickupModal() {
             const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked');
-            if(checkboxes.length === 0) {
-                showToast("Warning", "Please select at least one return request to confirm pickup.", "warning"); return;
+            if(checkboxes.length === 0) { 
+                showToast("Warning", "Please select at least one return request to confirm pickup.", "warning"); return; 
             }
             document.getElementById('confirmReturnPickupModal').style.display = 'flex';
         }
 
-        function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
+        function closeConfirmReturnPickupModal() { 
+            document.getElementById('confirmReturnPickupModal').style.display = 'none'; 
+        }
 
         function processReturnPickup() {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked');
-            const itemsToDispatch = [];
-            checkboxes.forEach(cb => {
-                itemsToDispatch.push(cb.value);
-            });
-
-            const btn = document.getElementById('confirmReturnPickupBtn');
-            const originalText = btn.innerHTML;
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); 
+            const itemsToDispatch = []; 
+            checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
+            
+            const btn = document.getElementById('confirmReturnPickupBtn'); 
+            const originalText = btn.innerHTML; 
             btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser })
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", `${itemsToDispatch.length} return shipments picked up!`);
-                    itemsToDispatch.forEach(id => {
-                        let itemIndex = cachedReturnBills.findIndex(r => r.id === id);
-                        if (itemIndex > -1) {
-                            cachedReturnBills[itemIndex].status = "In Transit (Return)";
-                            cachedReturnBills[itemIndex].dispatchDate = getCurrentFormattedDate();
-                        }
-                    });
-                    updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList();
+                if(data.status === 'success') { 
+                    showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); 
+                    itemsToDispatch.forEach(id => { 
+                        let itemIndex = cachedReturnBills.findIndex(r => r.id === id); 
+                        if (itemIndex > -1) { 
+                            cachedReturnBills[itemIndex].status = "In Transit (Return)"; 
+                            cachedReturnBills[itemIndex].dispatchDate = getCurrentFormattedDate(); 
+                        } 
+                    }); 
+                    updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList(); 
                     document.getElementById('selectAllReturnPickup').checked = false; 
                 } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => {
-                btn.innerHTML = originalText; btn.disabled = false;
+            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { 
+                btn.innerHTML = originalText; btn.disabled = false; 
             });
         }
 
         function showReturnTransitList() {
-            hideAllLists();
-            document.getElementById('return-transit-list-section').style.display = 'block';
-            let sb = document.getElementById('returnTransitSearchBox'); if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnTransitTableBody'); 
-            const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
-
+            hideAllLists(); document.getElementById('return-transit-list-section').style.display = 'block'; let sb = document.getElementById('returnTransitSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
             if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
-            
-            let html = "";
-            transitReturns.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.boxes}</td>
-                    <td>${item.city}</td>
-                    <td>${item.state}</td>
-                    <td>${item.partner || '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><span class="badge bg-transit">${item.status}</span></td>
-                    <td style="color:#c2410c;">${item.dispatchDate || '-'}</td>
-                    <td>
-                        <button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button>
-                    </td>
-                </tr>`;
-            });
+            let html = ""; transitReturns.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`; });
             tableBody.innerHTML = html;
         }
 
-        function openReceiveReturnModal(id, expectedBoxes) {
-            document.getElementById('receiveReturnForm').reset();
-            document.getElementById('recvReturnId').value = id;
-            document.getElementById('recvExpectedBoxes').value = expectedBoxes;
-            document.getElementById('recvActualBoxes').max = expectedBoxes;
-            document.getElementById('receiveReturnModal').style.display = 'flex';
-        }
-
-        function closeReceiveReturnModal() {
-            document.getElementById('receiveReturnModal').style.display = 'none';
-        }
+        function openReceiveReturnModal(id, expectedBoxes) { document.getElementById('receiveReturnForm').reset(); document.getElementById('recvReturnId').value = id; document.getElementById('recvExpectedBoxes').value = expectedBoxes; document.getElementById('recvActualBoxes').max = expectedBoxes; document.getElementById('receiveReturnModal').style.display = 'flex'; }
+        function closeReceiveReturnModal() { document.getElementById('receiveReturnModal').style.display = 'none'; }
 
         function submitReceiveReturn(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveReceiveReturnBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            const id = document.getElementById('recvReturnId').value;
-            const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0;
-            const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
-
-            const payload = {
-                action: 'receiveReturn',
-                returnId: id,
-                expected: expected,
-                received: received,
-                actionBy: loggedInUser
-            };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
+            const payload = { action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser };
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify(payload)
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Return receiving processed successfully!");
-                    
-                    let rIndex = cachedReturnBills.findIndex(r => r.id === id);
-                    if (rIndex > -1) {
-                        if (received < expected) {
-                            cachedReturnBills[rIndex].status = "Return Received (Partial)";
-                            cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate();
-                            cachedReturnBills[rIndex].rcvdBoxes = received;
-                            
-                            let missing = expected - received;
-                            let shortItem = { ...cachedReturnBills[rIndex] };
-                            shortItem.id = id + "-SHORT";
-                            shortItem.boxes = missing;
-                            shortItem.rcvdBoxes = "";
-                            shortItem.status = "Disputed (Return)";
-                            shortItem.recvDate = getCurrentFormattedDate();
-                            shortItem.remark = "Missing Boxes: " + missing;
-                            cachedReturnBills.push(shortItem);
-                        } else {
-                            cachedReturnBills[rIndex].status = "Return Received";
-                            cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate();
-                            cachedReturnBills[rIndex].rcvdBoxes = received;
-                        }
-                    }
-
-                    updateDashboardCounts();
-                    closeReceiveReturnModal();
-                    showReturnTransitList(); 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { if (received < expected) { cachedReturnBills[rIndex].status = "Return Received (Partial)"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; let missing = expected - received; let shortItem = { ...cachedReturnBills[rIndex] }; shortItem.id = id + "-SHORT"; shortItem.boxes = missing; shortItem.rcvdBoxes = ""; shortItem.status = "Disputed (Return)"; shortItem.recvDate = getCurrentFormattedDate(); shortItem.remark = "Missing Boxes: " + missing; cachedReturnBills.push(shortItem); } else { cachedReturnBills[rIndex].status = "Return Received"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; } } updateDashboardCounts(); closeReceiveReturnModal(); showReturnTransitList(); } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function calculateReturnTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            
-            function parseCustomDate(dStr) {
-                if(dStr.includes('-')) { 
-                    const parts = dStr.split(/[- :]/);
-                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]);
-                } else if (dStr.includes('/')) { 
-                    const parts = dStr.split(/[\/ :]/);
-                    if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]);
-                }
-                return new Date(dStr);
-            }
-
-            const sDate = parseCustomDate(startStr);
-            const eDate = parseCustomDate(endStr);
-            if (isNaN(sDate) || isNaN(eDate)) return '-';
-            
-            const diffMs = eDate - sDate;
-            if (diffMs < 0) return '-';
-            const diffDays = Math.floor(diffMs / 86400000);
-            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
-            
-            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`;
-            return `${diffHrs} Hrs`;
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } else if (dStr.includes('/')) { const parts = dStr.split(/[\/ :]/); if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
         }
 
         function showReturnReceivedList(startDate = null, endDate = null) {
-            hideAllLists();
-            document.getElementById('return-received-list-section').style.display = 'block';
-            let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnReceivedTableBody'); 
-            
-            let listToDisplay = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed'));
-
-            if(startDate || endDate) {
-                listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate));
-            }
-
+            hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('returnReceivedTableBody'); let listToDisplay = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed'));
+            if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='14' style='text-align:center;'>No received returns found.</td></tr>"; return; }
-            
-            let html = "";
-            listToDisplay.forEach((item, index) => {
-                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
-                let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate);
-
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td>
-                    <td>${item.city}, ${item.state || ''}</td>
-                    <td>${item.partner || '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><span class="badge bg-delivered">${item.status}</span></td>
-                    <td style="font-size:12px; color:#64748b;">${item.date || '-'}</td>
-                    <td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td>
-                    <td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td>
-                    <td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td>
-                    <td style="font-weight:700; font-size:13px;">${totalTimeStr}</td>
-                    <td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td>
-                </tr>`;
-            });
+            let html = ""; listToDisplay.forEach((item, index) => { let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; });
             tableBody.innerHTML = html;
         }
 
         function showReturnDisputedList() {
-            hideAllLists();
-            document.getElementById('return-disputed-list-section').style.display = 'block';
-            let sb = document.getElementById('returnDisputedSearchBox'); if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnDisputedTableBody'); 
-            const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
-
+            hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; let sb = document.getElementById('returnDisputedSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
             if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
-            
-            let html = "";
-            disputedReturns.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b style="color:#dc2626;">${item.id}</b></td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.boxes}</td>
-                    <td>${item.city}</td>
-                    <td>${item.partner || '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><span class="badge bg-rto">${item.status}</span></td>
-                    <td style="color:#c2410c;">${item.recvDate || '-'}</td>
-                    <td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td>
-                    <td>
-                        <button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button>
-                    </td>
-                </tr>`;
-            });
+            let html = ""; disputedReturns.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`; });
             tableBody.innerHTML = html;
         }
 
         function handleResolveRetActionChange() {
-            const actionSelect = document.getElementById('resolveRetAction').value;
-            const dateGroup = document.getElementById('resolveRetDateGroup');
-            const dateInput = document.getElementById('resolveRetDate');
-            const dateLabel = document.getElementById('resolveRetDateLabel');
-            const appGroup = document.getElementById('resolveRetApprovedByGroup');
-            const appInput = document.getElementById('resolveRetApprovedBy');
-
-            if (actionSelect === "Received at Origin") {
-                dateGroup.style.display = 'block';
-                dateLabel.innerHTML = 'Receiving Date <span style="color: red;">*</span>';
-                dateInput.required = true;
-                
-                appGroup.style.display = 'none';
-                appInput.required = false;
-                appInput.value = '';
-            } else if (actionSelect === "Claim Settled / Closed") {
-                dateGroup.style.display = 'block';
-                dateLabel.innerHTML = 'Settled/Closed Date <span style="color: red;">*</span>';
-                dateInput.required = true;
-                
-                appGroup.style.display = 'block';
-                appInput.required = true;
-            } else {
-                dateGroup.style.display = 'none';
-                dateInput.required = false;
-                
-                appGroup.style.display = 'none';
-                appInput.required = false;
-            }
+            const actionSelect = document.getElementById('resolveRetAction').value; const dateGroup = document.getElementById('resolveRetDateGroup'); const dateInput = document.getElementById('resolveRetDate'); const dateLabel = document.getElementById('resolveRetDateLabel'); const appGroup = document.getElementById('resolveRetApprovedByGroup'); const appInput = document.getElementById('resolveRetApprovedBy');
+            if (actionSelect === "Received at Origin") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Receiving Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; appInput.value = ''; } else if (actionSelect === "Claim Settled / Closed") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Settled/Closed Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
-        function openResolveReturnModal(id) {
-            document.getElementById('resolveReturnForm').reset();
-            document.getElementById('resolveRetId').value = id;
-            document.getElementById('resolveRetIdDisplay').value = id;
-            handleResolveRetActionChange(); 
-            document.getElementById('resolveReturnModal').style.display = 'flex';
-        }
-
-        function closeResolveReturnModal() {
-            document.getElementById('resolveReturnModal').style.display = 'none';
-        }
+        function openResolveReturnModal(id) { document.getElementById('resolveReturnForm').reset(); document.getElementById('resolveRetId').value = id; document.getElementById('resolveRetIdDisplay').value = id; handleResolveRetActionChange(); document.getElementById('resolveReturnModal').style.display = 'flex'; }
+        function closeResolveReturnModal() { document.getElementById('resolveReturnModal').style.display = 'none'; }
 
         function submitResolveReturnDispute(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveResolveRetBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            const id = document.getElementById('resolveRetId').value;
-            const actionStatus = document.getElementById('resolveRetAction').value;
-            let remark = document.getElementById('resolveRetRemark').value;
-
-            const approvedBy = document.getElementById('resolveRetApprovedBy').value;
-            if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') {
-                remark += " | " + approvedBy;
-            }
-
-            let actionDateStr = document.getElementById('resolveRetDate').value;
-            if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') {
-                 const d = new Date(actionDateStr);
-                 actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-                 remark += " | Date: " + actionDateStr;
-            }
-
-            const payload = {
-                action: 'resolveReturnDispute',
-                returnId: id,
-                resolutionStatus: actionStatus,
-                remark: remark, 
-                actionBy: loggedInUser
-            };
-
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            e.preventDefault(); const btn = document.getElementById('saveResolveRetBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
+            const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
+            let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
+            const payload = { action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser };
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify(payload) 
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Return Dispute Resolved!");
-                    
-                    let rIndex = cachedReturnBills.findIndex(r => r.id === id);
-                    if (rIndex > -1) {
-                        cachedReturnBills[rIndex].status = actionStatus === 'Received at Origin' ? 'Return Received (SHORT)' : 'Closed (Claim Settled)';
-                        cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); 
-                        
-                        if (actionStatus === 'Received at Origin') {
-                            cachedReturnBills[rIndex].rcvdBoxes = cachedReturnBills[rIndex].boxes; 
-                        }
-                        
-                        let currentRemark = cachedReturnBills[rIndex].remark || "";
-                        cachedReturnBills[rIndex].remark = currentRemark ? (currentRemark + " | Res: " + remark) : ("Res: " + remark);
-                    }
-
-                    updateDashboardCounts();
-                    closeResolveReturnModal();
-                    showReturnDisputedList(); 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { cachedReturnBills[rIndex].status = actionStatus === 'Received at Origin' ? 'Return Received (SHORT)' : 'Closed (Claim Settled)'; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); if (actionStatus === 'Received at Origin') { cachedReturnBills[rIndex].rcvdBoxes = cachedReturnBills[rIndex].boxes; } let currentRemark = cachedReturnBills[rIndex].remark || ""; cachedReturnBills[rIndex].remark = currentRemark ? (currentRemark + " | Res: " + remark) : ("Res: " + remark); } updateDashboardCounts(); closeResolveReturnModal(); showReturnDisputedList(); } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
-        // =====================================================================
-        // NEW FUNCTIONALITY: Track Status Combiner
-        // =====================================================================
         function showReturnStatusList() {
-            hideAllLists();
-            document.getElementById('return-status-list-section').style.display = 'block';
-            let sb = document.getElementById('returnStatusSearchBox'); if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnStatusTableBody'); 
-            let combinedList = [];
-            
-            // Unplanned Returns Data
-            cachedUnplannedBills.forEach(u => {
-                combinedList.push({
-                    id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName,
-                    boxes: u.boxes, status: u.status, date: u.date, remark: '-'
-                });
-            });
-            
-            // Generated Returns Data
-            cachedReturnBills.forEach(r => {
-                let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date;
-                combinedList.push({
-                    id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName,
-                    boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-'
-                });
-            });
-
+            hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; let sb = document.getElementById('returnStatusSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('returnStatusTableBody'); let combinedList = [];
+            cachedUnplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
+            cachedReturnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
             if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
-            
-            // Latest entries on top
-            combinedList.reverse();
-
-            let html = "";
-            combinedList.forEach((item, index) => {
-                let badgeClass = "bg-assigned"; 
-                let s = item.status.toLowerCase();
-                
-                if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending";
-                else if(s.includes('transit')) badgeClass = "bg-transit";
-                else if(s.includes('received') || s.includes('closed') || s.includes('confirmed')) badgeClass = "bg-delivered";
-                else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto";
-
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td>
-                    <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
-                    <td>${item.boxes}</td>
-                    <td><span class="badge ${badgeClass}">${item.status}</span></td>
-                    <td style="font-size:13px;">${item.date || '-'}</td>
-                    <td style="font-size:12px; color:#64748b;">${item.remark}</td>
-                </tr>`;
-            });
+            combinedList.reverse(); let html = "";
+            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html += `<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`; });
             tableBody.innerHTML = html;
         }
 
-        // Global Search Table Function
         function filterTableGlobal(inputId, tbodyId) {
-            let input = document.getElementById(inputId).value.toUpperCase();
-            let table = document.getElementById(tbodyId);
-            let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) {
-                let textContent = tr[i].textContent || tr[i].innerText;
-                if (textContent.toUpperCase().indexOf(input) > -1) { 
-                    tr[i].style.display = ""; 
-                } else { 
-                    tr[i].style.display = "none"; 
-                }
-            }
+            let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) { let textContent = tr[i].textContent || tr[i].innerText; if (textContent.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
         }
-        // =====================================================================
 
         function calculateTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            
-            function parseCustomDate(dStr) {
-                if(dStr.includes('-')) { 
-                    const parts = dStr.split(/[- :]/);
-                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]);
-                } else if (dStr.includes('/')) { 
-                    const parts = dStr.split(/[\/ :]/);
-                    if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]);
-                }
-                return new Date(dStr);
-            }
-
-            const sDate = parseCustomDate(startStr);
-            const eDate = parseCustomDate(endStr);
-            if (isNaN(sDate) || isNaN(eDate)) return '-';
-            
-            const diffMs = eDate - sDate;
-            if (diffMs < 0) return '-';
-            const diffDays = Math.floor(diffMs / 86400000);
-            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
-            if (diffDays > 0) return `${diffDays}d ${diffHrs}h`;
-            return `${diffHrs}h`;
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } else if (dStr.includes('/')) { const parts = dStr.split(/[\/ :]/); if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
         }
 
-        function openDateRangeModal(tabName) {
-            targetTabForDateRange = tabName;
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-            document.getElementById('dateRangeModal').style.display = 'flex';
-        }
-        function closeDateRangeModal() {
-            document.getElementById('dateRangeModal').style.display = 'none';
-        }
-        function applyDateFilterAndShow() {
-            const start = document.getElementById('filterStartDate').value;
-            const end = document.getElementById('filterEndDate').value;
-            closeDateRangeModal();
-            
-            if (targetTabForDateRange === 'delivered') {
-                showDeliveredList(start, end);
-            } else if (targetTabForDateRange === 'dispatched') {
-                showDispatchedList(start, end);
-            } else if (targetTabForDateRange === 'returnReceived') {
-                showReturnReceivedList(start, end);
-            }
-        }
+        function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
+        function closeDateRangeModal() { document.getElementById('dateRangeModal').style.display = 'none'; }
+        function applyDateFilterAndShow() { const start = document.getElementById('filterStartDate').value; const end = document.getElementById('filterEndDate').value; closeDateRangeModal(); if (targetTabForDateRange === 'delivered') { showDeliveredList(start, end); } else if (targetTabForDateRange === 'dispatched') { showDispatchedList(start, end); } else if (targetTabForDateRange === 'returnReceived') { showReturnReceivedList(start, end); } }
+        
         function isDateInRange(dateStr, start, end) {
-            if (!start && !end) return true;
-            if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
-            
-            let itemDate;
-            if (dateStr.includes('-')) {
-                const parts = dateStr.split(/[- :]/);
-                if (parts.length >= 3) {
-                    itemDate = new Date(parts[2], parts[1] - 1, parts[0], parts[3] || 0, parts[4] || 0, parts[5] || 0);
-                } else {
-                    itemDate = new Date(dateStr);
-                }
-            } else {
-                itemDate = new Date(dateStr);
-            }
-
-            if (isNaN(itemDate.getTime())) return true; 
-            
-            const sDate = start ? new Date(start + "T00:00:00") : null;
-            const eDate = end ? new Date(end + "T23:59:59") : null;
-
-            if (sDate && itemDate < sDate) return false;
-            if (eDate && itemDate > eDate) return false;
-            return true;
+            if (!start && !end) return true; if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
+            let itemDate; if (dateStr.includes('-')) { const parts = dateStr.split(/[- :]/); if (parts.length >= 3) { itemDate = new Date(parts[2], parts[1] - 1, parts[0], parts[3] || 0, parts[4] || 0, parts[5] || 0); } else { itemDate = new Date(dateStr); } } else { itemDate = new Date(dateStr); }
+            if (isNaN(itemDate.getTime())) return true; const sDate = start ? new Date(start + "T00:00:00") : null; const eDate = end ? new Date(end + "T23:59:59") : null; if (sDate && itemDate < sDate) return false; if (eDate && itemDate > eDate) return false; return true;
         }
 
         function showInvoiceList(type) {
-            hideAllLists(); currentViewMode = type; 
-            document.getElementById('invoice-list-section').style.display = 'block';
-            let sb = document.getElementById('pendingSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('invoiceTableBody'); 
-
-            const btnExport = document.getElementById('btnExportPending');
-            btnExport.style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex';
-            
-            const btnUpload = document.getElementById('btnBulkUpload');
-            btnUpload.style.display = (isStandardUser()) ? 'none' : 'flex'; 
-
-            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills;
-            document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
-
+            hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; let sb = document.getElementById('pendingSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('invoiceTableBody'); const btnExport = document.getElementById('btnExportPending'); btnExport.style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; const btnUpload = document.getElementById('btnBulkUpload'); btnUpload.style.display = (isStandardUser()) ? 'none' : 'flex'; 
+            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills; document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
-            
-            let html = "";
-            listToDisplay.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.scanTime}</td>
-                    <td><span class="badge bg-pending">Pending</span></td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; listToDisplay.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`; }); tableBody.innerHTML = html;
         }
 
         function showAssignedList() {
-            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block';
-            let sb = document.getElementById('assignedSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('assignedTableBody');  
+            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; let sb = document.getElementById('assignedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('assignedTableBody');  
             if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            
-            let html = "";
-            cachedAssignedBills.forEach((item, index) => {
-                html += `<tr>
-                    <td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.partner}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td><span class="badge bg-assigned">Assigned</span></td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; cachedAssignedBills.forEach((item, index) => { html += `<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`; }); tableBody.innerHTML = html;
         }
 
-        function toggleAllDispatch(source) {
-            const checkboxes = document.querySelectorAll('.dispatch-checkbox');
-            checkboxes.forEach(cb => cb.checked = source.checked);
-        }
+        function toggleAllDispatch(source) { const checkboxes = document.querySelectorAll('.dispatch-checkbox'); checkboxes.forEach(cb => cb.checked = source.checked); }
 
         function showPodList() {
-            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block';
-            let sb = document.getElementById('transitSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('podTableBody');  
+            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; let sb = document.getElementById('transitSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('podTableBody');  
             if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            
-            let html = "";
-            cachedTransitBills.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.partner}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td><span class="badge bg-transit">In Transit</span></td>
-                    <td>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button>
-                        </div>
-                    </td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; cachedTransitBills.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`; }); tableBody.innerHTML = html;
         }
         
         function showDeliveredList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
-            hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block';
-            let sb = document.getElementById('deliveredSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('deliveredTableBody');  
-            
-            let listToDisplay = cachedDeliveredBills;
-            if(startDate || endDate) {
-                listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
-            }
-            
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; let sb = document.getElementById('deliveredSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('deliveredTableBody');  
+            let listToDisplay = cachedDeliveredBills; if(startDate || endDate) { listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
-            
-            let html = "";
-            listToDisplay.forEach((item, index) => {
-                let sTag = '<span class="badge bg-delivered">Delivered</span>';
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td>${item.partner}</td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td>${sTag}</td>
-                    <td>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button>
-                        </div>
-                    </td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; listToDisplay.forEach((item, index) => { let sTag = '<span class="badge bg-delivered">Delivered</span>'; html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td>${sTag}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`; }); tableBody.innerHTML = html;
         }
         
         function showDisputedList() {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
-            hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block';
-            let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('disputedTableBody'); 
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('disputedTableBody'); 
             if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
-            
-            let html = "";
-            cachedDisputedBills.forEach((item, index) => {
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b style="color:#dc2626;">${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td>${item.partner}</td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td><span class="badge bg-rto">${item.status}</span></td>
-                    <td>${item.remark || '-'}</td>
-                    <td>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button>
-                        </div>
-                    </td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; cachedDisputedBills.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`; }); tableBody.innerHTML = html;
         }
 
         function showDispatchedList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; }
-            hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block';
-            let sb = document.getElementById('dispatchedSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('dispatchedTableBody'); 
-            
-            let listToDisplay = cachedDispatchedBills;
-            if(startDate || endDate) {
-                listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate));
-            }
-            
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; let sb = document.getElementById('dispatchedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('dispatchedTableBody'); 
+            let listToDisplay = cachedDispatchedBills; if(startDate || endDate) { listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            
-            let html = "";
-            listToDisplay.forEach((item, index) => {
-                let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : 
-                           `<span class="badge bg-delivered">${item.status}</span>`;
-                           
-                let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime);
-                           
-                html += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td>${item.partner}</td>
-                    <td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td>
-                    <td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td>
-                    <td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td>
-                    <td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td>
-                    <td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td>
-                    <td>${sTag}</td>
-                    <td>${item.remark || '-'}</td>
-                </tr>`;
-            });
-            tableBody.innerHTML = html;
+            let html = ""; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`; }); tableBody.innerHTML = html;
         }
 
         function handleUploadTypeChange() {
-            const type = document.getElementById('uploadType').value;
-            const remarkGroup = document.getElementById('remarkGroup');
-            const remarkInput = document.getElementById('podRemark');
-            const fileLabel = document.getElementById('transitFileLabel');
-
-            if (type === 'RTO' || type === 'Misplaced') { 
-                remarkGroup.style.display = 'block'; 
-                remarkInput.required = true; 
-                fileLabel.innerText = "Select Document (PDF/Image)";
-            } else { 
-                remarkGroup.style.display = 'none'; 
-                remarkInput.required = false; 
-                remarkInput.value = ''; 
-                fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)";
-            }
+            const type = document.getElementById('uploadType').value; const remarkGroup = document.getElementById('remarkGroup'); const remarkInput = document.getElementById('podRemark'); const fileLabel = document.getElementById('transitFileLabel');
+            if (type === 'RTO' || type === 'Misplaced') { remarkGroup.style.display = 'block'; remarkInput.required = true; fileLabel.innerText = "Select Document (PDF/Image)"; } else { remarkGroup.style.display = 'none'; remarkInput.required = false; remarkInput.value = ''; fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)"; }
         }
         
-function handleFinalActionChange() {
-    const actionType = document.getElementById('finalActionType').value;
-    const shortGroup = document.getElementById('finalShortDeliveryGroup');
-    const expBox = document.getElementById('finalExpectedBoxes');
-    const recBox = document.getElementById('finalReceivedBoxes');
-    const remarkGroup = document.getElementById('finalRemarkGroup');
-    const remarkInput = document.getElementById('finalPodRemark');
-    const fileGroup = document.getElementById('finalFileGroup');
-    const fileInput = document.getElementById('finalPodFile');
+        function handleFinalActionChange() {
+            const actionType = document.getElementById('finalActionType').value; const shortGroup = document.getElementById('finalShortDeliveryGroup'); const expBox = document.getElementById('finalExpectedBoxes'); const recBox = document.getElementById('finalReceivedBoxes'); const remarkGroup = document.getElementById('finalRemarkGroup'); const remarkInput = document.getElementById('finalPodRemark'); const fileGroup = document.getElementById('finalFileGroup'); const fileInput = document.getElementById('finalPodFile');
+            if (actionType === 'Short Delivered') { shortGroup.style.display = 'flex'; expBox.required = true; recBox.required = true; remarkGroup.style.display = 'block'; remarkInput.required = true; fileGroup.style.display = 'block'; fileInput.required = true; } else if (actionType === 'OTP based delivery - No POD Required') { shortGroup.style.display = 'none'; expBox.required = false; recBox.required = false; remarkGroup.style.display = 'none'; remarkInput.required = false; fileGroup.style.display = 'none'; fileInput.required = false; } else { shortGroup.style.display = 'none'; expBox.required = false; recBox.required = false; remarkGroup.style.display = 'none'; remarkInput.required = false; fileGroup.style.display = 'block'; fileInput.required = true; }
+        }
 
-    if (actionType === 'Short Delivered') {
-        shortGroup.style.display = 'flex';
-        expBox.required = true;
-        recBox.required = true;
-        remarkGroup.style.display = 'block';
-        remarkInput.required = true;
-        fileGroup.style.display = 'block';
-        fileInput.required = true;
-    } else if (actionType === 'OTP based delivery - No POD Required') {
-        shortGroup.style.display = 'none';
-        expBox.required = false;
-        recBox.required = false;
-        remarkGroup.style.display = 'none';
-        remarkInput.required = false;
-        fileGroup.style.display = 'none';
-        fileInput.required = false;
-    } else {
-        shortGroup.style.display = 'none';
-        expBox.required = false;
-        recBox.required = false;
-        remarkGroup.style.display = 'none';
-        remarkInput.required = false;
-        fileGroup.style.display = 'block';
-        fileInput.required = true;
-    }
-}
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
         function processBulkUpload() {
-            const fileInput = document.getElementById('bulkExcelFile');
-            if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
+            const fileInput = document.getElementById('bulkExcelFile'); if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
+            const file = fileInput.files[0]; const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
-                
+                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); const firstSheet = workbook.Sheets[workbook.SheetNames[0]]; const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
                 if (jsonData.length === 0) { showToast("Error", "Excel file is empty.", "error"); return; }
                 const groupedData = {};
-
                 for (let row of jsonData) {
-                    const rowUpper = {};
-                    for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
-                    
-                    const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim();
-                    const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
-                    
+                    const rowUpper = {}; for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
+                    const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
                     if (invNo) {
                         const isPending = cachedPendingBills.find(b => String(b.invoiceNo).trim() === invNo);
                         if (isPending) {
                             const uniqueKey = invNo + "_" + excelDocket;
-                            if (!groupedData[uniqueKey]) {
-                                groupedData[uniqueKey] = {
-                                    invoiceNo: invNo, partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "",
-                                    weight: String(rowUpper["WEIGHT"] || ""), size: String(rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || ""),
-                                    origin: "Meerut", city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "",
-                                    drName: rowUpper["DR NAME"] || "", ledgerName: rowUpper["LEDGER NAME"] || "",
-                                    pinCode: String(rowUpper["PIN CODE"] || ""), docketNo: excelDocket
-                                };
-                            } else {
-                                if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"];
-                                if(rowUpper["DIMENSION"]) groupedData[uniqueKey].size += " | " + rowUpper["DIMENSION"];
-                            }
+                            if (!groupedData[uniqueKey]) { groupedData[uniqueKey] = { invoiceNo: invNo, partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", weight: String(rowUpper["WEIGHT"] || ""), size: String(rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || ""), origin: "Meerut", city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", drName: rowUpper["DR NAME"] || "", ledgerName: rowUpper["LEDGER NAME"] || "", pinCode: String(rowUpper["PIN CODE"] || ""), docketNo: excelDocket }; } else { if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; if(rowUpper["DIMENSION"]) groupedData[uniqueKey].size += " | " + rowUpper["DIMENSION"]; }
                         }
                     }
                 }
-                const assignments = Object.values(groupedData);
-                if(assignments.length === 0) { showToast("Error", "No matching pending invoices found in the uploaded Excel.", "error"); return; }
-                
-                pendingBulkAssignments = assignments;
-                populateConfirmBulkModal(assignments);
+                const assignments = Object.values(groupedData); if(assignments.length === 0) { showToast("Error", "No matching pending invoices found in the uploaded Excel.", "error"); return; }
+                pendingBulkAssignments = assignments; populateConfirmBulkModal(assignments);
             };
             reader.readAsArrayBuffer(file);
         }
 
         function populateConfirmBulkModal(assignments) {
-            const tbody = document.getElementById('confirmBulkTableBody');
-            tbody.innerHTML = '';
-            assignments.forEach((a, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${index + 1}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;"><b>${a.invoiceNo}</b></td>
-                        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.partner}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.docketNo || '-'}</td>
-                    </tr>
-                `;
-            });
-            document.getElementById('confirmBulkModal').style.display = 'flex';
-            closeBulkUploadModal();
+            const tbody = document.getElementById('confirmBulkTableBody'); tbody.innerHTML = ''; assignments.forEach((a, index) => { tbody.innerHTML += `<tr><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${index + 1}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;"><b>${a.invoiceNo}</b></td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.partner}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.docketNo || '-'}</td></tr>`; }); document.getElementById('confirmBulkModal').style.display = 'flex'; closeBulkUploadModal();
         }
 
-        function closeConfirmBulkModal() {
-            document.getElementById('confirmBulkModal').style.display = 'none';
-            pendingBulkAssignments = [];
-        }
+        function closeConfirmBulkModal() { document.getElementById('confirmBulkModal').style.display = 'none'; pendingBulkAssignments = []; }
 
-        function executeBulkAssignment() {
-            if(pendingBulkAssignments.length === 0) return;
-            submitBulkAssignment(pendingBulkAssignments);
-        }
+        function executeBulkAssignment() { if(pendingBulkAssignments.length === 0) return; submitBulkAssignment(pendingBulkAssignments); }
 
         function submitBulkAssignment(assignments) {
             const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            fetch(WEB_APP_URL, { 
-                method: 'POST', body: JSON.stringify({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }), 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser })
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", `${data.processed} invoices verified and assigned successfully!`);
-                    assignments.forEach(a => {
-                        cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); 
-                        cachedAssignedBills.push({ 
-                            invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city,
-                            drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: getCurrentFormattedDate()
-                        });
-                    });
-                    updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); 
-                } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned successfully!`); assignments.forEach(a => { cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); cachedAssignedBills.push({ invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city, drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: getCurrentFormattedDate() }); }); updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
         }
 
-        function openConfirmDispatchModal() {
-            const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked');
-            if(checkboxes.length === 0) {
-                showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return;
-            }
-            document.getElementById('confirmDispatchModal').style.display = 'flex';
-        }
-
+        function openConfirmDispatchModal() { const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); if(checkboxes.length === 0) { showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return; } document.getElementById('confirmDispatchModal').style.display = 'flex'; }
         function closeConfirmDispatchModal() { document.getElementById('confirmDispatchModal').style.display = 'none'; }
 
         function processPhysicalDispatch() {
-            const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked');
-            const itemsToDispatch = [];
-            checkboxes.forEach(cb => {
-                const parts = cb.value.split('|');
-                itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] });
-            });
-
-            const btn = document.getElementById('confirmDispatchBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
+            const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
+                method: 'POST', body: JSON.stringify({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser })
             }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`);
-                    itemsToDispatch.forEach(dispatchItem => {
-                        let itemIndex = cachedAssignedBills.findIndex(i => i.invoiceNo === dispatchItem.invoiceNo && (i.docket || '') === dispatchItem.docketNo);
-                        if (itemIndex > -1) {
-                            let itemToMove = cachedAssignedBills[itemIndex];
-                            cachedAssignedBills.splice(itemIndex, 1);
-                            itemToMove.actionTime = getCurrentFormattedDate();
-                            cachedTransitBills.push(itemToMove);
-                        }
-                    });
-                    updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList();
-                    document.getElementById('selectAllDispatch').checked = false; 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => {
-                btn.innerHTML = originalText; btn.disabled = false;
-            });
+                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); itemsToDispatch.forEach(dispatchItem => { let itemIndex = cachedAssignedBills.findIndex(i => i.invoiceNo === dispatchItem.invoiceNo && (i.docket || '') === dispatchItem.docketNo); if (itemIndex > -1) { let itemToMove = cachedAssignedBills[itemIndex]; cachedAssignedBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); cachedTransitBills.push(itemToMove); } }); updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList(); document.getElementById('selectAllDispatch').checked = false; } else { showToast("Error", data.message, "error"); }
+            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
         function openForgotPasswordModal() { document.getElementById('forgotPasswordModal').style.display = 'flex'; }
         function closeForgotPasswordModal() { document.getElementById('forgotPasswordModal').style.display = 'none'; }
         
-        function openPodModal(inv, docket) { 
-            document.getElementById('podInvoiceNo').value = inv; 
-            document.getElementById('podOldDocketNo').value = docket || ''; 
-            document.getElementById('uploadPodModal').style.display = 'flex'; 
-            handleUploadTypeChange(); 
-        }
+        function openPodModal(inv, docket) { document.getElementById('podInvoiceNo').value = inv; document.getElementById('podOldDocketNo').value = docket || ''; document.getElementById('uploadPodModal').style.display = 'flex'; handleUploadTypeChange(); }
         function closePodModal() { document.getElementById('uploadPodModal').style.display = 'none'; document.getElementById('podForm').reset(); }
         
-        function openFinalPodModal(inv, docket) { 
-            document.getElementById('finalPodInvoiceNo').value = inv; 
-            document.getElementById('finalPodOldDocketNo').value = docket || ''; 
-            document.getElementById('finalActionType').value = 'Full Delivery POD';
-            handleFinalActionChange();
-            document.getElementById('finalPodModal').style.display = 'flex'; 
-        }
+        function openFinalPodModal(inv, docket) { document.getElementById('finalPodInvoiceNo').value = inv; document.getElementById('finalPodOldDocketNo').value = docket || ''; document.getElementById('finalActionType').value = 'Full Delivery POD'; handleFinalActionChange(); document.getElementById('finalPodModal').style.display = 'flex'; }
         function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
 
         function openResolveModal(inv, docket, status) {
-            document.getElementById('resolveInvNo').value = inv;
-            document.getElementById('resolveDocket').value = docket || '';
-            document.getElementById('resolveInvDisplay').value = inv;
-            document.getElementById('resolveReceiveDate').value = '';
-            document.getElementById('resolveApprovedBy').value = '';
-            
-            const actionSelect = document.getElementById('resolveAction');
-            actionSelect.innerHTML = ''; 
-            
-            if (status.includes("RTO")) {
-                actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`;
-            } else if (status.includes("Misplaced")) {
-                actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`;
-                actionSelect.innerHTML += `<option value="Delivered to client">Delivered to client (Pending POD)</option>`;
-                actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
-            } else if (status.includes("Disputed") || status.includes("Missing") || status.includes("Short")) {
-                actionSelect.innerHTML += `<option value="Received to Party">Received to Party (Delivered)</option>`;
-                actionSelect.innerHTML += `<option value="Return to Origin">Return to Origin (Received at Warehouse)</option>`;
-                actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`;
-            } else {
-                actionSelect.innerHTML += `<option value="Case Closed">Close Case</option>`;
-            }
-            
-            handleResolveActionChange();
-            document.getElementById('resolveModal').style.display = 'flex';
+            document.getElementById('resolveInvNo').value = inv; document.getElementById('resolveDocket').value = docket || ''; document.getElementById('resolveInvDisplay').value = inv; document.getElementById('resolveReceiveDate').value = ''; document.getElementById('resolveApprovedBy').value = '';
+            const actionSelect = document.getElementById('resolveAction'); actionSelect.innerHTML = ''; 
+            if (status.includes("RTO")) { actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`; } else if (status.includes("Misplaced")) { actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`; actionSelect.innerHTML += `<option value="Delivered to client">Delivered to client (Pending POD)</option>`; actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`; } else if (status.includes("Disputed") || status.includes("Missing") || status.includes("Short")) { actionSelect.innerHTML += `<option value="Received to Party">Received to Party (Delivered)</option>`; actionSelect.innerHTML += `<option value="Return to Origin">Return to Origin (Received at Warehouse)</option>`; actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`; } else { actionSelect.innerHTML += `<option value="Case Closed">Close Case</option>`; }
+            handleResolveActionChange(); document.getElementById('resolveModal').style.display = 'flex';
         }
         function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
 
         function handleResolveActionChange() {
-            const actionSelect = document.getElementById('resolveAction');
-            const dateGroup = document.getElementById('resolveDateGroup');
-            const dateInput = document.getElementById('resolveReceiveDate');
-            const appGroup = document.getElementById('resolveApprovedByGroup');
-            const appInput = document.getElementById('resolveApprovedBy');
-
-            if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") {
-                dateGroup.style.display = 'block';
-                dateInput.required = true;
-                appGroup.style.display = 'none';
-                appInput.required = false;
-                appInput.value = '';
-            } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") {
-                dateGroup.style.display = 'block';
-                dateInput.required = true;
-                appGroup.style.display = 'block';
-                appInput.required = true;
-            } else {
-                dateGroup.style.display = 'none';
-                dateInput.required = false;
-                appGroup.style.display = 'none';
-                appInput.required = false;
-            }
+            const actionSelect = document.getElementById('resolveAction'); const dateGroup = document.getElementById('resolveDateGroup'); const dateInput = document.getElementById('resolveReceiveDate'); const appGroup = document.getElementById('resolveApprovedByGroup'); const appInput = document.getElementById('resolveApprovedBy');
+            if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; appInput.value = ''; } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
         function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e); }); }
         
         async function submitPodUpload(e) {
             e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
-            const uploadType = document.getElementById('uploadType').value; 
-            const invoiceNo = document.getElementById('podInvoiceNo').value;
-            const oldDocketNo = document.getElementById('podOldDocketNo').value;
-            const remarkInput = document.getElementById('podRemark').value; 
-            
-            let base64Data = ""; let fileName = ""; let mimeType = "";
-            const file = document.getElementById('podFile').files[0]; 
-            
-            if (file) {
-                base64Data = await getBase64(file);
-                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name;
-                mimeType = file.type;
-            }
-
+            const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value; 
+            let base64Data = ""; let fileName = ""; let mimeType = ""; const file = document.getElementById('podFile').files[0]; 
+            if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name; mimeType = file.type; }
             try {
-                const payload = { 
-                    action: 'uploadPOD', 
-                    invoiceNo: invoiceNo, 
-                    oldDocketNo: oldDocketNo, 
-                    fileName: fileName, 
-                    mimeType: mimeType, 
-                    fileBase64: base64Data, 
-                    uploadedBy: loggedInUser, 
-                    uploadType: uploadType, 
-                    remarks: remarkInput
-                };
-                
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
-                const data = await res.json();
-                
-                if(data.status === 'success') {
-                    showToast("Updated", `Status (${uploadType}) Updated Successfully!`);
-                    let itemIndex = cachedTransitBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo);
-                    if (itemIndex > -1) {
-                        let itemToMove = cachedTransitBills[itemIndex];
-                        cachedTransitBills.splice(itemIndex, 1);
-                        
-                        itemToMove.actionTime = getCurrentFormattedDate();
-                        itemToMove.status = uploadType;
-                        itemToMove.remark = remarkInput;
-                        
-                        if (uploadType === "Delivered") {
-                            cachedDeliveredBills.push(itemToMove); 
-                        } else {
-                            cachedDisputedBills.push(itemToMove);
-                        }
-                    }
-                    updateDashboardCounts(); closePodModal(); showPodList(); 
-                } else { showToast("Error", data.message, "error"); }
+                const payload = { action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput };
+                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); let itemIndex = cachedTransitBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedTransitBills[itemIndex]; cachedTransitBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.status = uploadType; itemToMove.remark = remarkInput; if (uploadType === "Delivered") { cachedDeliveredBills.push(itemToMove); } else { cachedDisputedBills.push(itemToMove); } } updateDashboardCounts(); closePodModal(); showPodList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
         async function submitFinalPodUpload(e) {
             e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
-            
-            const actionType = document.getElementById('finalActionType').value;
-            const invoiceNo = document.getElementById('finalPodInvoiceNo').value;
-            const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
-            
-            const expBoxes = document.getElementById('finalExpectedBoxes').value;
-            const recBoxes = document.getElementById('finalReceivedBoxes').value;
-            const rem = document.getElementById('finalPodRemark').value;
-
+            const actionType = document.getElementById('finalActionType').value; const invoiceNo = document.getElementById('finalPodInvoiceNo').value; const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
+            const expBoxes = document.getElementById('finalExpectedBoxes').value; const recBoxes = document.getElementById('finalReceivedBoxes').value; const rem = document.getElementById('finalPodRemark').value;
             const file = document.getElementById('finalPodFile').files[0]; 
-            
             try {
-                let base64Data = "";
-                let fileName = "";
-                let mimeType = "";
-
-                if (file) {
-                    base64Data = await getBase64(file);
-                    fileName = invoiceNo + "_POD_" + file.name;
-                    mimeType = file.type;
-                }
-                
-                const payload = { 
-                    action: 'uploadFinalPOD', 
-                    invoiceNo: invoiceNo, 
-                    oldDocketNo: oldDocketNo, 
-                    fileName: fileName, 
-                    mimeType: mimeType, 
-                    fileBase64: base64Data, 
-                    uploadedBy: loggedInUser,
-                    uploadType: actionType, 
-                    expectedBoxes: expBoxes, 
-                    receivedBoxes: recBoxes, 
-                    remarks: rem
-                };
-                
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
-                const data = await res.json();
-                
-                if(data.status === 'success') {
-                    showToast("Success", `Status Updated Successfully!`);
-                    let itemIndex = cachedDeliveredBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo);
-                    if (itemIndex > -1) {
-                        let itemToMove = cachedDeliveredBills[itemIndex];
-                        cachedDeliveredBills.splice(itemIndex, 1);
-                        
-                        if (actionType === 'Short Delivered') {
-                            itemToMove.status = 'Delivered (Partial)';
-                            itemToMove.actionTime = getCurrentFormattedDate();
-                            itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`;
-                            cachedDispatchedBills.push(itemToMove);
-
-                            cachedDisputedBills.push({
-                                invoiceNo: itemToMove.invoiceNo + "-SHORT",
-                                docket: itemToMove.docket,
-                                partner: itemToMove.partner,
-                                city: itemToMove.city,
-                                drName: itemToMove.drName,
-                                ledgerName: itemToMove.ledgerName,
-                                pinCode: itemToMove.pinCode,
-                                actionTime: getCurrentFormattedDate(),
-                                status: "Disputed (Missing)",
-                                remark: `Missing Boxes: ${expBoxes - recBoxes}`
-                            });
-                        } else if (actionType === 'OTP based delivery - No POD Required') {
-                            itemToMove.status = 'Delivered (OTP)';
-                            itemToMove.actionTime = getCurrentFormattedDate();
-                            itemToMove.remark = 'No POD required (OTP)';
-                            cachedDispatchedBills.push(itemToMove);
-                        } else {
-                            itemToMove.status = 'Delivered (POD)';
-                            itemToMove.actionTime = getCurrentFormattedDate();
-                            cachedDispatchedBills.push(itemToMove);
-                        }
-                    }
-                    updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); 
-                } else { showToast("Error", data.message, "error"); }
+                let base64Data = ""; let fileName = ""; let mimeType = "";
+                if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
+                const payload = { action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem };
+                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); let itemIndex = cachedDeliveredBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedDeliveredBills[itemIndex]; cachedDeliveredBills.splice(itemIndex, 1); if (actionType === 'Short Delivered') { itemToMove.status = 'Delivered (Partial)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`; cachedDispatchedBills.push(itemToMove); cachedDisputedBills.push({ invoiceNo: itemToMove.invoiceNo + "-SHORT", docket: itemToMove.docket, partner: itemToMove.partner, city: itemToMove.city, drName: itemToMove.drName, ledgerName: itemToMove.ledgerName, pinCode: itemToMove.pinCode, actionTime: getCurrentFormattedDate(), status: "Disputed (Missing)", remark: `Missing Boxes: ${expBoxes - recBoxes}` }); } else if (actionType === 'OTP based delivery - No POD Required') { itemToMove.status = 'Delivered (OTP)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = 'No POD required (OTP)'; cachedDispatchedBills.push(itemToMove); } else { itemToMove.status = 'Delivered (POD)'; itemToMove.actionTime = getCurrentFormattedDate(); cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
         async function submitResolveDispute(e) {
-            e.preventDefault(); 
-            const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            const invoiceNo = document.getElementById('resolveInvNo').value;
-            const docketNo = document.getElementById('resolveDocket').value;
-            const actionStatus = document.getElementById('resolveAction').value;
-            let remark = document.getElementById('resolveFinalRemark').value;
-            
-            const approvedBy = document.getElementById('resolveApprovedBy').value;
-            if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') {
-                remark += " | " + approvedBy;
-            }
-
-            let receiveDateStr = document.getElementById('resolveReceiveDate').value;
-            if(receiveDateStr) {
-                 const d = new Date(receiveDateStr);
-                 receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-            }
-            
+            e.preventDefault(); const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
+            const invoiceNo = document.getElementById('resolveInvNo').value; const docketNo = document.getElementById('resolveDocket').value; const actionStatus = document.getElementById('resolveAction').value; let remark = document.getElementById('resolveFinalRemark').value;
+            const approvedBy = document.getElementById('resolveApprovedBy').value; if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
+            let receiveDateStr = document.getElementById('resolveReceiveDate').value; if(receiveDateStr) { const d = new Date(receiveDateStr); receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
             try {
-                const payload = { 
-                    action: 'resolveDispute', 
-                    invoiceNo: invoiceNo, 
-                    docketNo: docketNo, 
-                    resolutionStatus: actionStatus, 
-                    resolutionRemark: remark,
-                    receiveDate: receiveDateStr,
-                    resolvedBy: loggedInUser
-                };
-                
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const data = await res.json();
-                
-                if(data.status === 'success') {
-                    showToast("Success", "Case Resolved Successfully!");
-                    let itemIndex = cachedDisputedBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
-                    if (itemIndex > -1) {
-                        let itemToMove = cachedDisputedBills[itemIndex];
-                        cachedDisputedBills.splice(itemIndex, 1);
-                        
-                        let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : "";
-                        itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText;
-                        itemToMove.actionTime = getCurrentFormattedDate();
-                        
-                        if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") {
-                            itemToMove.status = "Delivered";
-                            cachedDeliveredBills.push(itemToMove);
-                        } else {
-                            itemToMove.status = "Closed: " + actionStatus;
-                            cachedDispatchedBills.push(itemToMove);
-                        }
-                    }
-                    updateDashboardCounts(); closeResolveModal(); showDisputedList(); 
-                } else { showToast("Error", data.message, "error"); }
+                const payload = { action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser };
+                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); let itemIndex = cachedDisputedBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo); if (itemIndex > -1) { let itemToMove = cachedDisputedBills[itemIndex]; cachedDisputedBills.splice(itemIndex, 1); let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : ""; itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText; itemToMove.actionTime = getCurrentFormattedDate(); if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") { itemToMove.status = "Delivered"; cachedDeliveredBills.push(itemToMove); } else { itemToMove.status = "Closed: " + actionStatus; cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeResolveModal(); showDisputedList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
         }
 
-        // --- LIVE CLOCK ---
         function updateDateTime() {
-            const now = new Date();
-            const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
-            document.getElementById('dashCompactTime').innerText = timeStr;
+            const now = new Date(); const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`; document.getElementById('dashCompactTime').innerText = timeStr;
         }
         updateDateTime(); setInterval(updateDateTime, 1000);
     </script>
