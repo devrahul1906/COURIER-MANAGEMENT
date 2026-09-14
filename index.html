@@ -513,12 +513,12 @@
                         <div class="kpi-value" id="transitReturnCount">0</div><div class="kpi-desc">Dispatched from Party</div>
                     </div>
 
-                    <div class="kpi-card card-delivered" id="card-return-received" onclick="openDateRangeModal('returnReceived')">
+                    <div class="kpi-card card-delivered" id="card-return-received" onclick="showReturnReceivedList()">
                         <div class="kpi-header"><span class="kpi-title">Return Received</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
                         <div class="kpi-value" id="receivedReturnCount">0</div><div class="kpi-desc">Received / Settled</div>
                     </div>
                     
-                    <div class="kpi-card" id="card-return-processed" style="background-color: #fdf4ff; border-color: #f0abfc; color: #86198f;" onclick="showReturnProcessedList()">
+                    <div class="kpi-card" id="card-return-processed" style="background-color: #fdf4ff; border-color: #f0abfc; color: #86198f;" onclick="openDateRangeModal('returnProcessed')">
                         <div class="kpi-header">
                             <span class="kpi-title">Return Processed</span>
                             <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
@@ -625,7 +625,7 @@
                     <div class="table-responsive">
                         <table id="returnReceivedTable" style="min-width: 1850px;">
                             <thead><tr>
-                                <th><input type="checkbox" id="selectAllReturnReceived" onclick="toggleAllReturnReceived(this)" style="cursor: pointer;"></th>
+                                <th>Select</th>
                                 <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th>
                             </tr></thead>
                             <tbody id="returnReceivedTableBody"></tbody>
@@ -729,7 +729,10 @@
                             <input type="number" id="unpBoxes" min="1" placeholder="Enter Boxes" required>
                         </div>
                     </div>
-                    
+                    <div class="form-group file-input-box" style="margin-top: 0;">
+                        <label style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Upload Parcel Image (JPG/PNG) <span style="color: red;">*</span></label>
+                        <input type="file" id="unpFile" accept="image/jpeg, image/png, image/jpg" required>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeUnplannedReturnModal()">Cancel</button>
                         <button type="submit" id="saveUnplannedBtn" class="action-btn btn-primary" style="background:#c026d3;">Submit Surprise Entry</button>
@@ -917,7 +920,12 @@
                     </div>
                     <div class="form-group">
                         <label>Courier Partner <span style="color: red;">*</span></label>
-                        <input type="text" id="retCourierPartner" placeholder="e.g. Delhivery, Blue Dart" required>
+                        <select id="retCourierPartner" required>
+                            <option value="">Select Option</option>
+                            <option value="Blue Dart">Blue Dart</option>
+                            <option value="DTDC">DTDC</option>
+                            <option value="Delhivery">Delhivery</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Docket No <span style="color: red;">*</span></label>
@@ -972,6 +980,10 @@
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">
                         * If actual boxes are less than expected, a new dispute record will automatically be created.
                     </p>
+                    <div class="form-group file-input-box" style="margin-top: 0;">
+                        <label style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Upload Parcel Image (JPG/PNG) <span style="color: red;">*</span></label>
+                        <input type="file" id="recvFile" accept="image/jpeg, image/png, image/jpg" required>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeReceiveReturnModal()">Cancel</button>
                         <button type="submit" id="saveReceiveReturnBtn" class="action-btn btn-success" style="background:var(--success);">Confirm Receiving</button>
@@ -996,6 +1008,10 @@
                     <div class="form-group">
                         <label>CN Creation Date <span style="color: red;">*</span></label>
                         <input type="date" id="cnDateInput" required>
+                    </div>
+                    <div class="form-group" id="cnDelayReasonGroup" style="display: none;">
+                        <label>Reason for Delay <span style="color: red;">*</span></label>
+                        <input type="text" id="cnDelayReason" placeholder="Please provide a valid reason for delayed CN entry...">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeCNDetailsModal()">Cancel</button>
@@ -1045,6 +1061,12 @@
                         <label>Final Remarks (Receiver's Name)</label>
                         <input type="text" id="resolveRetRemark" placeholder="e.g. Receiver's Name / Claim passed..." required>
                     </div>
+
+                    <div class="form-group file-input-box" style="margin-top: 0;">
+                        <label style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">Upload Evidence Image (JPG/PNG) <span style="color: red;">*</span></label>
+                        <input type="file" id="resolveRetFile" accept="image/jpeg, image/png, image/jpg" required>
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeResolveReturnModal()">Cancel</button>
                         <button type="submit" id="saveResolveRetBtn" class="action-btn btn-primary">Close Case</button>
@@ -1309,7 +1331,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw8ASlVHopwSI6gZbeP-c2D5l4CkOIDGWQkrUCO-14CEDpFsjOk__4YMpSoqRxNGVpG/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKSlRz-B1_IWMRlPSVpOWnk9deL_HeoeV4Zr-RGobcmLk_b3tZDTCwSrNOcuZWHYs2/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
@@ -1327,6 +1349,29 @@
         let currentWorkspace = "dispatch"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
+
+        // --- AUTO-HEALING NETWORK WRAPPER ---
+        async function safeFetch(payload, retries = 3) {
+            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
+            const options = {
+                method: 'POST',
+                redirect: 'follow',
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            };
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(noCacheUrl, options);
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    return await response.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    console.warn(`Connection dropped. Auto-reconnecting... Attempt ${i + 1} of ${retries}`);
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+        }
 
         function safeStr(val) { 
             return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
@@ -1531,15 +1576,9 @@
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = "Authenticating & Loading...";
 
-            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
+            const payload = { action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' };
 
-            fetch(noCacheUrl, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' })
-            }).then(res => {
-                if (!res.ok) throw new Error("HTTP Error " + res.status);
-                return res.json();
-            }).then(data => {
+            safeFetch(payload).then(data => {
                 if(data.status === "success") {
                     const allowed = data.allowedType ? data.allowedType.trim() : "All";
                     if (allowed === "RESTRICTED") {
@@ -1605,7 +1644,8 @@
                 }
             }).catch(error => { 
                 console.error("Login Failed:", error);
-                showToast("Error", `Fix: ${error.message}`, "error"); 
+                errorDiv.innerText = "Network timeout. Please check your connection and try again.";
+                errorDiv.style.display = 'block'; 
                 btn.disabled = false; 
                 spinner.style.display = 'none'; 
                 document.getElementById('loginText').innerText = "Sign In"; 
@@ -1617,15 +1657,9 @@
             const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
             btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Syncing...`; btn.disabled = true;
 
-            const user = document.getElementById('username').value || localStorage.getItem('hatvetUser');
-            const pass = document.getElementById('password').value || localStorage.getItem('hatvetPass');
+            const payload = { action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' };
 
-            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
-
-            fetch(noCacheUrl, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' })
-            }).then(res => res.json()).then(data => {
+            safeFetch(payload).then(data => {
                 if(data.status === "success") {
                     cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || []; cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || []; cachedReturnBills = data.returnBills || []; cachedUnplannedBills = data.unplannedBills || [];
                     cachedLedgers = data.ledgerList || [];
@@ -1651,7 +1685,7 @@
                     }
                     showToast('Synced', 'Data updated to latest.', 'success');
                 } else { showToast("Error", "Sync failed.", "error"); }
-            }).catch(error => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+            }).catch(error => showToast("Error", "Network timeout during sync.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function logoutSystem() {
@@ -1705,13 +1739,30 @@
             document.getElementById('unplannedReturnModal').style.display = 'none'; 
         }
 
-        function submitUnplannedReturn(e) {
+        function getBase64(file) { 
+            return new Promise((resolve, reject) => { 
+                const reader = new FileReader(); 
+                reader.readAsDataURL(file); 
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
+                reader.onerror = e => reject(e); 
+            }); 
+        }
+
+        async function submitUnplannedReturn(e) {
             e.preventDefault(); 
             const btn = document.getElementById('saveUnplannedBtn'); 
             const originalHTML = btn.innerHTML; 
             btn.innerHTML = "Submitting..."; 
             btn.disabled = true;
             
+            const file = document.getElementById('unpFile').files[0];
+            let base64Data = "", fileName = "", mimeType = "";
+            if (file) {
+                base64Data = await getBase64(file);
+                fileName = "UNP_" + new Date().getTime() + "_" + file.name;
+                mimeType = file.type;
+            }
+
             const requestData = { 
                 drName: document.getElementById('unpDrName').value, 
                 ledgerName: document.getElementById('unpLedgerName').value, 
@@ -1724,18 +1775,15 @@
                 status: "Confirmation Pending" 
             };
             
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser })
-            }).then(res => res.json()).then(data => {
+            const payload = { action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
+
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { 
                     showToast("Success", "Unplanned Return logged successfully!"); 
                     cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() }); 
                     updateDashboardCounts(); 
                     closeUnplannedReturnModal(); 
-                } else { 
-                    showToast("Error", data.message, "error"); 
-                }
+                } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
                 btn.innerHTML = originalHTML; btn.disabled = false; 
             });
@@ -1754,11 +1802,11 @@
                 tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; 
                 return; 
             }
-            let html = ""; 
+            let html = []; 
             unplannedList.forEach((item, index) => { 
-                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`; 
+                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`); 
             });
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = html.join("");
         }
 
         function handleConfirmedByChange() {
@@ -1824,10 +1872,7 @@
             
             const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData };
             
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', 
-                body: JSON.stringify(payload)
-            }).then(res => res.json()).then(data => {
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') {
                     showToast("Success", "Unplanned Return confirmed successfully!");
                     let uIndex = cachedUnplannedBills.findIndex(u => u.id === id);
@@ -1896,10 +1941,7 @@
             
             const payload = { action: 'createReturn', data: requestData, createdBy: loggedInUser };
             
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', 
-                body: JSON.stringify(payload)
-            }).then(res => res.json()).then(data => {
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { 
                     showToast("Success", "Return request generated successfully!"); 
                     cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' }); 
@@ -1925,11 +1967,11 @@
             if(expectedReturns.length === 0) { 
                 tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; 
             }
-            let html = ""; 
+            let html = []; 
             expectedReturns.forEach((item, index) => { 
-                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`; 
+                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`); 
             });
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = html.join("");
         }
 
         function openAssignReturnCourierModal(returnId) { 
@@ -1955,9 +1997,7 @@
             
             const payload = { action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser };
             
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify(payload)
-            }).then(res => res.json()).then(data => {
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { 
                     showToast("Success", "Courier assigned successfully!"); 
                     let rIndex = cachedReturnBills.findIndex(r => r.id === returnId); 
@@ -1986,11 +2026,11 @@
             if(assignedReturns.length === 0) { 
                 tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; 
             }
-            let html = ""; 
+            let html = []; 
             assignedReturns.forEach((item, index) => { 
-                html += `<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`; 
+                html.push(`<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`); 
             });
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = html.join("");
         }
 
         function toggleAllReturnPickup(source) { 
@@ -2019,9 +2059,9 @@
             const originalText = btn.innerHTML; 
             btn.innerHTML = "Processing..."; btn.disabled = true;
             
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser })
-            }).then(res => res.json()).then(data => {
+            const payload = { action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser };
+            
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { 
                     showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); 
                     itemsToDispatch.forEach(id => { 
@@ -2043,20 +2083,27 @@
             hideAllLists(); document.getElementById('return-transit-list-section').style.display = 'block'; let sb = document.getElementById('returnTransitSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
             if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
-            let html = ""; transitReturns.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`; });
-            tableBody.innerHTML = html;
+            let html = []; transitReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`); });
+            tableBody.innerHTML = html.join("");
         }
 
         function openReceiveReturnModal(id, expectedBoxes) { document.getElementById('receiveReturnForm').reset(); document.getElementById('recvReturnId').value = id; document.getElementById('recvExpectedBoxes').value = expectedBoxes; document.getElementById('recvActualBoxes').max = expectedBoxes; document.getElementById('receiveReturnModal').style.display = 'flex'; }
         function closeReceiveReturnModal() { document.getElementById('receiveReturnModal').style.display = 'none'; }
 
-        function submitReceiveReturn(e) {
+        async function submitReceiveReturn(e) {
             e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
-            const payload = { action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser };
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify(payload)
-            }).then(res => res.json()).then(data => {
+            
+            const file = document.getElementById('recvFile').files[0];
+            let base64Data = "", fileName = "", mimeType = "";
+            if (file) {
+                base64Data = await getBase64(file);
+                fileName = "RECV_" + id + "_" + file.name;
+                mimeType = file.type;
+            }
+
+            const payload = { action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { if (received < expected) { cachedReturnBills[rIndex].status = "Return Received (Partial)"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; let missing = expected - received; let shortItem = { ...cachedReturnBills[rIndex] }; shortItem.id = id + "-SHORT"; shortItem.boxes = missing; shortItem.rcvdBoxes = ""; shortItem.status = "Disputed (Return)"; shortItem.recvDate = getCurrentFormattedDate(); shortItem.remark = "Missing Boxes: " + missing; cachedReturnBills.push(shortItem); } else { cachedReturnBills[rIndex].status = "Return Received"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; } } updateDashboardCounts(); closeReceiveReturnModal(); showReturnTransitList(); } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
@@ -2068,30 +2115,23 @@
             if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
         }
 
-        function showReturnReceivedList(startDate = null, endDate = null) {
+        function showReturnReceivedList() {
             hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('returnReceivedTableBody'); 
             let listToDisplay = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
-            if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
             if(listToDisplay.length === 0) { 
                 tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; 
                 document.getElementById('btnFillCN').style.display = 'none';
                 return; 
             }
-            let html = ""; listToDisplay.forEach((item, index) => { 
+            let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
-                html += `<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; 
+                html.push(`<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = html.join("");
             toggleCNButton();
         }
         
-        function toggleAllReturnReceived(source) { 
-            const checkboxes = document.querySelectorAll('.return-received-checkbox'); 
-            checkboxes.forEach(cb => cb.checked = source.checked); 
-            toggleCNButton();
-        }
-
         function toggleCNButton() {
             const checkedCount = document.querySelectorAll('.return-received-checkbox:checked').length;
             document.getElementById('btnFillCN').style.display = checkedCount > 0 ? 'block' : 'none';
@@ -2099,6 +2139,32 @@
 
         function openCNDetailsModal() {
             document.getElementById('cnDetailsForm').reset();
+            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked');
+            let needsReason = false;
+            const now = new Date();
+            
+            checkboxes.forEach(cb => {
+                let item = cachedReturnBills.find(r => r.id === cb.value);
+                if (item && item.recvDate && item.recvDate !== '-') {
+                    let parts = item.recvDate.split(/[- :\/]/);
+                    if (parts.length >= 3) {
+                        let rDate = new Date(parts[2], parts[1]-1, parts[0]);
+                        let diffDays = (now - rDate) / (1000 * 60 * 60 * 24);
+                        if (diffDays > 7) { needsReason = true; }
+                    }
+                }
+            });
+
+            const reasonGroup = document.getElementById('cnDelayReasonGroup');
+            const reasonInput = document.getElementById('cnDelayReason');
+            if (needsReason) {
+                reasonGroup.style.display = 'block';
+                reasonInput.required = true;
+            } else {
+                reasonGroup.style.display = 'none';
+                reasonInput.required = false;
+            }
+            
             document.getElementById('cnDetailsModal').style.display = 'flex';
         }
 
@@ -2112,16 +2178,24 @@
             const originalHTML = btn.innerHTML;
             btn.innerHTML = "Processing..."; btn.disabled = true;
 
-            const cnNo = document.getElementById('cnNoInput').value;
+            const cnNo = document.getElementById('cnNoInput').value.trim();
             const cnDate = document.getElementById('cnDateInput').value;
+            const delayReason = document.getElementById('cnDelayReason').value;
+            
+            const isDuplicate = cachedReturnBills.some(r => r.cnNo && String(r.cnNo).trim().toLowerCase() === cnNo.toLowerCase());
+            if (isDuplicate) {
+                showToast("Error", "Duplicate CN No. found! Please enter a unique CN No.", "error");
+                btn.innerHTML = originalHTML; btn.disabled = false;
+                return;
+            }
+
             const checkboxes = document.querySelectorAll('.return-received-checkbox:checked');
             const itemsToProcess = [];
             checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
 
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), {
-                method: 'POST',
-                body: JSON.stringify({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, actionBy: loggedInUser })
-            }).then(res => res.json()).then(data => {
+            const payload = { action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, actionBy: loggedInUser };
+            
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') {
                     showToast("Success", "CN Details updated successfully!");
                     itemsToProcess.forEach(id => {
@@ -2131,12 +2205,12 @@
                             cachedReturnBills[idx].cnNo = cnNo;
                             let dArr = cnDate.split('-');
                             cachedReturnBills[idx].cnDate = dArr.length === 3 ? `${dArr[2]}-${dArr[1]}-${dArr[0]}` : cnDate;
+                            if(delayReason) cachedReturnBills[idx].remark = (cachedReturnBills[idx].remark || "") + " | Delay Res: " + delayReason;
                         }
                     });
                     updateDashboardCounts();
                     closeCNDetailsModal();
                     showReturnReceivedList();
-                    document.getElementById('selectAllReturnReceived').checked = false;
                 } else {
                     showToast("Error", data.message, "error");
                 }
@@ -2145,27 +2219,29 @@
             });
         }
         
-        function showReturnProcessedList() {
+        function showReturnProcessedList(startDate = null, endDate = null) {
             hideAllLists(); document.getElementById('return-processed-list-section').style.display = 'block'; 
             let sb = document.getElementById('returnProcessedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('returnProcessedTableBody'); 
             let listToDisplay = cachedReturnBills.filter(r => r.status === 'Return Processed');
             
+            if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
+
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
-            let html = ""; listToDisplay.forEach((item, index) => { 
+            let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
                 let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
-                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; 
+                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = html.join("");
         }
 
         function showReturnDisputedList() {
             hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; let sb = document.getElementById('returnDisputedSearchBox'); if(sb) sb.value = '';
             const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
             if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
-            let html = ""; disputedReturns.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`; });
-            tableBody.innerHTML = html;
+            let html = []; disputedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`); });
+            tableBody.innerHTML = html.join("");
         }
 
         function handleResolveRetActionChange() {
@@ -2176,15 +2252,22 @@
         function openResolveReturnModal(id) { document.getElementById('resolveReturnForm').reset(); document.getElementById('resolveRetId').value = id; document.getElementById('resolveRetIdDisplay').value = id; handleResolveRetActionChange(); document.getElementById('resolveReturnModal').style.display = 'flex'; }
         function closeResolveReturnModal() { document.getElementById('resolveReturnModal').style.display = 'none'; }
 
-        function submitResolveReturnDispute(e) {
+        async function submitResolveReturnDispute(e) {
             e.preventDefault(); const btn = document.getElementById('saveResolveRetBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
             const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
             let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
-            const payload = { action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser };
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify(payload) 
-            }).then(res => res.json()).then(data => {
+            
+            const file = document.getElementById('resolveRetFile').files[0];
+            let base64Data = "", fileName = "", mimeType = "";
+            if (file) {
+                base64Data = await getBase64(file);
+                fileName = "DISP_RES_" + id + "_" + file.name;
+                mimeType = file.type;
+            }
+
+            const payload = { action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { cachedReturnBills[rIndex].status = actionStatus === 'Received at Origin' ? 'Return Received (SHORT)' : 'Closed (Claim Settled)'; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); if (actionStatus === 'Received at Origin') { cachedReturnBills[rIndex].rcvdBoxes = cachedReturnBills[rIndex].boxes; } let currentRemark = cachedReturnBills[rIndex].remark || ""; cachedReturnBills[rIndex].remark = currentRemark ? (currentRemark + " | Res: " + remark) : ("Res: " + remark); } updateDashboardCounts(); closeResolveReturnModal(); showReturnDisputedList(); } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
@@ -2195,9 +2278,9 @@
             cachedUnplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
             cachedReturnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
             if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
-            combinedList.reverse(); let html = "";
-            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html += `<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`; });
-            tableBody.innerHTML = html;
+            combinedList.reverse(); let html = [];
+            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
+            tableBody.innerHTML = html.join("");
         }
 
         function filterTableGlobal(inputId, tbodyId) {
@@ -2213,7 +2296,7 @@
 
         function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
         function closeDateRangeModal() { document.getElementById('dateRangeModal').style.display = 'none'; }
-        function applyDateFilterAndShow() { const start = document.getElementById('filterStartDate').value; const end = document.getElementById('filterEndDate').value; closeDateRangeModal(); if (targetTabForDateRange === 'delivered') { showDeliveredList(start, end); } else if (targetTabForDateRange === 'dispatched') { showDispatchedList(start, end); } else if (targetTabForDateRange === 'returnReceived') { showReturnReceivedList(start, end); } }
+        function applyDateFilterAndShow() { const start = document.getElementById('filterStartDate').value; const end = document.getElementById('filterEndDate').value; closeDateRangeModal(); if (targetTabForDateRange === 'delivered') { showDeliveredList(start, end); } else if (targetTabForDateRange === 'dispatched') { showDispatchedList(start, end); } else if (targetTabForDateRange === 'returnProcessed') { showReturnProcessedList(start, end); } }
         
         function isDateInRange(dateStr, start, end) {
             if (!start && !end) return true; if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
@@ -2225,13 +2308,13 @@
             hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; let sb = document.getElementById('pendingSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('invoiceTableBody'); const btnExport = document.getElementById('btnExportPending'); btnExport.style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; const btnUpload = document.getElementById('btnBulkUpload'); btnUpload.style.display = (isStandardUser()) ? 'none' : 'flex'; 
             let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills; document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
-            let html = ""; listToDisplay.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); tableBody.innerHTML = html.join("");
         }
 
         function showAssignedList() {
             hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; let sb = document.getElementById('assignedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('assignedTableBody');  
             if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            let html = ""; cachedAssignedBills.forEach((item, index) => { html += `<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; cachedAssignedBills.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); tableBody.innerHTML = html.join("");
         }
 
         function toggleAllDispatch(source) { const checkboxes = document.querySelectorAll('.dispatch-checkbox'); checkboxes.forEach(cb => cb.checked = source.checked); }
@@ -2239,27 +2322,27 @@
         function showPodList() {
             hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; let sb = document.getElementById('transitSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('podTableBody');  
             if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            let html = ""; cachedTransitBills.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; cachedTransitBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
         }
         
         function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; let sb = document.getElementById('deliveredSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('deliveredTableBody');  
             let listToDisplay = cachedDeliveredBills; if(startDate || endDate) { listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
-            let html = ""; listToDisplay.forEach((item, index) => { let sTag = '<span class="badge bg-delivered">Delivered</span>'; html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td>${sTag}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; listToDisplay.forEach((item, index) => { let sTag = '<span class="badge bg-delivered">Delivered</span>'; html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td>${sTag}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
         }
         
         function showDisputedList() {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('disputedTableBody'); 
             if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
-            let html = ""; cachedDisputedBills.forEach((item, index) => { html += `<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; cachedDisputedBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
         }
 
         function showDispatchedList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; let sb = document.getElementById('dispatchedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('dispatchedTableBody'); 
             let listToDisplay = cachedDispatchedBills; if(startDate || endDate) { listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            let html = ""; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html += `<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`; }); tableBody.innerHTML = html;
+            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); tableBody.innerHTML = html.join("");
         }
 
         function handleUploadTypeChange() {
@@ -2309,9 +2392,9 @@
 
         function submitBulkAssignment(assignments) {
             const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser })
-            }).then(res => res.json()).then(data => {
+            
+            const payload = { action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser };
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned successfully!`); assignments.forEach(a => { cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); cachedAssignedBills.push({ invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city, drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: getCurrentFormattedDate() }); }); updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
         }
@@ -2322,9 +2405,9 @@
         function processPhysicalDispatch() {
             const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
             const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', body: JSON.stringify({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser })
-            }).then(res => res.json()).then(data => {
+            
+            const payload = { action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser };
+            safeFetch(payload).then(data => {
                 if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); itemsToDispatch.forEach(dispatchItem => { let itemIndex = cachedAssignedBills.findIndex(i => i.invoiceNo === dispatchItem.invoiceNo && (i.docket || '') === dispatchItem.docketNo); if (itemIndex > -1) { let itemToMove = cachedAssignedBills[itemIndex]; cachedAssignedBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); cachedTransitBills.push(itemToMove); } }); updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList(); document.getElementById('selectAllDispatch').checked = false; } else { showToast("Error", data.message, "error"); }
             }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
@@ -2351,8 +2434,6 @@
             if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; appInput.value = ''; } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
-        function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e); }); }
-        
         async function submitPodUpload(e) {
             e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
             const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value; 
@@ -2360,7 +2441,7 @@
             if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name; mimeType = file.type; }
             try {
                 const payload = { action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput };
-                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                const data = await safeFetch(payload);
                 if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); let itemIndex = cachedTransitBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedTransitBills[itemIndex]; cachedTransitBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.status = uploadType; itemToMove.remark = remarkInput; if (uploadType === "Delivered") { cachedDeliveredBills.push(itemToMove); } else { cachedDisputedBills.push(itemToMove); } } updateDashboardCounts(); closePodModal(); showPodList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
@@ -2374,7 +2455,7 @@
                 let base64Data = ""; let fileName = ""; let mimeType = "";
                 if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
                 const payload = { action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem };
-                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                const data = await safeFetch(payload);
                 if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); let itemIndex = cachedDeliveredBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedDeliveredBills[itemIndex]; cachedDeliveredBills.splice(itemIndex, 1); if (actionType === 'Short Delivered') { itemToMove.status = 'Delivered (Partial)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`; cachedDispatchedBills.push(itemToMove); cachedDisputedBills.push({ invoiceNo: itemToMove.invoiceNo + "-SHORT", docket: itemToMove.docket, partner: itemToMove.partner, city: itemToMove.city, drName: itemToMove.drName, ledgerName: itemToMove.ledgerName, pinCode: itemToMove.pinCode, actionTime: getCurrentFormattedDate(), status: "Disputed (Missing)", remark: `Missing Boxes: ${expBoxes - recBoxes}` }); } else if (actionType === 'OTP based delivery - No POD Required') { itemToMove.status = 'Delivered (OTP)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = 'No POD required (OTP)'; cachedDispatchedBills.push(itemToMove); } else { itemToMove.status = 'Delivered (POD)'; itemToMove.actionTime = getCurrentFormattedDate(); cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
@@ -2386,7 +2467,7 @@
             let receiveDateStr = document.getElementById('resolveReceiveDate').value; if(receiveDateStr) { const d = new Date(receiveDateStr); receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
             try {
                 const payload = { action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser };
-                const res = await fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
+                const data = await safeFetch(payload);
                 if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); let itemIndex = cachedDisputedBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo); if (itemIndex > -1) { let itemToMove = cachedDisputedBills[itemIndex]; cachedDisputedBills.splice(itemIndex, 1); let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : ""; itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText; itemToMove.actionTime = getCurrentFormattedDate(); if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") { itemToMove.status = "Delivered"; cachedDeliveredBills.push(itemToMove); } else { itemToMove.status = "Closed: " + actionStatus; cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeResolveModal(); showDisputedList(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
         }
