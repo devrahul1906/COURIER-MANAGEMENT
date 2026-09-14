@@ -1331,7 +1331,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDXJgt3AqcI_XxHJWzyj7C697cUQX5lso_I9Rq0pdwG3hpaHoMOIBPgc6MO2aZD04W/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwbt8SIgzrHeuf08ddCnvOI2gf8r8wott8_of_pUT9aj2a6QSLIsHGPTm5Y2C2RZanu/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
@@ -1353,13 +1353,15 @@
         // =========================================================================
         // 1. UPDATED: HIGHER TIMEOUT TO PREVENT CONNECTION DROPS (60 SECONDS)
         // =========================================================================
-        async function safeFetch(payload, retries = 3) {
+// UPDATED: No Retry Loops & 120 Second Safe Margin
+        async function safeFetch(payload, retries = 1) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             
             for (let i = 0; i < retries; i++) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 60000); 
+                    // Increased to 120 seconds to give Google enough time to respond without panicking
+                    const timeoutId = setTimeout(() => controller.abort(), 120000); 
                     
                     const options = {
                         method: 'POST',
