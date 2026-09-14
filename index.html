@@ -162,8 +162,7 @@
         .file-input-box { border: 2px dashed #ced4da; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; background: #f8fafc; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .dispatch-checkbox { width: 16px; height: 16px; cursor: pointer; }
-        .return-pickup-checkbox { width: 16px; height: 16px; cursor: pointer; }
+        .dispatch-checkbox, .return-pickup-checkbox, .return-received-checkbox { width: 16px; height: 16px; cursor: pointer; }
         
         .dashboard-footer { text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); background: #fff; margin-top: auto; }
         
@@ -193,9 +192,7 @@
             border-bottom: 1px solid #d4d4d4;
             font-size: 13px;
         }
-        .autocomplete-items div:hover {
-            background-color: #f1f5f9;
-        }
+        .autocomplete-items div:hover { background-color: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -520,6 +517,16 @@
                         <div class="kpi-header"><span class="kpi-title">Return Received</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
                         <div class="kpi-value" id="receivedReturnCount">0</div><div class="kpi-desc">Received / Settled</div>
                     </div>
+                    
+                    <div class="kpi-card" id="card-return-processed" style="background-color: #fdf4ff; border-color: #f0abfc; color: #86198f;" onclick="showReturnProcessedList()">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Return Processed</span>
+                            <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-value" id="processedReturnCount">0</div><div class="kpi-desc">CN Generated</div>
+                    </div>
 
                     <div class="kpi-card" id="card-return-dispute" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showReturnDisputedList()">
                         <div class="kpi-header"><span class="kpi-title">Dispute (Return)</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
@@ -610,15 +617,38 @@
                     <div class="table-header">
                         <h2>Return Received</h2>
                         <div class="table-actions">
-                            <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 2)">
+                            <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 3)">
                             <button class="btn-outline btn-export" onclick="exportTableToCSV('returnReceivedTable', 'Received_Returns.csv')">Export CSV</button>
                             <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table id="returnReceivedTable" style="min-width: 1800px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
+                        <table id="returnReceivedTable" style="min-width: 1850px;">
+                            <thead><tr>
+                                <th><input type="checkbox" id="selectAllReturnReceived" onclick="toggleAllReturnReceived(this)" style="cursor: pointer;"></th>
+                                <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th>
+                            </tr></thead>
                             <tbody id="returnReceivedTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                        <button class="action-btn btn-primary" id="btnFillCN" style="padding: 10px 20px; font-size: 14px; display: none;" onclick="openCNDetailsModal()">Fill CN Details</button>
+                    </div>
+                </div>
+                
+                <div id="return-processed-list-section" class="table-wrapper">
+                    <div class="table-header">
+                        <h2>Return Processed (CN Generated)</h2>
+                        <div class="table-actions">
+                            <input type="text" id="returnProcessedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnProcessedSearchBox', 'returnProcessedTableBody', 2)">
+                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnProcessedTable', 'Processed_Returns.csv')">Export CSV</button>
+                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="returnProcessedTable" style="min-width: 1950px;">
+                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>CN No.</th><th>CN Date</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
+                            <tbody id="returnProcessedTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -672,7 +702,7 @@
 
     <!-- Modals for Return Inventory -->
     <div id="unplannedReturnModal" class="modal-overlay">
-        <div class="modal-box modal-lg">
+        <div class="modal-box">
             <div class="modal-header">
                 <h3>Unplanned Return (Parcel Received at Warehouse)</h3>
                 <button type="button" class="close-btn" onclick="closeUnplannedReturnModal()">&times;</button>
@@ -681,12 +711,12 @@
                 <form id="unplannedReturnForm" onsubmit="submitUnplannedReturn(event)">
                     <div class="two-col">
                         <div class="form-group">
-                            <label>Dr. Name <span style="color: red;">*</span></label>
-                            <input type="text" id="unpDrName" placeholder="Enter Dr. Name" required>
+                            <label>Dr. Name</label>
+                            <input type="text" id="unpDrName" placeholder="Enter Dr. Name">
                         </div>
                         <div class="form-group">
-                            <label>Ledger Name <span style="color: red;">*</span></label>
-                            <input type="text" id="unpLedgerName" placeholder="Enter Ledger Name" required autocomplete="off">
+                            <label>Ledger Name</label>
+                            <input type="text" id="unpLedgerName" placeholder="Enter Ledger Name" autocomplete="off">
                         </div>
                     </div>
                     <div class="two-col">
@@ -695,30 +725,8 @@
                             <input type="text" id="unpCity" placeholder="Enter City" required>
                         </div>
                         <div class="form-group">
-                            <label>State <span style="color: red;">*</span></label>
-                            <input type="text" id="unpState" placeholder="Enter State" required>
-                        </div>
-                    </div>
-                    
-                    <div class="two-col">
-                        <div class="form-group">
-                            <label>Ledger Code</label>
-                            <input type="text" id="unpLedgerCode" placeholder="Enter Ledger Code">
-                        </div>
-                        <div class="form-group">
-                            <label>Zone</label>
-                            <input type="text" id="unpZone" placeholder="Enter Zone">
-                        </div>
-                    </div>
-                    
-                    <div class="two-col">
-                        <div class="form-group">
-                            <label>BDM Name</label>
-                            <input type="text" id="unpBdmName" placeholder="Enter BDM Name">
-                        </div>
-                        <div class="form-group">
-                            <label>No of Boxes<span style="color: red;">*</span></label>
-                            <input type="number" id="unpBoxes" min="1" placeholder="Enter Number of Boxes Received" required>
+                            <label>No of Boxes <span style="color: red;">*</span></label>
+                            <input type="number" id="unpBoxes" min="1" placeholder="Enter Boxes" required>
                         </div>
                     </div>
                     
@@ -731,16 +739,62 @@
         </div>
     </div>
 
-    <!-- Confirm Unplanned Return Modal - Dropdown Modified -->
     <div id="confirmUnplannedModal" class="modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box modal-lg">
             <div class="modal-header">
-                <h3>Confirm Unplanned Return</h3>
+                <h3>Confirm Unplanned Return (Final Entry)</h3>
                 <button type="button" class="close-btn" onclick="closeConfirmUnplannedModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="confirmUnplannedForm" onsubmit="submitConfirmUnplanned(event)">
                     <input type="hidden" id="confUnpId">
+                    
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Dr. Name <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpDrName" placeholder="Enter Dr. Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ledger Name <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpLedgerName" placeholder="Enter Ledger Name" autocomplete="off" required>
+                        </div>
+                    </div>
+                    
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Phone No. <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpPhone" placeholder="Enter Phone No." required>
+                        </div>
+                        <div class="form-group">
+                            <label>City <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpCity" placeholder="Enter City" required>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>State <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpState" placeholder="Enter State" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ledger Code <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpLedgerCode" placeholder="Enter Ledger Code" required>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Zone <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpZone" placeholder="Enter Zone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>BDM Name <span style="color: red;">*</span></label>
+                            <input type="text" id="confUnpBdmName" placeholder="Enter BDM Name" required>
+                        </div>
+                    </div>
+
+                    <hr style="border-top: 1px solid var(--border); margin: 15px 0;">
+
                     <div class="two-col">
                         <div class="form-group">
                             <label>Received Boxes</label>
@@ -777,7 +831,6 @@
         </div>
     </div>
 
-    <!-- Generate Return Request Modal - "No of boxes" removed & aligned -->
     <div id="generateReturnModal" class="modal-overlay">
         <div class="modal-box modal-lg">
             <div class="modal-header">
@@ -849,7 +902,6 @@
         </div>
     </div>
 
-    <!-- Assign Return Courier Modal - "No of Boxes" added -->
     <div id="assignReturnCourierModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -923,6 +975,31 @@
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeReceiveReturnModal()">Cancel</button>
                         <button type="submit" id="saveReceiveReturnBtn" class="action-btn btn-success" style="background:var(--success);">Confirm Receiving</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="cnDetailsModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Fill CN Details</h3>
+                <button type="button" class="close-btn" onclick="closeCNDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cnDetailsForm" onsubmit="submitCNDetails(event)">
+                    <div class="form-group">
+                        <label>CN No. <span style="color: red;">*</span></label>
+                        <input type="text" id="cnNoInput" required placeholder="Enter CN Number">
+                    </div>
+                    <div class="form-group">
+                        <label>CN Creation Date <span style="color: red;">*</span></label>
+                        <input type="date" id="cnDateInput" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeCNDetailsModal()">Cancel</button>
+                        <button type="submit" id="saveCNDetailsBtn" class="action-btn btn-primary">Submit Details</button>
                     </div>
                 </form>
             </div>
@@ -1232,7 +1309,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnUvSX1RdBm9Ec5XYAqu-3DenzNRmCM-yWeNwFzEhCt639PU9L60Tn6fa_Knc04_JX/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw8ASlVHopwSI6gZbeP-c2D5l4CkOIDGWQkrUCO-14CEDpFsjOk__4YMpSoqRxNGVpG/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
@@ -1269,11 +1346,11 @@
             }
 
             // INIT AUTOCOMPLETE
-            setupAutocomplete('unpLedgerName', 'unpCity', 'unpState', null, 'unpLedgerCode', 'unpZone', 'unpBdmName');
+            setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null);
             setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName');
+            setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName');
         });
 
-        // AUTOCOMPLETE FUNCTION
         function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId) {
             const inp = document.getElementById(inputId);
             if(!inp) return;
@@ -1415,11 +1492,6 @@
             pwd.type = pwd.type === "password" ? "text" : "password"; 
         }
         
-        function getGreeting() { 
-            const h = new Date().getHours(); 
-            return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 21 ? "Good Evening" : "Good Night"; 
-        }
-
         function updateDashboardCounts() {
             if (currentWorkspace === 'dispatch') {
                 document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
@@ -1433,9 +1505,12 @@
                 document.getElementById('pendingReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Expected Return').length;
                 document.getElementById('assignedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)').length;
                 document.getElementById('transitReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'In Transit (Return)').length;
-                document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed')).length;
+                document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed').length;
                 document.getElementById('disputedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Disputed (Return)').length;
                 
+                let processedCount = document.getElementById('processedReturnCount');
+                if (processedCount) processedCount.innerText = cachedReturnBills.filter(r => r.status === 'Return Processed').length;
+
                 let unpCount = document.getElementById('unplannedReturnCount');
                 if(unpCount) unpCount.innerText = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending').length;
             }
@@ -1562,6 +1637,7 @@
                         else if(document.getElementById('return-assigned-list-section').style.display === 'block') showReturnAssignedList();
                         else if(document.getElementById('return-transit-list-section').style.display === 'block') showReturnTransitList();
                         else if(document.getElementById('return-received-list-section').style.display === 'block') showReturnReceivedList();
+                        else if(document.getElementById('return-processed-list-section').style.display === 'block') showReturnProcessedList();
                         else if(document.getElementById('return-disputed-list-section').style.display === 'block') showReturnDisputedList();
                         else if(document.getElementById('unplanned-list-section').style.display === 'block') showUnplannedList();
                         else if(document.getElementById('return-status-list-section').style.display === 'block') showReturnStatusList();
@@ -1611,6 +1687,7 @@
                     if (allowedCards.includes('courier assigned')) document.getElementById('card-return-assigned').style.display = 'flex';
                     if (allowedCards.includes('in transit (return)') || allowedCards.includes('in transit')) document.getElementById('card-return-transit').style.display = 'flex';
                     if (allowedCards.includes('return received')) document.getElementById('card-return-received').style.display = 'flex';
+                    if (allowedCards.includes('return processed')) document.getElementById('card-return-processed').style.display = 'flex';
                     if (allowedCards.includes('dispute (return)') || allowedCards.includes('dispute')) document.getElementById('card-return-dispute').style.display = 'flex';
                     if (allowedCards.includes('unplanned received')) document.getElementById('card-unplanned-received').style.display = 'flex';
                 } else {
@@ -1639,11 +1716,11 @@
                 drName: document.getElementById('unpDrName').value, 
                 ledgerName: document.getElementById('unpLedgerName').value, 
                 city: document.getElementById('unpCity').value, 
-                state: document.getElementById('unpState').value, 
+                state: "", 
                 boxes: document.getElementById('unpBoxes').value, 
-                ledgerCode: document.getElementById('unpLedgerCode').value,
-                zone: document.getElementById('unpZone').value,
-                bdmName: document.getElementById('unpBdmName').value,
+                ledgerCode: "",
+                zone: "",
+                bdmName: "",
                 status: "Confirmation Pending" 
             };
             
@@ -1684,7 +1761,6 @@
             tableBody.innerHTML = html;
         }
 
-        // Handle Confirmed By Dropdown in Unplanned Return
         function handleConfirmedByChange() {
             const val = document.getElementById('confUnpConfirmedBy').value;
             const otherGrp = document.getElementById('confUnpOtherGroup');
@@ -1703,11 +1779,19 @@
             document.getElementById('confirmUnplannedForm').reset(); 
             document.getElementById('confUnpId').value = id; 
             document.getElementById('confUnpExpected').value = reportedBoxes; 
+            
+            let uItem = cachedUnplannedBills.find(u => u.id === id);
+            if (uItem) {
+                document.getElementById('confUnpDrName').value = uItem.drName || '';
+                document.getElementById('confUnpLedgerName').value = uItem.ledgerName || '';
+                document.getElementById('confUnpCity').value = uItem.city || '';
+            }
+
             document.getElementById('confUnpConfirmedBy').value = '';
             handleConfirmedByChange();
             document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
         }
-        
+
         function closeConfirmUnplannedModal() { 
             document.getElementById('confirmUnplannedModal').style.display = 'none'; 
         }
@@ -1726,8 +1810,19 @@
             const confirmedByVal = document.getElementById('confUnpConfirmedBy').value;
             const confirmedBySpec = document.getElementById('confUnpOtherSpec').value;
             const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
+
+            const finalData = {
+                drName: document.getElementById('confUnpDrName').value,
+                ledgerName: document.getElementById('confUnpLedgerName').value,
+                phone: document.getElementById('confUnpPhone').value,
+                city: document.getElementById('confUnpCity').value,
+                state: document.getElementById('confUnpState').value,
+                ledgerCode: document.getElementById('confUnpLedgerCode').value,
+                zone: document.getElementById('confUnpZone').value,
+                bdmName: document.getElementById('confUnpBdmName').value
+            };
             
-            const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser };
+            const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData };
             
             fetch(WEB_APP_URL + "?t=" + new Date().getTime(), { 
                 method: 'POST', 
@@ -1739,8 +1834,13 @@
                     if (uIndex > -1) {
                         let uItem = cachedUnplannedBills[uIndex]; 
                         cachedUnplannedBills[uIndex].status = "Confirmed"; 
+                        cachedUnplannedBills[uIndex].drName = finalData.drName;
+                        cachedUnplannedBills[uIndex].ledgerName = finalData.ledgerName;
+                        cachedUnplannedBills[uIndex].city = finalData.city;
+                        cachedUnplannedBills[uIndex].state = finalData.state;
+
                         let currentDate = getCurrentFormattedDate();
-                        let baseRet = { id: uItem.id, drName: uItem.drName, ledgerName: uItem.ledgerName, city: uItem.city, state: uItem.state, phone: "", pinCode: "", address: "", createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned", assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: `Confirmed by: ${finalConfirmedBy}` };
+                        let baseRet = { id: uItem.id, drName: finalData.drName, ledgerName: finalData.ledgerName, city: finalData.city, state: finalData.state, phone: finalData.phone, pinCode: "", address: "", createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned", assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: `Confirmed by: ${finalConfirmedBy}` };
                         if (expected !== received) {
                             let diff = Math.abs(expected - received); 
                             let isShort = expected > received; 
@@ -1970,10 +2070,93 @@
 
         function showReturnReceivedList(startDate = null, endDate = null) {
             hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('returnReceivedTableBody'); let listToDisplay = cachedReturnBills.filter(r => r.status.includes('Return Received') || r.status.includes('Closed'));
+            const tableBody = document.getElementById('returnReceivedTableBody'); 
+            let listToDisplay = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
             if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='14' style='text-align:center;'>No received returns found.</td></tr>"; return; }
-            let html = ""; listToDisplay.forEach((item, index) => { let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; });
+            if(listToDisplay.length === 0) { 
+                tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; 
+                document.getElementById('btnFillCN').style.display = 'none';
+                return; 
+            }
+            let html = ""; listToDisplay.forEach((item, index) => { 
+                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
+                html += `<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; 
+            });
+            tableBody.innerHTML = html;
+            toggleCNButton();
+        }
+        
+        function toggleAllReturnReceived(source) { 
+            const checkboxes = document.querySelectorAll('.return-received-checkbox'); 
+            checkboxes.forEach(cb => cb.checked = source.checked); 
+            toggleCNButton();
+        }
+
+        function toggleCNButton() {
+            const checkedCount = document.querySelectorAll('.return-received-checkbox:checked').length;
+            document.getElementById('btnFillCN').style.display = checkedCount > 0 ? 'block' : 'none';
+        }
+
+        function openCNDetailsModal() {
+            document.getElementById('cnDetailsForm').reset();
+            document.getElementById('cnDetailsModal').style.display = 'flex';
+        }
+
+        function closeCNDetailsModal() {
+            document.getElementById('cnDetailsModal').style.display = 'none';
+        }
+
+        function submitCNDetails(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveCNDetailsBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const cnNo = document.getElementById('cnNoInput').value;
+            const cnDate = document.getElementById('cnDateInput').value;
+            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked');
+            const itemsToProcess = [];
+            checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
+
+            fetch(WEB_APP_URL + "?t=" + new Date().getTime(), {
+                method: 'POST',
+                body: JSON.stringify({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, actionBy: loggedInUser })
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    showToast("Success", "CN Details updated successfully!");
+                    itemsToProcess.forEach(id => {
+                        let idx = cachedReturnBills.findIndex(r => r.id === id);
+                        if(idx > -1) {
+                            cachedReturnBills[idx].status = "Return Processed";
+                            cachedReturnBills[idx].cnNo = cnNo;
+                            let dArr = cnDate.split('-');
+                            cachedReturnBills[idx].cnDate = dArr.length === 3 ? `${dArr[2]}-${dArr[1]}-${dArr[0]}` : cnDate;
+                        }
+                    });
+                    updateDashboardCounts();
+                    closeCNDetailsModal();
+                    showReturnReceivedList();
+                    document.getElementById('selectAllReturnReceived').checked = false;
+                } else {
+                    showToast("Error", data.message, "error");
+                }
+            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => {
+                btn.innerHTML = originalHTML; btn.disabled = false;
+            });
+        }
+        
+        function showReturnProcessedList() {
+            hideAllLists(); document.getElementById('return-processed-list-section').style.display = 'block'; 
+            let sb = document.getElementById('returnProcessedSearchBox'); if(sb) sb.value = '';
+            const tableBody = document.getElementById('returnProcessedTableBody'); 
+            let listToDisplay = cachedReturnBills.filter(r => r.status === 'Return Processed');
+            
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
+            let html = ""; listToDisplay.forEach((item, index) => { 
+                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
+                let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
+                html += `<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`; 
+            });
             tableBody.innerHTML = html;
         }
 
@@ -2013,7 +2196,7 @@
             cachedReturnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
             if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
             combinedList.reverse(); let html = "";
-            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html += `<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`; });
+            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html += `<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`; });
             tableBody.innerHTML = html;
         }
 
