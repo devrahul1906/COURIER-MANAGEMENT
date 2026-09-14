@@ -1331,7 +1331,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwt-2B_5y5svjtH0hE_bOQN8O8b3G6dEg51Vgqdbsj4ycqZUxyJDjQ3CacgRmYqA9W9/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDXJgt3AqcI_XxHJWzyj7C697cUQX5lso_I9Rq0pdwG3hpaHoMOIBPgc6MO2aZD04W/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
@@ -1350,14 +1350,16 @@
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
 
-        // --- AUTO-HEALING NETWORK WRAPPER ---
+        // =========================================================================
+        // 1. UPDATED: HIGHER TIMEOUT TO PREVENT CONNECTION DROPS (60 SECONDS)
+        // =========================================================================
         async function safeFetch(payload, retries = 3) {
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             
             for (let i = 0; i < retries; i++) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 seconds limit per try
+                    const timeoutId = setTimeout(() => controller.abort(), 60000); 
                     
                     const options = {
                         method: 'POST',
@@ -1403,7 +1405,6 @@
                 document.getElementById('loginBtn').click();
             }
 
-            // INIT AUTOCOMPLETE
             setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null);
             setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName');
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName');
@@ -1574,6 +1575,9 @@
             }
         }
 
+        // =========================================================================
+        // 2. UPDATED: FAST LOGIN AND BACKGROUND SYNC
+        // =========================================================================
         function handleLogin(event) {
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); 
@@ -1587,9 +1591,10 @@
             currentWorkspace = (loginType === 'Return Courier Management' || loginType === 'Return Inventory') ? 'return' : 'dispatch';
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
-            document.getElementById('loginText').innerText = "Authenticating & Loading...";
+            document.getElementById('loginText').innerText = "Authenticating...";
 
-            const payload = { action: 'loginAndSync', username: user, password: pass, workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' };
+            // ONLY send action: 'login' (fast validation)
+            const payload = { action: 'login', username: user, password: pass };
 
             safeFetch(payload).then(data => {
                 if(data.status === "success") {
@@ -1620,16 +1625,7 @@
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
                     document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
 
-                    cachedPendingBills = data.pendingBills || []; 
-                    cachedAssignedBills = data.assignedBills || []; 
-                    cachedTransitBills = data.transitBills || []; 
-                    cachedDeliveredBills = data.deliveredBills || []; 
-                    cachedDispatchedBills = data.dispatchedBills || []; 
-                    cachedDisputedBills = data.disputedBills || []; 
-                    cachedReturnBills = data.returnBills || []; 
-                    cachedUnplannedBills = data.unplannedBills || [];
-                    cachedLedgers = data.ledgerList || []; 
-
+                    // Immediately show dashboard while background syncs
                     document.getElementById('login-view').style.display = 'none'; 
                     document.getElementById('dashboard-view').style.display = 'flex';
                     
@@ -1646,10 +1642,12 @@
                     }
                     
                     showDashboardCards(); 
-                    updateDashboardCounts(); 
-                    showToast('Login Successful', `Welcome to the Dashboard.`, 'success');
+                    showToast('Login Successful', `Fetching your dashboard data...`, 'success');
                     
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
+
+                    // Trigger heavy data loading entirely in the background
+                    syncData(true);
 
                 } else { 
                     errorDiv.innerText = data.message; errorDiv.style.display = 'block'; localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
@@ -1665,10 +1663,23 @@
             });
         }
 
-        function syncData() {
+        // =========================================================================
+        // 3. UPDATED: BACKGROUND SYNC DATA
+        // =========================================================================
+        function syncData(isInitialLoad = false) {
             if (!loggedInUser) return;
-            const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Syncing...`; btn.disabled = true;
+            const btn = document.getElementById('syncBtn'); 
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Loading...`; 
+            btn.disabled = true;
+
+            if(isInitialLoad) {
+                document.querySelectorAll('.kpi-value').forEach(el => {
+                    if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry") {
+                        el.innerText = "...";
+                    }
+                });
+            }
 
             const payload = { action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' };
 
@@ -1696,7 +1707,12 @@
                         else if(document.getElementById('disputed-list-section').style.display === 'block') showDisputedList();
                         else if(document.getElementById('dispatched-list-section').style.display === 'block') showDispatchedList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
                     }
-                    showToast('Synced', 'Data updated to latest.', 'success');
+                    
+                    if(isInitialLoad) {
+                        showToast('Dashboard Ready', 'All data loaded successfully.', 'success');
+                    } else {
+                        showToast('Synced', 'Data updated to latest.', 'success');
+                    }
                 } else { showToast("Error", "Sync failed.", "error"); }
             }).catch(error => showToast("Error", "Network timeout during sync.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
