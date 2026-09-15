@@ -417,7 +417,8 @@
                 <div class="table-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
                     <div class="table-actions">
-                        <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('pendingSearchBox', 'invoiceTableBody', 1)">
+                        <!-- DEBOUNCED SEARCH ADDED -->
+                        <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('pendingSearchBox', 'invoiceTableBody', 1)">
                         <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
                         <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
@@ -435,7 +436,7 @@
                 <div class="table-header">
                     <h2>Assigned Invoices</h2>
                     <div class="table-actions">
-                        <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('assignedSearchBox', 'assignedTableBody', 2)">
+                        <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('assignedSearchBox', 'assignedTableBody', 2)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -458,7 +459,7 @@
                 <div class="table-header">
                     <h2>In Transit Invoices</h2>
                     <div class="table-actions">
-                        <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('transitSearchBox', 'podTableBody', 1)">
+                        <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('transitSearchBox', 'podTableBody', 1)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -475,7 +476,7 @@
                 <div class="table-header">
                     <h2>Delivered Bills</h2>
                     <div class="table-actions">
-                        <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
+                        <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('deliveredTable', 'Delivered_Bills.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -497,7 +498,7 @@
                 <div class="table-header">
                     <h2>Disputed / Exceptions</h2>
                     <div class="table-actions">
-                        <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
+                        <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('disputedSearchBox', 'disputedTableBody', 1)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -518,7 +519,7 @@
                 <div class="table-header">
                     <h2>Dispatched Bills (Completed / Exceptions)</h2>
                     <div class="table-actions">
-                        <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
+                        <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -540,7 +541,7 @@
                 <div class="table-header">
                     <h2>Unplanned Received - Confirmation Pending</h2>
                     <div class="table-actions">
-                        <input type="text" id="unplannedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('unplannedSearchBox', 'unplannedTableBody', 2)">
+                        <input type="text" id="unplannedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('unplannedSearchBox', 'unplannedTableBody', 2)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('unplannedTable', 'Unplanned_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -557,7 +558,7 @@
                 <div class="table-header">
                     <h2>Pending Returns (Expected)</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnPendingSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnPendingSearchBox', 'returnPendingTableBody', 2)">
+                        <input type="text" id="returnPendingSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnPendingSearchBox', 'returnPendingTableBody', 2)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnPendingTable', 'Pending_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -574,7 +575,7 @@
                 <div class="table-header">
                     <h2>Courier Assigned (Returns)</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnAssignedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnAssignedSearchBox', 'returnAssignedTableBody', 3)">
+                        <input type="text" id="returnAssignedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnAssignedSearchBox', 'returnAssignedTableBody', 3)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnAssignedTable', 'Assigned_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -597,7 +598,7 @@
                 <div class="table-header">
                     <h2>In Transit (Returns)</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnTransitSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnTransitSearchBox', 'returnTransitTableBody', 2)">
+                        <input type="text" id="returnTransitSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnTransitSearchBox', 'returnTransitTableBody', 2)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnTransitTable', 'Transit_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -614,7 +615,7 @@
                 <div class="table-header">
                     <h2>Return Received</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 3)">
+                        <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 3)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnReceivedTable', 'Received_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -637,7 +638,7 @@
                 <div class="table-header">
                     <h2>Return Processed (CN Generated)</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnProcessedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnProcessedSearchBox', 'returnProcessedTableBody', 2)">
+                        <input type="text" id="returnProcessedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnProcessedSearchBox', 'returnProcessedTableBody', 2)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnProcessedTable', 'Processed_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -654,7 +655,7 @@
                 <div class="table-header">
                     <h2>Dispute (Return) - Missing Boxes</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnDisputedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnDisputedSearchBox', 'returnDisputedTableBody', 3)">
+                        <input type="text" id="returnDisputedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="debouncedFilterTable('returnDisputedSearchBox', 'returnDisputedTableBody', 3)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnDisputedTable', 'Disputed_Returns.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -671,7 +672,7 @@
                 <div class="table-header">
                     <h2>Track Return Status</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="filterTableGlobal('returnStatusSearchBox', 'returnStatusTableBody')">
+                        <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="debouncedFilterTableGlobal('returnStatusSearchBox', 'returnStatusTableBody')">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnStatusTable', 'Return_Status_Track.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -1328,7 +1329,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: REPLACE THE URL BELOW WITH YOUR BRAND NEW GOOGLE APPS SCRIPT DEPLOYMENT URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz25P96dmvy52Zrr9WAKo94NxnNz25XYa0m7FAEIlGZqbOyBvimT1ZEcqawRvXcGtF8/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwo-ydRaCcA4m22azwLOPe0LXsEouvrDcDa276ZMPByp19qKmOWD-2x-g-aDXNwEFZt/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1344,7 +1345,39 @@
         let tableCache = {};
         let activeTableContext = null;
 
-        // 🚀 SAFE FETCH
+        // --- NEW: CHUNKED HTML RENDERER (PREVENTS BROWSER FREEZING) ---
+        function renderLargeHtml(tbodyId, htmlArray) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = "";
+            if (!htmlArray || htmlArray.length === 0) return;
+            
+            let chunkSize = 150;
+            let index = 0;
+            
+            function renderChunk() {
+                if (!document.getElementById(tbodyId)) return; // Stop if user changed view
+                let chunk = htmlArray.slice(index, index + chunkSize).join("");
+                tbody.insertAdjacentHTML('beforeend', chunk);
+                index += chunkSize;
+                if (index < htmlArray.length) {
+                    setTimeout(renderChunk, 0); // yields to UI thread
+                }
+            }
+            renderChunk();
+        }
+
+        // --- NEW: DEBOUNCED SEARCH FILTERS ---
+        let filterTimer;
+        function debouncedFilterTable(inputId, tbodyId, colIndex) {
+            clearTimeout(filterTimer);
+            filterTimer = setTimeout(() => filterTable(inputId, tbodyId, colIndex), 350);
+        }
+        function debouncedFilterTableGlobal(inputId, tbodyId) {
+            clearTimeout(filterTimer);
+            filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
+        }
+
+        // 🚀 SAFE FETCH (Improved Error Logging)
         async function safeFetch(payload) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             try {
@@ -1353,21 +1386,27 @@
                 const options = { 
                     method: 'POST', 
                     redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    headers: { "Content-Type": "text/plain" }, 
                     body: JSON.stringify(payload), 
                     signal: controller.signal 
                 };
                 const response = await fetch(noCacheUrl, options);
                 clearTimeout(timeoutId);
+                
                 if (!response.ok) throw new Error("Server HTTP Error " + response.status);
+                
                 const text = await response.text();
                 try { 
                     return JSON.parse(text); 
                 } catch (e) { 
                     console.error("Server Response:", text);
-                    throw new Error("Invalid response from server. Check console for details."); 
+                    let snippet = text.substring(0, 50).replace(/</g, "&lt;");
+                    throw new Error("Invalid Server Response (It returned HTML). Check Web App Permissions. Preview: " + snippet); 
                 }
-            } catch (err) { console.error("Fetch Error:", err); throw err; }
+            } catch (err) { 
+                console.error("Fetch Error:", err); 
+                throw err; 
+            }
         }
 
         function safeStr(val) { return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
@@ -1491,7 +1530,8 @@
             });
         }
 
-        function handleLogin(event) {
+        // 🚀 UPDATED: USING ASYNC/AWAIT TO CHAIN REQUESTS SEQUENTIALLY
+        async function handleLogin(event) {
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner'); const errorDiv = document.getElementById('loginError');
             const user = document.getElementById('username').value; const pass = document.getElementById('password').value;
@@ -1499,7 +1539,9 @@
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = "Authenticating...";
 
-            safeFetch({ action: 'login', username: user, password: pass }).then(data => {
+            try {
+                const data = await safeFetch({ action: 'login', username: user, password: pass });
+                
                 if(data.status === "success") {
                     const allowed = data.allowedType ? data.allowedType.trim() : "All";
                     if (allowed === "RESTRICTED") { errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return; }
@@ -1531,25 +1573,35 @@
                     
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
 
-                    fetchLedgers();
+                    // 🚀 SEQUENTIAL CALL (Prevents Google Apps Script 502 Crash)
+                    await fetchLedgers();
                     syncData(true);
 
                 } else { 
                     errorDiv.innerText = data.message; errorDiv.style.display = 'block';
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
                 }
-            }).catch(error => { 
+            } catch (error) {
                 errorDiv.innerText = "Connection Error: " + error.message;
                 errorDiv.style.display = 'block'; 
                 btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; 
-            });
+            }
         }
 
+        // 🚀 UPDATED FETCH LEDGERS FUNCTION
         async function fetchLedgers() {
             try {
+                console.log("Fetching ledgers...");
                 const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers' });
-                if (resp.status === 'success') { cachedLedgers = resp.data; }
-            } catch (e) { console.error("Ledgers fetch failed"); }
+                if (resp && resp.status === 'success' && resp.data) { 
+                    cachedLedgers = resp.data; 
+                    console.log("Ledgers loaded successfully: " + cachedLedgers.length);
+                } else {
+                    console.error("Ledger fetch response missing data:", resp);
+                }
+            } catch (e) { 
+                console.error("Ledgers fetch failed", e); 
+            }
         }
 
         // 🚀 UPDATED PRE-FETCHING LOGIC (Sequential to prevent timeouts)
@@ -1569,7 +1621,7 @@
                     if(isInitialLoad) {
                         showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
                         
-                        // 🚀 SEQUENTIAL BACKGROUND PRE-FETCHING (Prevents Apps Script Locking/502s)
+                        // 🚀 SEQUENTIAL BACKGROUND PRE-FETCHING
                         setTimeout(async () => {
                             try {
                                 const pData = await safeFetch({ action: 'syncData', reqType: 'pending' });
@@ -1585,9 +1637,9 @@
                             }
                         }, 2000); 
                     }
-                } else { showToast("Error", "Data sync failed.", "error"); }
+                } else { showToast("Error", "Data sync failed: " + data.message, "error"); }
             }).catch(error => {
-                showToast("Error", "Network timeout. Please refresh again.", "error");
+                showToast("System Error", error.message, "error");
                 if(isInitialLoad) { document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText === "...") { el.innerText = "Err"; el.style.color = "var(--danger)"; } }); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
@@ -1644,10 +1696,9 @@
         }
         function renderPendingTable(dataList, type) {
             let listToDisplay = (type === 'today') ? dataList.filter(b => checkIsToday(b.scanTime)) : dataList;
-            const tableBody = document.getElementById('invoiceTableBody');
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { document.getElementById('invoiceTableBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('invoiceTableBody', html);
         }
 
         function showAssignedList() {
@@ -1655,10 +1706,9 @@
             activeTableContext = { reqType: 'assigned', renderFn: renderAssignedTable }; loadAndRenderTable('assigned', activeTableContext.renderFn);
         }
         function renderAssignedTable(dataList) {
-            const tableBody = document.getElementById('assignedTableBody');
-            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
             let html = []; dataList.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('assignedTableBody', html);
         }
 
         function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
@@ -1668,10 +1718,9 @@
             activeTableContext = { reqType: 'transit', renderFn: renderPodTable }; loadAndRenderTable('transit', activeTableContext.renderFn);
         }
         function renderPodTable(dataList) {
-            const tableBody = document.getElementById('podTableBody');
-            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
             let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('podTableBody', html);
         }
 
         function showDeliveredList(startDate = null, endDate = null) {
@@ -1680,11 +1729,10 @@
             activeTableContext = { reqType: 'delivered', renderFn: (data) => renderDeliveredTable(data, startDate, endDate) }; loadAndRenderTable('delivered', activeTableContext.renderFn);
         }
         function renderDeliveredTable(dataList, startDate, endDate) {
-            const tableBody = document.getElementById('deliveredTableBody');
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('deliveredTableBody', html);
         }
 
         function showDisputedList() {
@@ -1693,10 +1741,9 @@
             activeTableContext = { reqType: 'disputed', renderFn: renderDisputedTable }; loadAndRenderTable('disputed', activeTableContext.renderFn);
         }
         function renderDisputedTable(dataList) {
-            const tableBody = document.getElementById('disputedTableBody');
-            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            if(dataList.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
             let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('disputedTableBody', html);
         }
 
         function showDispatchedList(startDate = null, endDate = null) {
@@ -1705,11 +1752,10 @@
             activeTableContext = { reqType: 'dispatched', renderFn: (data) => renderDispatchedTable(data, startDate, endDate) }; loadAndRenderTable('dispatched', activeTableContext.renderFn);
         }
         function renderDispatchedTable(dataList, startDate, endDate) {
-            const tableBody = document.getElementById('dispatchedTableBody');
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); 
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('dispatchedTableBody', html);
         }
 
         function showUnplannedList() {
@@ -1717,10 +1763,10 @@
             activeTableContext = { reqType: 'unplannedBills', renderFn: renderUnplannedTable }; loadAndRenderTable('unplannedBills', activeTableContext.renderFn);
         }
         function renderUnplannedTable(dataList) {
-            const tableBody = document.getElementById('unplannedTableBody'); const unplannedList = dataList.filter(r => r.status === 'Confirmation Pending');
-            if(unplannedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
+            const unplannedList = dataList.filter(r => r.status === 'Confirmation Pending');
+            if(unplannedList.length === 0) { document.getElementById('unplannedTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
             let html = []; unplannedList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('unplannedTableBody', html);
         }
 
         function showReturnPendingList() {
@@ -1728,10 +1774,10 @@
             activeTableContext = { reqType: 'returnBills', renderFn: renderReturnPendingTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnPendingTable(dataList) {
-            const tableBody = document.getElementById('returnPendingTableBody'); const expectedReturns = dataList.filter(r => r.status === 'Expected Return');
-            if(expectedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
+            const expectedReturns = dataList.filter(r => r.status === 'Expected Return');
+            if(expectedReturns.length === 0) { document.getElementById('returnPendingTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
             let html = []; expectedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnPendingTableBody', html);
         }
 
         function showReturnAssignedList() {
@@ -1739,10 +1785,10 @@
             activeTableContext = { reqType: 'returnBills', renderFn: renderReturnAssignedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnAssignedTable(dataList) {
-            const tableBody = document.getElementById('returnAssignedTableBody'); const assignedReturns = dataList.filter(r => r.status === 'Courier Assigned (Return)');
-            if(assignedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
+            const assignedReturns = dataList.filter(r => r.status === 'Courier Assigned (Return)');
+            if(assignedReturns.length === 0) { document.getElementById('returnAssignedTableBody').innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
             let html = []; assignedReturns.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnAssignedTableBody', html);
         }
         function toggleAllReturnPickup(source) { document.querySelectorAll('.return-pickup-checkbox').forEach(cb => cb.checked = source.checked); }
 
@@ -1751,10 +1797,10 @@
             activeTableContext = { reqType: 'returnBills', renderFn: renderReturnTransitTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnTransitTable(dataList) {
-            const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = dataList.filter(r => r.status === 'In Transit (Return)');
-            if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
+            const transitReturns = dataList.filter(r => r.status === 'In Transit (Return)');
+            if(transitReturns.length === 0) { document.getElementById('returnTransitTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
             let html = []; transitReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnTransitTableBody', html);
         }
 
         function showReturnReceivedList() {
@@ -1762,14 +1808,14 @@
             activeTableContext = { reqType: 'returnBills', renderFn: renderReturnReceivedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnReceivedTable(dataList) {
-            const tableBody = document.getElementById('returnReceivedTableBody'); 
             let listToDisplay = dataList.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; document.getElementById('btnFillCN').style.display = 'none'; return; }
+            if(listToDisplay.length === 0) { document.getElementById('returnReceivedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; document.getElementById('btnFillCN').style.display = 'none'; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
                 html.push(`<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
-            tableBody.innerHTML = html.join(""); toggleCNButton();
+            renderLargeHtml('returnReceivedTableBody', html);
+            toggleCNButton(); // Initialize button state
         }
 
         function toggleCNButton() { document.getElementById('btnFillCN').style.display = document.querySelectorAll('.return-received-checkbox:checked').length > 0 ? 'block' : 'none'; }
@@ -1779,14 +1825,14 @@
             activeTableContext = { reqType: 'returnBills', renderFn: (data) => renderReturnProcessedTable(data, startDate, endDate) }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnProcessedTable(dataList, startDate, endDate) {
-            const tableBody = document.getElementById('returnProcessedTableBody'); let listToDisplay = dataList.filter(r => r.status === 'Return Processed');
+            let listToDisplay = dataList.filter(r => r.status === 'Return Processed');
             if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
+            if(listToDisplay.length === 0) { document.getElementById('returnProcessedTableBody').innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
                 html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnProcessedTableBody', html);
         }
 
         function showReturnDisputedList() {
@@ -1794,10 +1840,10 @@
             activeTableContext = { reqType: 'returnBills', renderFn: renderReturnDisputedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
         function renderReturnDisputedTable(dataList) {
-            const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = dataList.filter(r => r.status === 'Disputed (Return)');
-            if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
+            const disputedReturns = dataList.filter(r => r.status === 'Disputed (Return)');
+            if(disputedReturns.length === 0) { document.getElementById('returnDisputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
             let html = []; disputedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnDisputedTableBody', html);
         }
 
         function showReturnStatusList() {
@@ -1805,13 +1851,13 @@
             activeTableContext = { reqType: 'returnStatus', renderFn: renderReturnStatusTable }; loadAndRenderTable('returnStatus', activeTableContext.renderFn);
         }
         function renderReturnStatusTable(dataObj) {
-            const tableBody = document.getElementById('returnStatusTableBody'); let combinedList = [];
+            let combinedList = [];
             dataObj.unplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
             dataObj.returnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
-            if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
+            if(combinedList.length === 0) { document.getElementById('returnStatusTableBody').innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
             combinedList.reverse(); let html = [];
             combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
-            tableBody.innerHTML = html.join("");
+            renderLargeHtml('returnStatusTableBody', html);
         }
 
         // ========================== MODALS AND ACTION HANDLERS ========================
