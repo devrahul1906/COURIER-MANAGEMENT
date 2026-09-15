@@ -74,7 +74,8 @@
         .brand-text { display: flex; flex-direction: column; }
         .brand-text h1 { font-size: 18px; color: var(--primary); font-weight: 800; margin: 0; letter-spacing: 0.5px; }
         .brand-text h2 { font-size: 12px; color: var(--text-muted); font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
-        .user-nav { display: flex; align-items: center; gap: 20px; }
+        
+        .user-nav { display: flex; align-items: center; gap: 15px; }
         .user-profile { display: flex; align-items: center; gap: 12px; padding: 6px 15px 6px 6px; border-radius: 30px; border: 1px solid var(--border); background: #f8fafc; cursor: pointer; transition: 0.2s; }
         .user-profile:hover { border-color: #cbd5e1; background: #f1f5f9; }
         .avatar { width: 32px; height: 32px; background: var(--primary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px; }
@@ -90,7 +91,9 @@
         .welcome-text p { font-size: 14px; color: var(--text-muted); }
         .date-display { font-size: 13px; font-weight: 600; color: var(--primary); background: #eff6ff; padding: 8px 16px; border-radius: 8px; border: 1px solid #bfdbfe; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
         @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; } }
@@ -169,7 +172,6 @@
         .two-col { display: flex; gap: 15px; }
         .two-col > .form-group { flex: 1; margin-bottom: 15px; }
 
-        /* AUTOCPMPLETE STYLES */
         .autocomplete-items {
             position: absolute;
             border: 1px solid #d4d4d4;
@@ -199,6 +201,7 @@
 
     <div id="toast-container"></div>
 
+    <!-- Login View (Direct ID & Password Login, No Type Selection) -->
     <div id="login-view">
         <div class="login-left">
             <div class="login-left-top">
@@ -208,7 +211,7 @@
             
             <div class="login-center-content">
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" class="login-center-logo">
-                <h2>Courier Management System</h2>
+                <h2>Courier & Return Management System</h2>
                 <p class="tagline">Secure • Fast • Trackable</p>
             </div>
         </div>
@@ -237,19 +240,6 @@
                             </span>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Select Type</label>
-                        <div class="input-wrapper">
-                            <svg class="icon-left icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                            <select id="loginType" required style="padding-left: 40px; cursor: pointer;">
-                                <option value="Dispatch Courier Management">Dispatch Courier Management</option>
-                                <option value="Return Courier Management">Return Courier Management</option>
-                            </select>
-                        </div>
-                    </div>
                     
                     <div class="login-options">
                         <label><input type="checkbox" id="rememberMe"> Remember Me</label>
@@ -268,13 +258,14 @@
         </div>
     </div>
 
+    <!-- Dashboard View (Unified Single Window displaying both Dispatch & Return modules together) -->
     <div id="dashboard-view">
         <div class="top-navbar">
             <div class="brand">
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" style="height: 40px; border-radius: 2px;">
                 <div class="brand-text">
                     <h1>HATVET PHARMA PVT. LTD.</h1>
-                    <h2 id="navbarSubtitle">Courier Management System</h2>
+                    <h2>Courier Management System</h2>
                 </div>
             </div>
             
@@ -301,396 +292,403 @@
             <div class="welcome-text">
                 <div>
                     <h2 id="welcomeGreeting">Greeting</h2>
-                    <p id="welcomeSubtext">Here's your courier management overview for today.</p>
+                    <p>Here is your combined overview for Dispatch and Return operations.</p>
                 </div>
                 <div class="date-display" id="dashCompactTime"></div>
             </div>
 
-            <div id="dispatch-workspace">
-                <div id="dashboard-home-cards" class="kpi-grid">
-                    <div class="kpi-card card-pending" onclick="showInvoiceList('today')">
-                        <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
-                        <div class="kpi-value" id="todayPendingCount">0</div><div class="kpi-desc">Action Required</div>
-                    </div>
-                    <div class="kpi-card card-pending" onclick="showInvoiceList('total')">
-                        <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div></div>
-                        <div class="kpi-value" id="totalPendingCount">0</div><div class="kpi-desc">Overall Backlog</div>
-                    </div>
-                    <div class="kpi-card card-assigned" onclick="showAssignedList()">
-                        <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
-                        <div class="kpi-value" id="assignedCount">0</div><div class="kpi-desc">Awaiting Physical Dispatch</div>
-                    </div>
-                    <div class="kpi-card card-transit" onclick="showPodList()">
-                        <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
-                        <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
-                    </div>
-                    <div class="kpi-card card-delivered" onclick="openDateRangeModal('delivered')">
-                        <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
-                        <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD / Action Pending</div>
-                    </div>
-                    <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()">
-                        <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
-                        <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
-                    </div>
-                    <div class="kpi-card card-dispatched" onclick="openDateRangeModal('dispatched')">
-                        <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
-                        <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
-                    </div>
-                </div>
-
-                <div id="invoice-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2 id="invoiceListTitle">Pending Invoices</h2>
-                        <div class="table-actions">
-                            <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('pendingSearchBox', 'invoiceTableBody', 1)">
-                            <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
-                            <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="invoiceTable">
-                            <thead><tr><th>#</th><th>Invoice No.</th><th>In-Time (Scan Time)</th><th>Status</th></tr></thead>
-                            <tbody id="invoiceTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="assigned-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Assigned Invoices</h2>
-                        <div class="table-actions">
-                            <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('assignedSearchBox', 'assignedTableBody', 2)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="assignedTable" style="min-width: 1000px;">
-                            <thead><tr>
-                                <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
-                            </tr></thead>
-                            <tbody id="assignedTableBody"></tbody>
-                        </table>
-                    </div>
-                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                        <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
-                    </div>
-                </div>
-
-                <div id="pod-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>In Transit Invoices</h2>
-                        <div class="table-actions">
-                            <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('transitSearchBox', 'podTableBody', 1)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="podTable" style="min-width: 1000px;">
-                            <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
-                            <tbody id="podTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="delivered-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Delivered Bills</h2>
-                        <div class="table-actions">
-                            <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('deliveredTable', 'Delivered_Bills.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="deliveredTable" style="min-width: 1200px;">
-                            <thead>
-                                <tr>
-                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                    <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="deliveredTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- Combined Main Dashboard Cards Area -->
+            <div id="dashboard-unified-cards">
                 
-                <div id="disputed-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Disputed / Exceptions</h2>
-                        <div class="table-actions">
-                            <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                <!-- DISPATCH MANAGEMENT SECTION -->
+                <div id="dispatch-management-section">
+                    <div class="section-title">Dispatch Management</div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card card-pending" onclick="showInvoiceList('today')" data-tab-name="Today's Pending">
+                            <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
+                            <div class="kpi-value" id="todayPendingCount">0</div><div class="kpi-desc">Action Required</div>
                         </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="disputedTable" style="min-width: 1000px;">
-                            <thead>
-                                <tr>
-                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="disputedTableBody"></tbody>
-                        </table>
+                        <div class="kpi-card card-pending" onclick="showInvoiceList('total')" data-tab-name="Total Pending">
+                            <div class="kpi-header"><span class="kpi-title">Total Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div></div>
+                            <div class="kpi-value" id="totalPendingCount">0</div><div class="kpi-desc">Overall Backlog</div>
+                        </div>
+                        <div class="kpi-card card-assigned" onclick="showAssignedList()" data-tab-name="Courier Assigned">
+                            <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
+                            <div class="kpi-value" id="assignedCount">0</div><div class="kpi-desc">Awaiting Physical Dispatch</div>
+                        </div>
+                        <div class="kpi-card card-transit" onclick="showPodList()" data-tab-name="In Transit">
+                            <div class="kpi-header"><span class="kpi-title">In Transit</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
+                            <div class="kpi-value" id="transitCount">0</div><div class="kpi-desc">Delivery Pending</div>
+                        </div>
+                        <div class="kpi-card card-delivered" onclick="openDateRangeModal('delivered')" data-tab-name="Delivered Bills">
+                            <div class="kpi-header"><span class="kpi-title">Delivered Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
+                            <div class="kpi-value" id="deliveredCount">0</div><div class="kpi-desc">POD / Action Pending</div>
+                        </div>
+                        <div class="kpi-card" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showDisputedList()" data-tab-name="Disputed / Exceptions">
+                            <div class="kpi-header"><span class="kpi-title">Disputed / Exceptions</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                            <div class="kpi-value" id="disputedCount">0</div><div class="kpi-desc">Pending Resolution</div>
+                        </div>
+                        <div class="kpi-card card-dispatched" onclick="openDateRangeModal('dispatched')" data-tab-name="Dispatched Bills">
+                            <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                            <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="dispatched-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Dispatched Bills (Completed / Exceptions)</h2>
-                        <div class="table-actions">
-                            <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                <!-- RETURN MANAGEMENT SECTION -->
+                <div id="return-management-section">
+                    <div class="section-title" style="margin-top: 35px;">Return Courier Management</div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card" id="card-return-status" style="background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;" onclick="showReturnStatusList()" data-tab-name="Search Entry">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Track Status</span>
+                                <div class="kpi-icon" style="background: rgba(22, 163, 74, 0.15); color: #16a34a;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" style="font-size: 24px;">Search Entry</div>
+                            <div class="kpi-desc">Track current status of any return</div>
                         </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="dispatchedTable" style="min-width: 1750px;">
-                            <thead>
-                                <tr>
-                                    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                    <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dispatchedTableBody"></tbody>
-                        </table>
+
+                        <div class="kpi-card" id="card-unplanned-entry" style="background-color: #fdf4ff; border-color: #f5d0fe; color: #701a75;" onclick="openUnplannedReturnModal()" data-tab-name="Surprise Entry">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Unplanned Return</span>
+                                <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" style="font-size: 24px;">Surprise Entry</div>
+                            <div class="kpi-desc">Log unplanned received boxes</div>
+                        </div>
+
+                        <div class="kpi-card card-assigned" id="card-generate-return" onclick="openGenerateReturnModal()" style="background-color: #e0e7ff; border-color: #c7d2fe; color: #3730a3;" data-tab-name="New Request">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Generate Return Request</span>
+                                <div class="kpi-icon" style="background: rgba(79, 70, 229, 0.15); color: #4f46e5;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" style="font-size: 24px;">New Request</div>
+                            <div class="kpi-desc">Create a new return entry</div>
+                        </div>
+                        
+                        <div class="kpi-card card-pending" id="card-pending-return" onclick="showReturnPendingList()" data-tab-name="Pending Return">
+                            <div class="kpi-header"><span class="kpi-title">Pending Return</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div></div>
+                            <div class="kpi-value" id="pendingReturnCount">0</div><div class="kpi-desc">Expected Returns</div>
+                        </div>
+
+                        <div class="kpi-card card-assigned" id="card-return-assigned" onclick="showReturnAssignedList()" style="background-color: #eff6ff; border-color: #dbeafe; color: #1e3a8a;" data-tab-name="Courier Assigned">
+                            <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
+                            <div class="kpi-value" id="assignedReturnCount">0</div><div class="kpi-desc">Pending Pickup</div>
+                        </div>
+
+                        <div class="kpi-card card-transit" id="card-return-transit" onclick="showReturnTransitList()" data-tab-name="In Transit (Return)">
+                            <div class="kpi-header"><span class="kpi-title">In Transit (Return)</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
+                            <div class="kpi-value" id="transitReturnCount">0</div><div class="kpi-desc">Dispatched from Party</div>
+                        </div>
+
+                        <div class="kpi-card card-delivered" id="card-return-received" onclick="showReturnReceivedList()" data-tab-name="Return Received">
+                            <div class="kpi-header"><span class="kpi-title">Return Received</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
+                            <div class="kpi-value" id="receivedReturnCount">0</div><div class="kpi-desc">Received / Pending for CN</div>
+                        </div>
+                        
+                        <div class="kpi-card" id="card-return-processed" style="background-color: #fdf4ff; border-color: #f0abfc; color: #86198f;" onclick="openDateRangeModal('returnProcessed')" data-tab-name="Return Processed">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Return Processed</span>
+                                <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" id="processedReturnCount">0</div><div class="kpi-desc">CN Generated / Settled</div>
+                        </div>
+
+                        <div class="kpi-card" id="card-return-dispute" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showReturnDisputedList()" data-tab-name="Dispute (Return)">
+                            <div class="kpi-header"><span class="kpi-title">Dispute (Return)</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
+                            <div class="kpi-value" id="disputedReturnCount">0</div><div class="kpi-desc">Missing Boxes</div>
+                        </div>
+
+                        <div class="kpi-card" id="card-unplanned-received" style="background-color: #fff1f2; border-color: #fecdd3; color: #881337;" onclick="showUnplannedList()" data-tab-name="Unplanned Received">
+                            <div class="kpi-header"><span class="kpi-title">Unplanned Received</span><div class="kpi-icon" style="background: rgba(225, 29, 72, 0.15); color: #e11d48;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div></div>
+                            <div class="kpi-value" id="unplannedReturnCount">0</div><div class="kpi-desc">Confirmation Pending</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="return-workspace" style="display: none;">
-                <div id="dashboard-return-cards" class="kpi-grid">
-                    
-                    <div class="kpi-card" id="card-return-status" style="background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;" onclick="showReturnStatusList()">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Track Status</span>
-                            <div class="kpi-icon" style="background: rgba(22, 163, 74, 0.15); color: #16a34a;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            </div>
-                        </div>
-                        <div class="kpi-value" style="font-size: 24px;">Search Entry</div>
-                        <div class="kpi-desc">Track current status of any return</div>
-                    </div>
-
-                    <div class="kpi-card" id="card-unplanned-entry" style="background-color: #fdf4ff; border-color: #f5d0fe; color: #701a75;" onclick="openUnplannedReturnModal()">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Unplanned Return</span>
-                            <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                            </div>
-                        </div>
-                        <div class="kpi-value" style="font-size: 24px;">Surprise Entry</div>
-                        <div class="kpi-desc">Log unplanned received boxes</div>
-                    </div>
-
-                    <div class="kpi-card card-assigned" id="card-generate-return" onclick="openGenerateReturnModal()" style="background-color: #e0e7ff; border-color: #c7d2fe; color: #3730a3;">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Generate Return Request</span>
-                            <div class="kpi-icon" style="background: rgba(79, 70, 229, 0.15); color: #4f46e5;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"></path></svg>
-                            </div>
-                        </div>
-                        <div class="kpi-value" style="font-size: 24px;">New Request</div>
-                        <div class="kpi-desc">Create a new return entry</div>
-                    </div>
-                    
-                    <div class="kpi-card card-pending" id="card-pending-return" onclick="showReturnPendingList()">
-                        <div class="kpi-header"><span class="kpi-title">Pending Return</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div></div>
-                        <div class="kpi-value" id="pendingReturnCount">0</div><div class="kpi-desc">Expected Returns</div>
-                    </div>
-
-                    <div class="kpi-card card-assigned" id="card-return-assigned" onclick="showReturnAssignedList()" style="background-color: #eff6ff; border-color: #dbeafe; color: #1e3a8a;">
-                        <div class="kpi-header"><span class="kpi-title">Courier Assigned</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div></div>
-                        <div class="kpi-value" id="assignedReturnCount">0</div><div class="kpi-desc">Pending Pickup</div>
-                    </div>
-
-                    <div class="kpi-card card-transit" id="card-return-transit" onclick="showReturnTransitList()">
-                        <div class="kpi-header"><span class="kpi-title">In Transit (Return)</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></div></div>
-                        <div class="kpi-value" id="transitReturnCount">0</div><div class="kpi-desc">Dispatched from Party</div>
-                    </div>
-
-                    <div class="kpi-card card-delivered" id="card-return-received" onclick="showReturnReceivedList()">
-                        <div class="kpi-header"><span class="kpi-title">Return Received</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div></div>
-                        <div class="kpi-value" id="receivedReturnCount">0</div><div class="kpi-desc">Received / Pending for CN</div>
-                    </div>
-                    
-                    <div class="kpi-card" id="card-return-processed" style="background-color: #fdf4ff; border-color: #f0abfc; color: #86198f;" onclick="openDateRangeModal('returnProcessed')">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Return Processed</span>
-                            <div class="kpi-icon" style="background: rgba(192, 38, 211, 0.15); color: #c026d3;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="kpi-value" id="processedReturnCount">0</div><div class="kpi-desc">CN Generated / Settled</div>
-                    </div>
-
-                    <div class="kpi-card" id="card-return-dispute" style="background-color: #fef2f2; border-color: #fecaca; color: #991b1b;" onclick="showReturnDisputedList()">
-                        <div class="kpi-header"><span class="kpi-title">Dispute (Return)</span><div class="kpi-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
-                        <div class="kpi-value" id="disputedReturnCount">0</div><div class="kpi-desc">Missing Boxes</div>
-                    </div>
-
-                    <div class="kpi-card" id="card-unplanned-received" style="background-color: #fff1f2; border-color: #fecdd3; color: #881337;" onclick="showUnplannedList()">
-                        <div class="kpi-header"><span class="kpi-title">Unplanned Received</span><div class="kpi-icon" style="background: rgba(225, 29, 72, 0.15); color: #e11d48;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div></div>
-                        <div class="kpi-value" id="unplannedReturnCount">0</div><div class="kpi-desc">Confirmation Pending</div>
+            <!-- All Data Tables Sections (Dispatch & Return) -->
+            <div id="invoice-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2 id="invoiceListTitle">Pending Invoices</h2>
+                    <div class="table-actions">
+                        <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('pendingSearchBox', 'invoiceTableBody', 1)">
+                        <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
+                        <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="invoiceTable">
+                        <thead><tr><th>#</th><th>Invoice No.</th><th>In-Time (Scan Time)</th><th>Status</th></tr></thead>
+                        <tbody id="invoiceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div id="unplanned-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Unplanned Received - Confirmation Pending</h2>
-                        <div class="table-actions">
-                            <input type="text" id="unplannedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('unplannedSearchBox', 'unplannedTableBody', 2)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('unplannedTable', 'Unplanned_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="unplannedTable" style="min-width: 1000px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>State</th><th>Boxes</th><th>Created Date</th><th>Status</th><th>Action</th></tr></thead>
-                            <tbody id="unplannedTableBody"></tbody>
-                        </table>
+            <div id="assigned-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Assigned Invoices</h2>
+                    <div class="table-actions">
+                        <input type="text" id="assignedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('assignedSearchBox', 'assignedTableBody', 2)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('assignedTable', 'Assigned_Invoices.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="assignedTable" style="min-width: 1000px;">
+                        <thead><tr>
+                            <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
+                            <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
+                        </tr></thead>
+                        <tbody id="assignedTableBody"></tbody>
+                    </table>
+                </div>
+                <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
+                </div>
+            </div>
 
-                <div id="return-pending-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Pending Returns (Expected)</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnPendingSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnPendingSearchBox', 'returnPendingTableBody', 2)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnPendingTable', 'Pending_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnPendingTable" style="min-width: 1200px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Phone No</th><th>City</th><th>State</th><th>Full Address</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead>
-                            <tbody id="returnPendingTableBody"></tbody>
-                        </table>
+            <div id="pod-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>In Transit Invoices</h2>
+                    <div class="table-actions">
+                        <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('transitSearchBox', 'podTableBody', 1)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="podTable" style="min-width: 1000px;">
+                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="podTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div id="return-assigned-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Courier Assigned (Returns)</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnAssignedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnAssignedSearchBox', 'returnAssignedTableBody', 3)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnAssignedTable', 'Assigned_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnAssignedTable" style="min-width: 1100px;">
-                            <thead><tr>
-                                <th><input type="checkbox" id="selectAllReturnPickup" onclick="toggleAllReturnPickup(this)" style="cursor: pointer;"></th>
-                                <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th>
-                            </tr></thead>
-                            <tbody id="returnAssignedTableBody"></tbody>
-                        </table>
-                    </div>
-                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                        <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmReturnPickupModal()">Confirm Pickup</button>
+            <div id="delivered-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Delivered Bills</h2>
+                    <div class="table-actions">
+                        <input type="text" id="deliveredSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('deliveredSearchBox', 'deliveredTableBody', 1)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('deliveredTable', 'Delivered_Bills.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
-
-                <div id="return-transit-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>In Transit (Returns)</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnTransitSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnTransitSearchBox', 'returnTransitTableBody', 2)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnTransitTable', 'Transit_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnTransitTable" style="min-width: 1100px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Dispatch Date</th><th>Action</th></tr></thead>
-                            <tbody id="returnTransitTableBody"></tbody>
-                        </table>
+                <div class="table-responsive">
+                    <table id="deliveredTable" style="min-width: 1200px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveredTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="disputed-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Disputed / Exceptions</h2>
+                    <div class="table-actions">
+                        <input type="text" id="disputedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('disputedSearchBox', 'disputedTableBody', 1)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('disputedTable', 'Disputed_Bills.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="disputedTable" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disputedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div id="return-received-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Return Received</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 3)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnReceivedTable', 'Received_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnReceivedTable" style="min-width: 1850px;">
-                            <thead><tr>
-                                <th>Select</th>
-                                <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th>
-                            </tr></thead>
-                            <tbody id="returnReceivedTableBody"></tbody>
-                        </table>
-                    </div>
-                    <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                        <button class="action-btn btn-primary" id="btnFillCN" style="padding: 10px 20px; font-size: 14px; display: none;" onclick="openCNDetailsModal()">Fill CN Details</button>
+            <div id="dispatched-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Dispatched Bills (Completed / Exceptions)</h2>
+                    <div class="table-actions">
+                        <input type="text" id="dispatchedSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="filterTable('dispatchedSearchBox', 'dispatchedTableBody', 1)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchedTable', 'Dispatched_Journey.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
-                
-                <div id="return-processed-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Return Processed (CN Generated)</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnProcessedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnProcessedSearchBox', 'returnProcessedTableBody', 2)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnProcessedTable', 'Processed_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnProcessedTable" style="min-width: 1950px;">
-                            <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>CN No.</th><th>CN Date</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
-                            <tbody id="returnProcessedTableBody"></tbody>
-                        </table>
+                <div class="table-responsive">
+                    <table id="dispatchedTable" style="min-width: 1750px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
+                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dispatchedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="unplanned-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Unplanned Received - Confirmation Pending</h2>
+                    <div class="table-actions">
+                        <input type="text" id="unplannedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('unplannedSearchBox', 'unplannedTableBody', 2)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('unplannedTable', 'Unplanned_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="unplannedTable" style="min-width: 1000px;">
+                        <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>State</th><th>Boxes</th><th>Created Date</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="unplannedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div id="return-disputed-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Dispute (Return) - Missing Boxes</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnDisputedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnDisputedSearchBox', 'returnDisputedTableBody', 3)">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnDisputedTable', 'Disputed_Returns.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnDisputedTable" style="min-width: 1100px;">
-                            <thead><tr><th>#</th><th>Return ID</th><th>Dr. Name</th><th>Ledger Name</th><th>Missing Boxes</th><th>City</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Date</th><th>Remark</th><th>Action</th></tr></thead>
-                            <tbody id="returnDisputedTableBody"></tbody>
-                        </table>
+            <div id="return-pending-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Pending Returns (Expected)</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnPendingSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnPendingSearchBox', 'returnPendingTableBody', 2)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnPendingTable', 'Pending_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="returnPendingTable" style="min-width: 1200px;">
+                        <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Phone No</th><th>City</th><th>State</th><th>Full Address</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead>
+                        <tbody id="returnPendingTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div id="return-status-list-section" class="table-wrapper">
-                    <div class="table-header">
-                        <h2>Track Return Status</h2>
-                        <div class="table-actions">
-                            <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="filterTableGlobal('returnStatusSearchBox', 'returnStatusTableBody')">
-                            <button class="btn-outline btn-export" onclick="exportTableToCSV('returnStatusTable', 'Return_Status_Track.csv')">Export CSV</button>
-                            <button class="btn-outline" onclick="showDashboardCards()">Back</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="returnStatusTable" style="min-width: 1100px;">
-                            <thead>
-                                <tr>
-                                    <th>#</th><th>ID / Type</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody id="returnStatusTableBody"></tbody>
-                        </table>
+            <div id="return-assigned-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Courier Assigned (Returns)</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnAssignedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnAssignedSearchBox', 'returnAssignedTableBody', 3)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnAssignedTable', 'Assigned_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table id="returnAssignedTable" style="min-width: 1100px;">
+                        <thead><tr>
+                            <th><input type="checkbox" id="selectAllReturnPickup" onclick="toggleAllReturnPickup(this)" style="cursor: pointer;"></th>
+                            <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th>
+                        </tr></thead>
+                        <tbody id="returnAssignedTableBody"></tbody>
+                    </table>
+                </div>
+                <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmReturnPickupModal()">Confirm Pickup</button>
+                </div>
+            </div>
 
+            <div id="return-transit-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>In Transit (Returns)</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnTransitSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnTransitSearchBox', 'returnTransitTableBody', 2)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnTransitTable', 'Transit_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="returnTransitTable" style="min-width: 1100px;">
+                        <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>City</th><th>State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Dispatch Date</th><th>Action</th></tr></thead>
+                        <tbody id="returnTransitTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="return-received-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Return Received</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnReceivedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnReceivedSearchBox', 'returnReceivedTableBody', 3)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnReceivedTable', 'Received_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="returnReceivedTable" style="min-width: 1850px;">
+                        <thead><tr>
+                            <th>Select</th>
+                            <th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th>
+                        </tr></thead>
+                        <tbody id="returnReceivedTableBody"></tbody>
+                    </table>
+                </div>
+                <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <button class="action-btn btn-primary" id="btnFillCN" style="padding: 10px 20px; font-size: 14px; display: none;" onclick="openCNDetailsModal()">Fill CN Details</button>
+                </div>
+            </div>
+            
+            <div id="return-processed-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Return Processed (CN Generated)</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnProcessedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnProcessedSearchBox', 'returnProcessedTableBody', 2)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnProcessedTable', 'Processed_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="returnProcessedTable" style="min-width: 1950px;">
+                        <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>CN No.</th><th>CN Date</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
+                        <tbody id="returnProcessedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="return-disputed-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Dispute (Return) - Missing Boxes</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnDisputedSearchBox" class="search-box" placeholder="Search by Leader Name..." onkeyup="filterTable('returnDisputedSearchBox', 'returnDisputedTableBody', 3)">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnDisputedTable', 'Disputed_Returns.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="returnDisputedTable" style="min-width: 1100px;">
+                        <thead><tr><th>#</th><th>Return ID</th><th>Dr. Name</th><th>Ledger Name</th><th>Missing Boxes</th><th>City</th><th>Courier Partner</th><th>Docket No</th><th>Status</th><th>Date</th><th>Remark</th><th>Action</th></tr></thead>
+                        <tbody id="returnDisputedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="return-status-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Track Return Status</h2>
+                    <div class="table-actions">
+                        <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="filterTableGlobal('returnStatusSearchBox', 'returnStatusTableBody')">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('returnStatusTable', 'Return_Status_Track.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="returnStatusTable" style="min-width: 1100px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>ID / Type</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnStatusTableBody"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -700,7 +698,7 @@
         </div>
     </div>
 
-    <!-- Modals for Return Inventory -->
+    <!-- Modals (Unplanned, Return Generation, Dispatch Confirmation, PODs, etc.) -->
     <div id="unplannedReturnModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -1076,7 +1074,6 @@
         </div>
     </div>
 
-    <!-- Original Dispatch Modals -->
     <div id="dateRangeModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
@@ -1331,11 +1328,12 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwbt8SIgzrHeuf08ddCnvOI2gf8r8wott8_of_pUT9aj2a6QSLIsHGPTm5Y2C2RZanu/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwfhEBgBREmjrAOeqCmnhLdOfNPrXdU2kBVEdjzBR9InxSFsRz9q7J9PKJxgIQin0xM/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
-        let loggedInUserPermissions = "All";
+        let loggedInUserType = "All"; // Handle Column D module selection
+        let loggedInUserPermissions = "All"; // Handle Column E tab selection
         let cachedPendingBills = []; 
         let cachedAssignedBills = []; 
         let cachedTransitBills = []; 
@@ -1346,23 +1344,15 @@
         let cachedUnplannedBills = [];
         let cachedLedgers = [];
         let currentViewMode = "today"; 
-        let currentWorkspace = "dispatch"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
 
-        // =========================================================================
-        // 1. UPDATED: HIGHER TIMEOUT TO PREVENT CONNECTION DROPS (60 SECONDS)
-        // =========================================================================
-// UPDATED: No Retry Loops & 120 Second Safe Margin
         async function safeFetch(payload, retries = 1) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
-            
             for (let i = 0; i < retries; i++) {
                 try {
                     const controller = new AbortController();
-                    // Increased to 120 seconds to give Google enough time to respond without panicking
                     const timeoutId = setTimeout(() => controller.abort(), 120000); 
-                    
                     const options = {
                         method: 'POST',
                         redirect: 'follow',
@@ -1370,21 +1360,17 @@
                         body: JSON.stringify(payload),
                         signal: controller.signal
                     };
-                    
                     const response = await fetch(noCacheUrl, options);
                     clearTimeout(timeoutId);
-                    
                     if (!response.ok) throw new Error("HTTP " + response.status);
                     return await response.json();
                 } catch (err) {
                     if (i === retries - 1) throw err;
                     console.warn(`Connection dropped. Auto-reconnecting... Attempt ${i + 1} of ${retries}`);
-                    
                     const btnSpan = document.getElementById('loginText');
                     if(btnSpan && btnSpan.innerText.includes("Loading")) {
                         btnSpan.innerText = `Reconnecting (${i + 1}/${retries})...`;
                     }
-                    
                     await new Promise(r => setTimeout(r, 2000));
                 }
             }
@@ -1397,12 +1383,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('hatvetUser');
             const savedPass = localStorage.getItem('hatvetPass');
-            const savedType = localStorage.getItem('hatvetType');
-            
             if (savedUser && savedPass) {
                 document.getElementById('username').value = savedUser;
                 document.getElementById('password').value = savedPass;
-                if(savedType) document.getElementById('loginType').value = savedType;
                 document.getElementById('rememberMe').checked = true;
                 document.getElementById('loginBtn').click();
             }
@@ -1415,40 +1398,27 @@
         function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId) {
             const inp = document.getElementById(inputId);
             if(!inp) return;
-            
-            let currentFocus;
-            
             inp.addEventListener("input", function(e) {
                 let a, b, val = this.value; 
                 closeAllLists();
                 if (!val) { return false;}
-                currentFocus = -1;
-                
                 a = document.createElement("DIV");
                 a.setAttribute("id", this.id + "autocomplete-list");
                 a.setAttribute("class", "autocomplete-items");
-                
                 this.parentNode.appendChild(a);
                 this.parentNode.style.position = "relative";
-                
                 let matchCount = 0;
-                
                 for (let i = 0; i < cachedLedgers.length; i++) {
                     if (cachedLedgers[i].ledgerName.toUpperCase().includes(val.toUpperCase())) {
                         if(matchCount > 20) break; 
-                        
                         let currentLedger = cachedLedgers[i]; 
-                        
                         b = document.createElement("DIV");
                         let regex = new RegExp("(" + val.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ")", "gi");
                         b.innerHTML = currentLedger.ledgerName.replace(regex, "<strong>$1</strong>");
-                        
                         if(currentLedger.city) {
                             b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
                         }
-                        
                         b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
-                        
                         b.addEventListener("click", function(e) {
                             inp.value = this.getElementsByTagName("input")[0].value;
                             if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
@@ -1464,13 +1434,10 @@
                     }
                 }
             });
-            
             function closeAllLists(elmnt) {
                 var x = document.getElementsByClassName("autocomplete-items");
                 for (var i = 0; i < x.length; i++) {
-                    if (elmnt != x[i] && elmnt != inp) {
-                        x[i].parentNode.removeChild(x[i]);
-                    }
+                    if (elmnt != x[i] && elmnt != inp) { x[i].parentNode.removeChild(x[i]); }
                 }
             }
             document.addEventListener("click", function (e) { closeAllLists(e.target); });
@@ -1554,32 +1521,65 @@
         }
         
         function updateDashboardCounts() {
-            if (currentWorkspace === 'dispatch') {
-                document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
-                document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
-                document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
-                document.getElementById('transitCount').innerText = cachedTransitBills.length;
-                document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
-                document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
-                document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
-            } else if (currentWorkspace === 'return') {
-                document.getElementById('pendingReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Expected Return').length;
-                document.getElementById('assignedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)').length;
-                document.getElementById('transitReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'In Transit (Return)').length;
-                document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed').length;
-                document.getElementById('disputedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Disputed (Return)').length;
-                
-                let processedCount = document.getElementById('processedReturnCount');
-                if (processedCount) processedCount.innerText = cachedReturnBills.filter(r => r.status === 'Return Processed').length;
+            // Dispatch counts
+            document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
+            document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
+            document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
+            document.getElementById('transitCount').innerText = cachedTransitBills.length;
+            document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
+            document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
+            document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
 
-                let unpCount = document.getElementById('unplannedReturnCount');
-                if(unpCount) unpCount.innerText = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending').length;
-            }
+            // Return counts
+            document.getElementById('pendingReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Expected Return').length;
+            document.getElementById('assignedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)').length;
+            document.getElementById('transitReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'In Transit (Return)').length;
+            document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed').length;
+            document.getElementById('disputedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Disputed (Return)').length;
+            
+            let processedCount = document.getElementById('processedReturnCount');
+            if (processedCount) processedCount.innerText = cachedReturnBills.filter(r => r.status === 'Return Processed').length;
+
+            let unpCount = document.getElementById('unplannedReturnCount');
+            if(unpCount) unpCount.innerText = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending').length;
         }
 
-        // =========================================================================
-        // 2. UPDATED: FAST LOGIN AND BACKGROUND SYNC
-        // =========================================================================
+        // Apply Tab & Module Based Access Control logic here
+        function applyAccessControl() {
+            const dispatchSection = document.getElementById('dispatch-management-section');
+            const returnSection = document.getElementById('return-management-section');
+            const allCards = document.querySelectorAll('.kpi-card');
+
+            // 1. Column D (Module Selection) Logic
+            if (loggedInUserType === "Dispatch Courier Management") {
+                dispatchSection.style.display = 'block';
+                returnSection.style.display = 'none';
+            } else if (loggedInUserType === "Return Courier Management") {
+                dispatchSection.style.display = 'none';
+                returnSection.style.display = 'block';
+            } else {
+                dispatchSection.style.display = 'block';
+                returnSection.style.display = 'block';
+            }
+
+            // 2. Column E (Tabs) Logic
+            const allowedTabsStr = loggedInUserPermissions.toLowerCase();
+            
+            allCards.forEach(card => {
+                const tabName = (card.getAttribute('data-tab-name') || "").toLowerCase();
+                
+                if (allowedTabsStr === "all" || allowedTabsStr.includes("all")) {
+                    card.style.display = 'flex'; 
+                } else {
+                    if (tabName && allowedTabsStr.includes(tabName)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+
         function handleLogin(event) {
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); 
@@ -1587,15 +1587,11 @@
             const errorDiv = document.getElementById('loginError');
             const user = document.getElementById('username').value; 
             const pass = document.getElementById('password').value;
-            const loginType = document.getElementById('loginType').value; 
             const rememberMe = document.getElementById('rememberMe').checked;
-
-            currentWorkspace = (loginType === 'Return Courier Management' || loginType === 'Return Inventory') ? 'return' : 'dispatch';
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = "Authenticating...";
 
-            // ONLY send action: 'login' (fast validation)
             const payload = { action: 'login', username: user, password: pass };
 
             safeFetch(payload).then(data => {
@@ -1604,22 +1600,18 @@
                     if (allowed === "RESTRICTED") {
                         errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return;
                     }
-                    if (allowed !== "All" && allowed !== loginType) {
-                        errorDiv.innerText = `Access Denied: You only have permission for ${allowed}.`; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return;
-                    }
 
                     if (rememberMe) { 
                         localStorage.setItem('hatvetUser', user); 
                         localStorage.setItem('hatvetPass', pass); 
-                        localStorage.setItem('hatvetType', loginType); 
                     } else { 
                         localStorage.removeItem('hatvetUser'); 
                         localStorage.removeItem('hatvetPass'); 
-                        localStorage.removeItem('hatvetType'); 
                     }
                     
                     loggedInUser = user; 
                     loggedInUserRole = data.role || "Standard"; 
+                    loggedInUserType = allowed;
                     loggedInUserPermissions = data.permissions || "All"; 
                     
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
@@ -1627,28 +1619,14 @@
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
                     document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
 
-                    // Immediately show dashboard while background syncs
                     document.getElementById('login-view').style.display = 'none'; 
                     document.getElementById('dashboard-view').style.display = 'flex';
-                    
-                    if (currentWorkspace === 'return') {
-                        document.getElementById('navbarSubtitle').innerText = "Return Inventory System"; 
-                        document.getElementById('welcomeSubtext').innerText = "Here's your return inventory overview."; 
-                        document.getElementById('dispatch-workspace').style.display = 'none'; 
-                        document.getElementById('return-workspace').style.display = 'block';
-                    } else {
-                        document.getElementById('navbarSubtitle').innerText = "Courier Management System"; 
-                        document.getElementById('welcomeSubtext').innerText = "Here's your courier management overview for today."; 
-                        document.getElementById('return-workspace').style.display = 'none'; 
-                        document.getElementById('dispatch-workspace').style.display = 'block';
-                    }
                     
                     showDashboardCards(); 
                     showToast('Login Successful', `Fetching your dashboard data...`, 'success');
                     
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
 
-                    // Trigger heavy data loading entirely in the background
                     syncData(true);
 
                 } else { 
@@ -1665,9 +1643,6 @@
             });
         }
 
-        // =========================================================================
-        // 3. UPDATED: BACKGROUND SYNC DATA
-        // =========================================================================
         function syncData(isInitialLoad = false) {
             if (!loggedInUser) return;
             const btn = document.getElementById('syncBtn'); 
@@ -1683,32 +1658,21 @@
                 });
             }
 
-            const payload = { action: 'syncData', workspace: currentWorkspace === 'return' ? 'Return Inventory' : 'Dispatch Courier Management' };
+            const payload = { action: 'syncData' };
 
             safeFetch(payload).then(data => {
                 if(data.status === "success") {
-                    cachedPendingBills = data.pendingBills || []; cachedAssignedBills = data.assignedBills || []; cachedTransitBills = data.transitBills || []; cachedDeliveredBills = data.deliveredBills || []; cachedDispatchedBills = data.dispatchedBills || []; cachedDisputedBills = data.disputedBills || []; cachedReturnBills = data.returnBills || []; cachedUnplannedBills = data.unplannedBills || [];
+                    cachedPendingBills = data.pendingBills || []; 
+                    cachedAssignedBills = data.assignedBills || []; 
+                    cachedTransitBills = data.transitBills || []; 
+                    cachedDeliveredBills = data.deliveredBills || []; 
+                    cachedDispatchedBills = data.dispatchedBills || []; 
+                    cachedDisputedBills = data.disputedBills || []; 
+                    cachedReturnBills = data.returnBills || []; 
+                    cachedUnplannedBills = data.unplannedBills || [];
                     cachedLedgers = data.ledgerList || [];
 
                     updateDashboardCounts(); 
-                    
-                    if (currentWorkspace === 'return') {
-                        if(document.getElementById('return-pending-list-section').style.display === 'block') showReturnPendingList();
-                        else if(document.getElementById('return-assigned-list-section').style.display === 'block') showReturnAssignedList();
-                        else if(document.getElementById('return-transit-list-section').style.display === 'block') showReturnTransitList();
-                        else if(document.getElementById('return-received-list-section').style.display === 'block') showReturnReceivedList();
-                        else if(document.getElementById('return-processed-list-section').style.display === 'block') showReturnProcessedList();
-                        else if(document.getElementById('return-disputed-list-section').style.display === 'block') showReturnDisputedList();
-                        else if(document.getElementById('unplanned-list-section').style.display === 'block') showUnplannedList();
-                        else if(document.getElementById('return-status-list-section').style.display === 'block') showReturnStatusList();
-                    } else {
-                        if(document.getElementById('invoice-list-section').style.display === 'block') showInvoiceList(currentViewMode);
-                        else if(document.getElementById('assigned-list-section').style.display === 'block') showAssignedList();
-                        else if(document.getElementById('pod-list-section').style.display === 'block') showPodList();
-                        else if(document.getElementById('delivered-list-section').style.display === 'block') showDeliveredList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
-                        else if(document.getElementById('disputed-list-section').style.display === 'block') showDisputedList();
-                        else if(document.getElementById('dispatched-list-section').style.display === 'block') showDispatchedList(document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
-                    }
                     
                     if(isInitialLoad) {
                         showToast('Dashboard Ready', 'All data loaded successfully.', 'success');
@@ -1724,51 +1688,24 @@
             const savedUser = localStorage.getItem('hatvetUser');
             const savedPass = localStorage.getItem('hatvetPass');
             if (savedUser && savedPass) { document.getElementById('username').value = savedUser; document.getElementById('password').value = savedPass; document.getElementById('rememberMe').checked = true; }
-            loggedInUser = ""; loggedInUserRole = ""; loggedInUserPermissions = "All";
+            loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
             cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = []; cachedReturnBills = []; cachedUnplannedBills = []; cachedLedgers = [];
-            localStorage.removeItem('hatvetType');
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
 
         function hideAllLists() {
-            document.getElementById('dashboard-home-cards').style.display = 'none';
-            document.getElementById('dashboard-return-cards').style.display = 'none';
+            document.getElementById('dashboard-unified-cards').style.display = 'none';
             document.querySelectorAll('.table-wrapper').forEach(el => el.style.display = 'none');
         }
 
         function showDashboardCards() { 
             hideAllLists(); 
-            if (currentWorkspace === 'dispatch') {
-                document.getElementById('dashboard-home-cards').style.display = 'grid'; 
-            } else if (currentWorkspace === 'return') {
-                document.getElementById('dashboard-return-cards').style.display = 'grid'; 
-                if (loggedInUserPermissions && loggedInUserPermissions !== "All" && loggedInUserPermissions !== "") {
-                    document.querySelectorAll('#dashboard-return-cards .kpi-card').forEach(card => card.style.display = 'none');
-                    const allowedCards = loggedInUserPermissions.toLowerCase().split(',').map(s => s.trim());
-                    if (allowedCards.includes('track status') || allowedCards.includes('search entry')) { let c = document.getElementById('card-return-status'); if (c) c.style.display = 'flex'; }
-                    if (allowedCards.includes('surprise entry')) document.getElementById('card-unplanned-entry').style.display = 'flex';
-                    if (allowedCards.includes('new request')) document.getElementById('card-generate-return').style.display = 'flex';
-                    if (allowedCards.includes('pending return')) document.getElementById('card-pending-return').style.display = 'flex';
-                    if (allowedCards.includes('courier assigned')) document.getElementById('card-return-assigned').style.display = 'flex';
-                    if (allowedCards.includes('in transit (return)') || allowedCards.includes('in transit')) document.getElementById('card-return-transit').style.display = 'flex';
-                    if (allowedCards.includes('return received')) document.getElementById('card-return-received').style.display = 'flex';
-                    if (allowedCards.includes('return processed')) document.getElementById('card-return-processed').style.display = 'flex';
-                    if (allowedCards.includes('dispute (return)') || allowedCards.includes('dispute')) document.getElementById('card-return-dispute').style.display = 'flex';
-                    if (allowedCards.includes('unplanned received')) document.getElementById('card-unplanned-received').style.display = 'flex';
-                } else {
-                    document.querySelectorAll('#dashboard-return-cards .kpi-card').forEach(card => card.style.display = 'flex');
-                }
-            }
+            document.getElementById('dashboard-unified-cards').style.display = 'block'; 
+            applyAccessControl(); // Ensures UI restrictions remain active when navigating back from tables
         }
 
-        function openUnplannedReturnModal() { 
-            document.getElementById('unplannedReturnForm').reset(); 
-            document.getElementById('unplannedReturnModal').style.display = 'flex'; 
-        }
-        
-        function closeUnplannedReturnModal() { 
-            document.getElementById('unplannedReturnModal').style.display = 'none'; 
-        }
+        function openUnplannedReturnModal() { document.getElementById('unplannedReturnForm').reset(); document.getElementById('unplannedReturnModal').style.display = 'flex'; }
+        function closeUnplannedReturnModal() { document.getElementById('unplannedReturnModal').style.display = 'none'; }
 
         function getBase64(file) { 
             return new Promise((resolve, reject) => { 
@@ -1780,63 +1717,22 @@
         }
 
         async function submitUnplannedReturn(e) {
-            e.preventDefault(); 
-            const btn = document.getElementById('saveUnplannedBtn'); 
-            const originalHTML = btn.innerHTML; 
-            btn.innerHTML = "Submitting..."; 
-            btn.disabled = true;
-            
+            e.preventDefault(); const btn = document.getElementById('saveUnplannedBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
             const file = document.getElementById('unpFile').files[0];
             let base64Data = "", fileName = "", mimeType = "";
-            if (file) {
-                base64Data = await getBase64(file);
-                fileName = "UNP_" + new Date().getTime() + "_" + file.name;
-                mimeType = file.type;
-            }
-
-            const requestData = { 
-                drName: document.getElementById('unpDrName').value, 
-                ledgerName: document.getElementById('unpLedgerName').value, 
-                city: document.getElementById('unpCity').value, 
-                state: "", 
-                boxes: document.getElementById('unpBoxes').value, 
-                ledgerCode: "",
-                zone: "",
-                bdmName: "",
-                status: "Confirmation Pending" 
-            };
-            
+            if (file) { base64Data = await getBase64(file); fileName = "UNP_" + new Date().getTime() + "_" + file.name; mimeType = file.type; }
+            const requestData = { drName: document.getElementById('unpDrName').value, ledgerName: document.getElementById('unpLedgerName').value, city: document.getElementById('unpCity').value, state: "", boxes: document.getElementById('unpBoxes').value, ledgerCode: "", zone: "", bdmName: "", status: "Confirmation Pending" };
             const payload = { action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
-
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { 
-                    showToast("Success", "Unplanned Return logged successfully!"); 
-                    cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() }); 
-                    updateDashboardCounts(); 
-                    closeUnplannedReturnModal(); 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Unplanned Return logged successfully!"); cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() }); updateDashboardCounts(); closeUnplannedReturnModal(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function showUnplannedList() {
-            hideAllLists(); 
-            document.getElementById('unplanned-list-section').style.display = 'block'; 
-            let sb = document.getElementById('unplannedSearchBox'); 
-            if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('unplannedTableBody'); 
-            const unplannedList = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending');
-            
-            if(unplannedList.length === 0) { 
-                tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; 
-                return; 
-            }
-            let html = []; 
-            unplannedList.forEach((item, index) => { 
-                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`); 
-            });
+            hideAllLists(); document.getElementById('unplanned-list-section').style.display = 'block'; 
+            const tableBody = document.getElementById('unplannedTableBody'); const unplannedList = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending');
+            if(unplannedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
+            let html = []; unplannedList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
@@ -1844,274 +1740,84 @@
             const val = document.getElementById('confUnpConfirmedBy').value;
             const otherGrp = document.getElementById('confUnpOtherGroup');
             const otherInp = document.getElementById('confUnpOtherSpec');
-            if(val === "Other") {
-                otherGrp.style.display = 'block';
-                otherInp.required = true;
-            } else {
-                otherGrp.style.display = 'none';
-                otherInp.required = false;
-                otherInp.value = '';
-            }
+            if(val === "Other") { otherGrp.style.display = 'block'; otherInp.required = true; } else { otherGrp.style.display = 'none'; otherInp.required = false; otherInp.value = ''; }
         }
 
         function openConfirmUnplannedModal(id, reportedBoxes) { 
-            document.getElementById('confirmUnplannedForm').reset(); 
-            document.getElementById('confUnpId').value = id; 
-            document.getElementById('confUnpExpected').value = reportedBoxes; 
-            
+            document.getElementById('confirmUnplannedForm').reset(); document.getElementById('confUnpId').value = id; document.getElementById('confUnpExpected').value = reportedBoxes; 
             let uItem = cachedUnplannedBills.find(u => u.id === id);
-            if (uItem) {
-                document.getElementById('confUnpDrName').value = uItem.drName || '';
-                document.getElementById('confUnpLedgerName').value = uItem.ledgerName || '';
-                document.getElementById('confUnpCity').value = uItem.city || '';
-            }
-
-            document.getElementById('confUnpConfirmedBy').value = '';
-            handleConfirmedByChange();
-            document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
+            if (uItem) { document.getElementById('confUnpDrName').value = uItem.drName || ''; document.getElementById('confUnpLedgerName').value = uItem.ledgerName || ''; document.getElementById('confUnpCity').value = uItem.city || ''; }
+            document.getElementById('confUnpConfirmedBy').value = ''; handleConfirmedByChange(); document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
         }
+        function closeConfirmUnplannedModal() { document.getElementById('confirmUnplannedModal').style.display = 'none'; }
 
-        function closeConfirmUnplannedModal() { 
-            document.getElementById('confirmUnplannedModal').style.display = 'none'; 
-        }
-
-        function submitConfirmUnplanned(e) {
-            e.preventDefault(); 
-            const btn = document.getElementById('saveConfirmUnpBtn'); 
-            const originalHTML = btn.innerHTML; 
-            btn.innerHTML = "Processing..."; 
-            btn.disabled = true;
-            
-            const id = document.getElementById('confUnpId').value; 
-            const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; 
-            const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
-            
-            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value;
-            const confirmedBySpec = document.getElementById('confUnpOtherSpec').value;
-            const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
-
-            const finalData = {
-                drName: document.getElementById('confUnpDrName').value,
-                ledgerName: document.getElementById('confUnpLedgerName').value,
-                phone: document.getElementById('confUnpPhone').value,
-                city: document.getElementById('confUnpCity').value,
-                state: document.getElementById('confUnpState').value,
-                ledgerCode: document.getElementById('confUnpLedgerCode').value,
-                zone: document.getElementById('confUnpZone').value,
-                bdmName: document.getElementById('confUnpBdmName').value
-            };
+        async function submitConfirmUnplanned(e) {
+            e.preventDefault(); const btn = document.getElementById('saveConfirmUnpBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const id = document.getElementById('confUnpId').value; const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
+            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value; const confirmedBySpec = document.getElementById('confUnpOtherSpec').value; const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
+            const finalData = { drName: document.getElementById('confUnpDrName').value, ledgerName: document.getElementById('confUnpLedgerName').value, phone: document.getElementById('confUnpPhone').value, city: document.getElementById('confUnpCity').value, state: document.getElementById('confUnpState').value, ledgerCode: document.getElementById('confUnpLedgerCode').value, zone: document.getElementById('confUnpZone').value, bdmName: document.getElementById('confUnpBdmName').value };
             
             const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData };
-            
             safeFetch(payload).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "Unplanned Return confirmed successfully!");
-                    let uIndex = cachedUnplannedBills.findIndex(u => u.id === id);
-                    if (uIndex > -1) {
-                        let uItem = cachedUnplannedBills[uIndex]; 
-                        cachedUnplannedBills[uIndex].status = "Confirmed"; 
-                        cachedUnplannedBills[uIndex].drName = finalData.drName;
-                        cachedUnplannedBills[uIndex].ledgerName = finalData.ledgerName;
-                        cachedUnplannedBills[uIndex].city = finalData.city;
-                        cachedUnplannedBills[uIndex].state = finalData.state;
-
-                        let currentDate = getCurrentFormattedDate();
-                        let baseRet = { id: uItem.id, drName: finalData.drName, ledgerName: finalData.ledgerName, city: finalData.city, state: finalData.state, phone: finalData.phone, pinCode: "", address: "", createdBy: loggedInUser, date: uItem.date, partner: "Self", docket: "Unplanned", assignDate: uItem.date, dispatchDate: uItem.date, recvDate: currentDate, remark: `Confirmed by: ${finalConfirmedBy}` };
-                        if (expected !== received) {
-                            let diff = Math.abs(expected - received); 
-                            let isShort = expected > received; 
-                            let mainStatus = isShort ? "Return Received (Partial)" : "Return Received (Excess)"; 
-                            let diffText = isShort ? "Missing Boxes: " + diff : "Excess Boxes: " + diff; let suffix = isShort ? "-SHORT" : "-EXCESS";
-                            cachedReturnBills.push({ ...baseRet, status: mainStatus, boxes: expected, rcvdBoxes: received }); 
-                            cachedReturnBills.push({ ...baseRet, id: uItem.id + suffix, status: "Disputed (Return)", boxes: diff, rcvdBoxes: "", remark: diffText });
-                        } else { 
-                            cachedReturnBills.push({ ...baseRet, status: "Return Received", boxes: expected, rcvdBoxes: received }); 
-                        }
-                    }
-                    updateDashboardCounts(); closeConfirmUnplannedModal(); showUnplannedList(); 
-                } else { 
-                    showToast("Error", data.message, "error"); 
-                }
-            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Unplanned Return confirmed successfully!"); updateDashboardCounts(); closeConfirmUnplannedModal(); showUnplannedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
-        function openGenerateReturnModal() { 
-            document.getElementById('generateReturnForm').reset(); 
-            document.getElementById('generateReturnModal').style.display = 'flex'; 
-        }
-        
-        function closeGenerateReturnModal() { 
-            document.getElementById('generateReturnModal').style.display = 'none'; 
-        }
+        function openGenerateReturnModal() { document.getElementById('generateReturnForm').reset(); document.getElementById('generateReturnModal').style.display = 'flex'; }
+        function closeGenerateReturnModal() { document.getElementById('generateReturnModal').style.display = 'none'; }
 
         function submitReturnRequest(e) {
-            e.preventDefault(); 
-            const btn = document.getElementById('saveReturnBtn'); 
-            const originalHTML = btn.innerHTML; 
-            btn.innerHTML = "Submitting..."; 
-            btn.disabled = true;
-            
-            const requestData = { 
-                drName: document.getElementById('retDrName').value, 
-                ledgerName: document.getElementById('retLedgerName').value, 
-                boxes: "", 
-                phone: document.getElementById('retPhone').value, 
-                city: document.getElementById('retCity').value, 
-                pinCode: document.getElementById('retPinCode').value, 
-                state: document.getElementById('retState').value, 
-                address: document.getElementById('retAddress').value, 
-                ledgerCode: document.getElementById('retLedgerCode').value,
-                zone: document.getElementById('retZone').value,
-                bdmName: document.getElementById('retBdmName').value,
-                status: "Expected Return", 
-                date: getCurrentFormattedDate(), 
-                remark: "" 
-            };
-            
+            e.preventDefault(); const btn = document.getElementById('saveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
+            const requestData = { drName: document.getElementById('retDrName').value, ledgerName: document.getElementById('retLedgerName').value, boxes: "", phone: document.getElementById('retPhone').value, city: document.getElementById('retCity').value, pinCode: document.getElementById('retPinCode').value, state: document.getElementById('retState').value, address: document.getElementById('retAddress').value, ledgerCode: document.getElementById('retLedgerCode').value, zone: document.getElementById('retZone').value, bdmName: document.getElementById('retBdmName').value, status: "Expected Return", date: getCurrentFormattedDate(), remark: "" };
             const payload = { action: 'createReturn', data: requestData, createdBy: loggedInUser };
-            
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { 
-                    showToast("Success", "Return request generated successfully!"); 
-                    cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' }); 
-                    updateDashboardCounts(); 
-                    closeGenerateReturnModal(); 
-                } else { 
-                    showToast("Error", data.message, "error"); 
-                }
-            }).catch(err => showToast("Error", "Submission failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Return request generated successfully!"); cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' }); updateDashboardCounts(); closeGenerateReturnModal(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function showReturnPendingList() {
-            hideAllLists(); 
-            document.getElementById('return-pending-list-section').style.display = 'block'; 
-            let sb = document.getElementById('returnPendingSearchBox'); 
-            if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnPendingTableBody'); 
-            const expectedReturns = cachedReturnBills.filter(r => r.status === 'Expected Return');
-            
-            if(expectedReturns.length === 0) { 
-                tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; 
-            }
-            let html = []; 
-            expectedReturns.forEach((item, index) => { 
-                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`); 
-            });
+            hideAllLists(); document.getElementById('return-pending-list-section').style.display = 'block'; 
+            const tableBody = document.getElementById('returnPendingTableBody'); const expectedReturns = cachedReturnBills.filter(r => r.status === 'Expected Return');
+            if(expectedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
+            let html = []; expectedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
-        function openAssignReturnCourierModal(returnId) { 
-            document.getElementById('assignReturnCourierForm').reset(); 
-            document.getElementById('assignReturnId').value = returnId; 
-            document.getElementById('assignRetBoxes').value = '';
-            document.getElementById('assignReturnCourierModal').style.display = 'flex'; 
-        }
-        function closeAssignReturnCourierModal() { 
-            document.getElementById('assignReturnCourierModal').style.display = 'none'; 
-        }
+        function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; }
+        function closeAssignReturnCourierModal() { document.getElementById('assignReturnCourierModal').style.display = 'none'; }
 
         function submitAssignReturnCourier(e) {
-            e.preventDefault(); 
-            const btn = document.getElementById('saveAssignReturnBtn'); 
-            const originalHTML = btn.innerHTML; 
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-            
-            const returnId = document.getElementById('assignReturnId').value; 
-            const boxes = document.getElementById('assignRetBoxes').value;
-            const partner = document.getElementById('retCourierPartner').value; 
-            const docket = document.getElementById('retDocketNo').value;
-            
+            e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; const partner = document.getElementById('retCourierPartner').value; const docket = document.getElementById('retDocketNo').value;
             const payload = { action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser };
-            
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { 
-                    showToast("Success", "Courier assigned successfully!"); 
-                    let rIndex = cachedReturnBills.findIndex(r => r.id === returnId); 
-                    if (rIndex > -1) { 
-                        cachedReturnBills[rIndex].boxes = boxes;
-                        cachedReturnBills[rIndex].status = "Courier Assigned (Return)"; 
-                        cachedReturnBills[rIndex].partner = partner; 
-                        cachedReturnBills[rIndex].docket = docket; 
-                        cachedReturnBills[rIndex].assignDate = getCurrentFormattedDate(); 
-                    } 
-                    updateDashboardCounts(); closeAssignReturnCourierModal(); showReturnPendingList(); 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Assignment failed.", "error")).finally(() => { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", "Courier assigned successfully!"); updateDashboardCounts(); closeAssignReturnCourierModal(); showReturnPendingList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function showReturnAssignedList() {
-            hideAllLists(); 
-            document.getElementById('return-assigned-list-section').style.display = 'block'; 
-            let sb = document.getElementById('returnAssignedSearchBox'); if(sb) sb.value = '';
-            
-            const tableBody = document.getElementById('returnAssignedTableBody'); 
-            const assignedReturns = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)');
-            
-            if(assignedReturns.length === 0) { 
-                tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; 
-            }
-            let html = []; 
-            assignedReturns.forEach((item, index) => { 
-                html.push(`<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`); 
-            });
+            hideAllLists(); document.getElementById('return-assigned-list-section').style.display = 'block'; 
+            const tableBody = document.getElementById('returnAssignedTableBody'); const assignedReturns = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)');
+            if(assignedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
+            let html = []; assignedReturns.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
-        function toggleAllReturnPickup(source) { 
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox'); 
-            checkboxes.forEach(cb => cb.checked = source.checked); 
-        }
-
-        function openConfirmReturnPickupModal() {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked');
-            if(checkboxes.length === 0) { 
-                showToast("Warning", "Please select at least one return request to confirm pickup.", "warning"); return; 
-            }
-            document.getElementById('confirmReturnPickupModal').style.display = 'flex';
-        }
-
-        function closeConfirmReturnPickupModal() { 
-            document.getElementById('confirmReturnPickupModal').style.display = 'none'; 
-        }
+        function toggleAllReturnPickup(source) { document.querySelectorAll('.return-pickup-checkbox').forEach(cb => cb.checked = source.checked); }
+        function openConfirmReturnPickupModal() { if(document.querySelectorAll('.return-pickup-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one return request.", "warning"); return; } document.getElementById('confirmReturnPickupModal').style.display = 'flex'; }
+        function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
 
         function processReturnPickup() {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); 
-            const itemsToDispatch = []; 
-            checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
-            
-            const btn = document.getElementById('confirmReturnPickupBtn'); 
-            const originalText = btn.innerHTML; 
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-            
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
+            const btn = document.getElementById('confirmReturnPickupBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const payload = { action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser };
-            
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { 
-                    showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); 
-                    itemsToDispatch.forEach(id => { 
-                        let itemIndex = cachedReturnBills.findIndex(r => r.id === id); 
-                        if (itemIndex > -1) { 
-                            cachedReturnBills[itemIndex].status = "In Transit (Return)"; 
-                            cachedReturnBills[itemIndex].dispatchDate = getCurrentFormattedDate(); 
-                        } 
-                    }); 
-                    updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList(); 
-                    document.getElementById('selectAllReturnPickup').checked = false; 
-                } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { 
-                btn.innerHTML = originalText; btn.disabled = false; 
-            });
+                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
         function showReturnTransitList() {
-            hideAllLists(); document.getElementById('return-transit-list-section').style.display = 'block'; let sb = document.getElementById('returnTransitSearchBox'); if(sb) sb.value = '';
+            hideAllLists(); document.getElementById('return-transit-list-section').style.display = 'block'; 
             const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
             if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
             let html = []; transitReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`); });
@@ -2124,37 +1830,27 @@
         async function submitReceiveReturn(e) {
             e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
-            
             const file = document.getElementById('recvFile').files[0];
             let base64Data = "", fileName = "", mimeType = "";
-            if (file) {
-                base64Data = await getBase64(file);
-                fileName = "RECV_" + id + "_" + file.name;
-                mimeType = file.type;
-            }
-
+            if (file) { base64Data = await getBase64(file); fileName = "RECV_" + id + "_" + file.name; mimeType = file.type; }
             const payload = { action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { if (received < expected) { cachedReturnBills[rIndex].status = "Return Received (Partial)"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; let missing = expected - received; let shortItem = { ...cachedReturnBills[rIndex] }; shortItem.id = id + "-SHORT"; shortItem.boxes = missing; shortItem.rcvdBoxes = ""; shortItem.status = "Disputed (Return)"; shortItem.recvDate = getCurrentFormattedDate(); shortItem.remark = "Missing Boxes: " + missing; cachedReturnBills.push(shortItem); } else { cachedReturnBills[rIndex].status = "Return Received"; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); cachedReturnBills[rIndex].rcvdBoxes = received; } } updateDashboardCounts(); closeReceiveReturnModal(); showReturnTransitList(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Processing failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); updateDashboardCounts(); closeReceiveReturnModal(); showReturnTransitList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function calculateReturnTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } else if (dStr.includes('/')) { const parts = dStr.split(/[\/ :]/); if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
             const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
             if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
         }
 
         function showReturnReceivedList() {
-            hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; let sb = document.getElementById('returnReceivedSearchBox'); if(sb) sb.value = '';
+            hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; 
             const tableBody = document.getElementById('returnReceivedTableBody'); 
             let listToDisplay = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
-            if(listToDisplay.length === 0) { 
-                tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; 
-                document.getElementById('btnFillCN').style.display = 'none';
-                return; 
-            }
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; document.getElementById('btnFillCN').style.display = 'none'; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
                 html.push(`<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
@@ -2163,112 +1859,34 @@
             toggleCNButton();
         }
         
-        function toggleCNButton() {
-            const checkedCount = document.querySelectorAll('.return-received-checkbox:checked').length;
-            document.getElementById('btnFillCN').style.display = checkedCount > 0 ? 'block' : 'none';
-        }
-
-        function openCNDetailsModal() {
-            document.getElementById('cnDetailsForm').reset();
-            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked');
-            let needsReason = false;
-            const now = new Date();
-            
-            checkboxes.forEach(cb => {
-                let item = cachedReturnBills.find(r => r.id === cb.value);
-                if (item && item.recvDate && item.recvDate !== '-') {
-                    let parts = item.recvDate.split(/[- :\/]/);
-                    if (parts.length >= 3) {
-                        let rDate = new Date(parts[2], parts[1]-1, parts[0]);
-                        let diffDays = (now - rDate) / (1000 * 60 * 60 * 24);
-                        if (diffDays > 7) { needsReason = true; }
-                    }
-                }
-            });
-
-            const reasonGroup = document.getElementById('cnDelayReasonGroup');
-            const reasonInput = document.getElementById('cnDelayReason');
-            if (needsReason) {
-                reasonGroup.style.display = 'block';
-                reasonInput.required = true;
-            } else {
-                reasonGroup.style.display = 'none';
-                reasonInput.required = false;
-            }
-            
-            document.getElementById('cnDetailsModal').style.display = 'flex';
-        }
-
-        function closeCNDetailsModal() {
-            document.getElementById('cnDetailsModal').style.display = 'none';
-        }
+        function toggleCNButton() { document.getElementById('btnFillCN').style.display = document.querySelectorAll('.return-received-checkbox:checked').length > 0 ? 'block' : 'none'; }
+        function openCNDetailsModal() { document.getElementById('cnDetailsForm').reset(); document.getElementById('cnDetailsModal').style.display = 'flex'; }
+        function closeCNDetailsModal() { document.getElementById('cnDetailsModal').style.display = 'none'; }
 
         function submitCNDetails(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveCNDetailsBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "Processing..."; btn.disabled = true;
-
-            const cnNo = document.getElementById('cnNoInput').value.trim();
-            const cnDate = document.getElementById('cnDateInput').value;
-            const delayReason = document.getElementById('cnDelayReason').value;
-            
-            const isDuplicate = cachedReturnBills.some(r => r.cnNo && String(r.cnNo).trim().toLowerCase() === cnNo.toLowerCase());
-            if (isDuplicate) {
-                showToast("Error", "Duplicate CN No. found! Please enter a unique CN No.", "error");
-                btn.innerHTML = originalHTML; btn.disabled = false;
-                return;
-            }
-
-            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked');
-            const itemsToProcess = [];
-            checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
-
+            e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
+            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
             const payload = { action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, actionBy: loggedInUser };
-            
             safeFetch(payload).then(data => {
-                if(data.status === 'success') {
-                    showToast("Success", "CN Details updated successfully!");
-                    itemsToProcess.forEach(id => {
-                        let idx = cachedReturnBills.findIndex(r => r.id === id);
-                        if(idx > -1) {
-                            cachedReturnBills[idx].status = "Return Processed";
-                            cachedReturnBills[idx].cnNo = cnNo;
-                            let dArr = cnDate.split('-');
-                            cachedReturnBills[idx].cnDate = dArr.length === 3 ? `${dArr[2]}-${dArr[1]}-${dArr[0]}` : cnDate;
-                            if(delayReason) cachedReturnBills[idx].remark = (cachedReturnBills[idx].remark || "") + " | Delay Res: " + delayReason;
-                        }
-                    });
-                    updateDashboardCounts();
-                    closeCNDetailsModal();
-                    showReturnReceivedList();
-                } else {
-                    showToast("Error", data.message, "error");
-                }
-            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => {
-                btn.innerHTML = originalHTML; btn.disabled = false;
-            });
+                if(data.status === 'success') { showToast("Success", "CN Details updated successfully!"); updateDashboardCounts(); closeCNDetailsModal(); showReturnReceivedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
         
         function showReturnProcessedList(startDate = null, endDate = null) {
             hideAllLists(); document.getElementById('return-processed-list-section').style.display = 'block'; 
-            let sb = document.getElementById('returnProcessedSearchBox'); if(sb) sb.value = '';
-            const tableBody = document.getElementById('returnProcessedTableBody'); 
-            let listToDisplay = cachedReturnBills.filter(r => r.status === 'Return Processed');
-            
+            const tableBody = document.getElementById('returnProcessedTableBody'); let listToDisplay = cachedReturnBills.filter(r => r.status === 'Return Processed');
             if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
-
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
-                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
-                let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
+                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
                 html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
             tableBody.innerHTML = html.join("");
         }
 
         function showReturnDisputedList() {
-            hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; let sb = document.getElementById('returnDisputedSearchBox'); if(sb) sb.value = '';
+            hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; 
             const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
             if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
             let html = []; disputedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`); });
@@ -2277,7 +1895,7 @@
 
         function handleResolveRetActionChange() {
             const actionSelect = document.getElementById('resolveRetAction').value; const dateGroup = document.getElementById('resolveRetDateGroup'); const dateInput = document.getElementById('resolveRetDate'); const dateLabel = document.getElementById('resolveRetDateLabel'); const appGroup = document.getElementById('resolveRetApprovedByGroup'); const appInput = document.getElementById('resolveRetApprovedBy');
-            if (actionSelect === "Received at Origin") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Receiving Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; appInput.value = ''; } else if (actionSelect === "Claim Settled / Closed") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Settled/Closed Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
+            if (actionSelect === "Received at Origin") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Receiving Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; } else if (actionSelect === "Claim Settled / Closed") { dateGroup.style.display = 'block'; dateLabel.innerHTML = 'Settled/Closed Date <span style="color: red;">*</span>'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
         function openResolveReturnModal(id) { document.getElementById('resolveReturnForm').reset(); document.getElementById('resolveRetId').value = id; document.getElementById('resolveRetIdDisplay').value = id; handleResolveRetActionChange(); document.getElementById('resolveReturnModal').style.display = 'flex'; }
@@ -2288,23 +1906,17 @@
             const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
             const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
             let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
-            
             const file = document.getElementById('resolveRetFile').files[0];
             let base64Data = "", fileName = "", mimeType = "";
-            if (file) {
-                base64Data = await getBase64(file);
-                fileName = "DISP_RES_" + id + "_" + file.name;
-                mimeType = file.type;
-            }
-
+            if (file) { base64Data = await getBase64(file); fileName = "DISP_RES_" + id + "_" + file.name; mimeType = file.type; }
             const payload = { action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); let rIndex = cachedReturnBills.findIndex(r => r.id === id); if (rIndex > -1) { cachedReturnBills[rIndex].status = actionStatus === 'Received at Origin' ? 'Return Received (SHORT)' : 'Closed (Claim Settled)'; cachedReturnBills[rIndex].recvDate = getCurrentFormattedDate(); if (actionStatus === 'Received at Origin') { cachedReturnBills[rIndex].rcvdBoxes = cachedReturnBills[rIndex].boxes; } let currentRemark = cachedReturnBills[rIndex].remark || ""; cachedReturnBills[rIndex].remark = currentRemark ? (currentRemark + " | Res: " + remark) : ("Res: " + remark); } updateDashboardCounts(); closeResolveReturnModal(); showReturnDisputedList(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Action failed.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); updateDashboardCounts(); closeResolveReturnModal(); showReturnDisputedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function showReturnStatusList() {
-            hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; let sb = document.getElementById('returnStatusSearchBox'); if(sb) sb.value = '';
+            hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; 
             const tableBody = document.getElementById('returnStatusTableBody'); let combinedList = [];
             cachedUnplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
             cachedReturnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
@@ -2316,12 +1928,12 @@
 
         function filterTableGlobal(inputId, tbodyId) {
             let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) { let textContent = tr[i].textContent || tr[i].innerText; if (textContent.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
+            for (let i = 0; i < tr.length; i++) { if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
         }
 
         function calculateTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } else if (dStr.includes('/')) { const parts = dStr.split(/[\/ :]/); if (parts.length >= 6) return new Date(parts[2], parts[0]-1, parts[1], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
             const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
         }
 
@@ -2336,44 +1948,56 @@
         }
 
         function showInvoiceList(type) {
-            hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; let sb = document.getElementById('pendingSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('invoiceTableBody'); const btnExport = document.getElementById('btnExportPending'); btnExport.style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; const btnUpload = document.getElementById('btnBulkUpload'); btnUpload.style.display = (isStandardUser()) ? 'none' : 'flex'; 
-            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills; document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); tableBody.innerHTML = html.join("");
+            hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; 
+            document.getElementById('btnExportPending').style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; 
+            document.getElementById('btnBulkUpload').style.display = (isStandardUser()) ? 'none' : 'flex'; 
+            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills; 
+            document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
+            if(listToDisplay.length === 0) { document.getElementById('invoiceTableBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); 
+            document.getElementById('invoiceTableBody').innerHTML = html.join("");
         }
 
         function showAssignedList() {
-            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; let sb = document.getElementById('assignedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('assignedTableBody');  
-            if(cachedAssignedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            let html = []; cachedAssignedBills.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); tableBody.innerHTML = html.join("");
+            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; 
+            if(cachedAssignedBills.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            let html = []; cachedAssignedBills.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); 
+            document.getElementById('assignedTableBody').innerHTML = html.join("");
         }
 
-        function toggleAllDispatch(source) { const checkboxes = document.querySelectorAll('.dispatch-checkbox'); checkboxes.forEach(cb => cb.checked = source.checked); }
+        function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
 
         function showPodList() {
-            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; let sb = document.getElementById('transitSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('podTableBody');  
-            if(cachedTransitBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            let html = []; cachedTransitBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
+            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; 
+            if(cachedTransitBills.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            let html = []; cachedTransitBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); 
+            document.getElementById('podTableBody').innerHTML = html.join("");
         }
         
         function showDeliveredList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; let sb = document.getElementById('deliveredSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('deliveredTableBody');  
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
+            hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
             let listToDisplay = cachedDeliveredBills; if(startDate || endDate) { listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { let sTag = '<span class="badge bg-delivered">Delivered</span>'; html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td>${sTag}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
+            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); 
+            document.getElementById('deliveredTableBody').innerHTML = html.join("");
         }
         
         function showDisputedList() {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; let sb = document.getElementById('disputedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('disputedTableBody'); 
-            if(cachedDisputedBills.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
-            let html = []; cachedDisputedBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); tableBody.innerHTML = html.join("");
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
+            hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; 
+            if(cachedDisputedBills.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            let html = []; cachedDisputedBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); 
+            document.getElementById('disputedTableBody').innerHTML = html.join("");
         }
 
         function showDispatchedList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; let sb = document.getElementById('dispatchedSearchBox'); if(sb) sb.value = ''; const tableBody = document.getElementById('dispatchedTableBody'); 
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
+            hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; 
             let listToDisplay = cachedDispatchedBills; if(startDate || endDate) { listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); tableBody.innerHTML = html.join("");
+            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); 
+            document.getElementById('dispatchedTableBody').innerHTML = html.join("");
         }
 
         function handleUploadTypeChange() {
@@ -2416,31 +2040,27 @@
         function populateConfirmBulkModal(assignments) {
             const tbody = document.getElementById('confirmBulkTableBody'); tbody.innerHTML = ''; assignments.forEach((a, index) => { tbody.innerHTML += `<tr><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${index + 1}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;"><b>${a.invoiceNo}</b></td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.partner}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.docketNo || '-'}</td></tr>`; }); document.getElementById('confirmBulkModal').style.display = 'flex'; closeBulkUploadModal();
         }
-
         function closeConfirmBulkModal() { document.getElementById('confirmBulkModal').style.display = 'none'; pendingBulkAssignments = []; }
-
         function executeBulkAssignment() { if(pendingBulkAssignments.length === 0) return; submitBulkAssignment(pendingBulkAssignments); }
 
         function submitBulkAssignment(assignments) {
             const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            
             const payload = { action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser };
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned successfully!`); assignments.forEach(a => { cachedPendingBills = cachedPendingBills.filter(b => b.invoiceNo !== a.invoiceNo); cachedAssignedBills.push({ invoiceNo: a.invoiceNo, partner: a.partner, docket: a.docketNo, city: a.city, drName: a.drName, ledgerName: a.ledgerName, pinCode: a.pinCode, actionTime: getCurrentFormattedDate() }); }); updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
+                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned successfully!`); updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
         }
 
-        function openConfirmDispatchModal() { const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); if(checkboxes.length === 0) { showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return; } document.getElementById('confirmDispatchModal').style.display = 'flex'; }
+        function openConfirmDispatchModal() { if(document.querySelectorAll('.dispatch-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return; } document.getElementById('confirmDispatchModal').style.display = 'flex'; }
         function closeConfirmDispatchModal() { document.getElementById('confirmDispatchModal').style.display = 'none'; }
 
         function processPhysicalDispatch() {
             const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
             const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            
             const payload = { action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser };
             safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); itemsToDispatch.forEach(dispatchItem => { let itemIndex = cachedAssignedBills.findIndex(i => i.invoiceNo === dispatchItem.invoiceNo && (i.docket || '') === dispatchItem.docketNo); if (itemIndex > -1) { let itemToMove = cachedAssignedBills[itemIndex]; cachedAssignedBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); cachedTransitBills.push(itemToMove); } }); updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList(); document.getElementById('selectAllDispatch').checked = false; } else { showToast("Error", data.message, "error"); }
-            }).catch(err => showToast("Error", "Network error.", "error")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
         function openForgotPasswordModal() { document.getElementById('forgotPasswordModal').style.display = 'flex'; }
@@ -2453,7 +2073,7 @@
         function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
 
         function openResolveModal(inv, docket, status) {
-            document.getElementById('resolveInvNo').value = inv; document.getElementById('resolveDocket').value = docket || ''; document.getElementById('resolveInvDisplay').value = inv; document.getElementById('resolveReceiveDate').value = ''; document.getElementById('resolveApprovedBy').value = '';
+            document.getElementById('resolveInvNo').value = inv; document.getElementById('resolveDocket').value = docket || ''; document.getElementById('resolveInvDisplay').value = inv;
             const actionSelect = document.getElementById('resolveAction'); actionSelect.innerHTML = ''; 
             if (status.includes("RTO")) { actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`; } else if (status.includes("Misplaced")) { actionSelect.innerHTML += `<option value="Received at Origin">Received at Origin (Warehouse)</option>`; actionSelect.innerHTML += `<option value="Delivered to client">Delivered to client (Pending POD)</option>`; actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`; } else if (status.includes("Disputed") || status.includes("Missing") || status.includes("Short")) { actionSelect.innerHTML += `<option value="Received to Party">Received to Party (Delivered)</option>`; actionSelect.innerHTML += `<option value="Return to Origin">Return to Origin (Received at Warehouse)</option>`; actionSelect.innerHTML += `<option value="Claim Settled / Closed">Claim Settled / Closed</option>`; } else { actionSelect.innerHTML += `<option value="Case Closed">Close Case</option>`; }
             handleResolveActionChange(); document.getElementById('resolveModal').style.display = 'flex';
@@ -2461,8 +2081,8 @@
         function closeResolveModal() { document.getElementById('resolveModal').style.display = 'none'; document.getElementById('resolveForm').reset(); }
 
         function handleResolveActionChange() {
-            const actionSelect = document.getElementById('resolveAction'); const dateGroup = document.getElementById('resolveDateGroup'); const dateInput = document.getElementById('resolveReceiveDate'); const appGroup = document.getElementById('resolveApprovedByGroup'); const appInput = document.getElementById('resolveApprovedBy');
-            if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; appInput.value = ''; } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
+            const actionSelect = document.getElementById('resolveAction').value; const dateGroup = document.getElementById('resolveDateGroup'); const dateInput = document.getElementById('resolveReceiveDate'); const appGroup = document.getElementById('resolveApprovedByGroup'); const appInput = document.getElementById('resolveApprovedBy');
+            if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
         async function submitPodUpload(e) {
@@ -2473,7 +2093,7 @@
             try {
                 const payload = { action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput };
                 const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); let itemIndex = cachedTransitBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedTransitBills[itemIndex]; cachedTransitBills.splice(itemIndex, 1); itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.status = uploadType; itemToMove.remark = remarkInput; if (uploadType === "Delivered") { cachedDeliveredBills.push(itemToMove); } else { cachedDisputedBills.push(itemToMove); } } updateDashboardCounts(); closePodModal(); showPodList(); } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); updateDashboardCounts(); closePodModal(); showPodList(); syncData(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
@@ -2487,7 +2107,7 @@
                 if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
                 const payload = { action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem };
                 const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); let itemIndex = cachedDeliveredBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === oldDocketNo); if (itemIndex > -1) { let itemToMove = cachedDeliveredBills[itemIndex]; cachedDeliveredBills.splice(itemIndex, 1); if (actionType === 'Short Delivered') { itemToMove.status = 'Delivered (Partial)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = rem + ` | Rcvd: ${recBoxes}/${expBoxes}`; cachedDispatchedBills.push(itemToMove); cachedDisputedBills.push({ invoiceNo: itemToMove.invoiceNo + "-SHORT", docket: itemToMove.docket, partner: itemToMove.partner, city: itemToMove.city, drName: itemToMove.drName, ledgerName: itemToMove.ledgerName, pinCode: itemToMove.pinCode, actionTime: getCurrentFormattedDate(), status: "Disputed (Missing)", remark: `Missing Boxes: ${expBoxes - recBoxes}` }); } else if (actionType === 'OTP based delivery - No POD Required') { itemToMove.status = 'Delivered (OTP)'; itemToMove.actionTime = getCurrentFormattedDate(); itemToMove.remark = 'No POD required (OTP)'; cachedDispatchedBills.push(itemToMove); } else { itemToMove.status = 'Delivered (POD)'; itemToMove.actionTime = getCurrentFormattedDate(); cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); syncData(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
         }
 
@@ -2499,7 +2119,7 @@
             try {
                 const payload = { action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser };
                 const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); let itemIndex = cachedDisputedBills.findIndex(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo); if (itemIndex > -1) { let itemToMove = cachedDisputedBills[itemIndex]; cachedDisputedBills.splice(itemIndex, 1); let dateText = receiveDateStr ? ` | Rcv Date: ${receiveDateStr}` : ""; itemToMove.remark = itemToMove.remark + " | Res: " + remark + dateText; itemToMove.actionTime = getCurrentFormattedDate(); if (actionStatus === "Received to Party" || actionStatus === "Delivered to client") { itemToMove.status = "Delivered"; cachedDeliveredBills.push(itemToMove); } else { itemToMove.status = "Closed: " + actionStatus; cachedDispatchedBills.push(itemToMove); } } updateDashboardCounts(); closeResolveModal(); showDisputedList(); } else { showToast("Error", data.message, "error"); }
+                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); updateDashboardCounts(); closeResolveModal(); showDisputedList(); syncData(); } else { showToast("Error", data.message, "error"); }
             } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
         }
 
