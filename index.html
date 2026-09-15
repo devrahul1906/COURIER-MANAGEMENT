@@ -56,8 +56,7 @@
         .input-wrapper input:focus, .input-wrapper select:focus, .input-wrapper textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(20, 52, 130, 0.1); }
         .eye-icon { position: absolute; right: 14px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; padding: 5px; border-radius: 50%; transition: 0.2s; }
         .eye-icon:hover { background: #f1f5f9; color: var(--primary); }
-        .login-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 13px; }
-        .login-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-muted); font-weight: 500; }
+        .login-options { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 25px; font-size: 13px; }
         .login-options a { color: var(--primary); text-decoration: none; font-weight: 600; }
         .login-options a:hover { text-decoration: underline; }
         .btn-login { background-color: var(--primary); color: white; border: none; width: 100%; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(20, 52, 130, 0.2); }
@@ -201,7 +200,7 @@
 
     <div id="toast-container"></div>
 
-    <!-- Login View (Direct ID & Password Login, No Type Selection) -->
+    <!-- Login View -->
     <div id="login-view">
         <div class="login-left">
             <div class="login-left-top">
@@ -242,7 +241,6 @@
                     </div>
                     
                     <div class="login-options">
-                        <label><input type="checkbox" id="rememberMe"> Remember Me</label>
                         <a href="#" onclick="openForgotPasswordModal(); return false;">Forgot Password?</a>
                     </div>
 
@@ -258,7 +256,7 @@
         </div>
     </div>
 
-    <!-- Dashboard View (Unified Single Window displaying both Dispatch & Return modules together) -->
+    <!-- Dashboard View -->
     <div id="dashboard-view">
         <div class="top-navbar">
             <div class="brand">
@@ -272,7 +270,7 @@
             <div class="user-nav">
                 <button class="btn-outline" id="syncBtn" onclick="syncData()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1; margin-right: 5px;" title="Refresh Latest Data">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-                    Sync Data
+                    Refresh
                 </button>
                 
                 <div class="user-profile">
@@ -292,12 +290,11 @@
             <div class="welcome-text">
                 <div>
                     <h2 id="welcomeGreeting">Greeting</h2>
-                    <p>Here is your combined overview for Dispatch and Return operations.</p>
+                    <p id="welcomeDesc">Here is your combined overview for Dispatch and Return operations.</p>
                 </div>
                 <div class="date-display" id="dashCompactTime"></div>
             </div>
 
-            <!-- Combined Main Dashboard Cards Area -->
             <div id="dashboard-unified-cards">
                 
                 <!-- DISPATCH MANAGEMENT SECTION -->
@@ -415,7 +412,7 @@
                 </div>
             </div>
 
-            <!-- All Data Tables Sections (Dispatch & Return) -->
+            <!-- All Data Tables Sections -->
             <div id="invoice-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
@@ -698,7 +695,7 @@
         </div>
     </div>
 
-    <!-- Modals (Unplanned, Return Generation, Dispatch Confirmation, PODs, etc.) -->
+    <!-- Modals -->
     <div id="unplannedReturnModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -1328,68 +1325,40 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwfhEBgBREmjrAOeqCmnhLdOfNPrXdU2kBVEdjzBR9InxSFsRz9q7J9PKJxgIQin0xM/exec"; 
+        // REPLACE WITH YOUR NEW DEPLOYMENT URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtsW0yy4_R3Sc-fMyDbOcRagrNUgkEpqb4w_3gKn3JDxxAnWfjQzDSfvk3uPiaXIiz/exec"; 
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
-        let loggedInUserType = "All"; // Handle Column D module selection
-        let loggedInUserPermissions = "All"; // Handle Column E tab selection
-        let cachedPendingBills = []; 
-        let cachedAssignedBills = []; 
-        let cachedTransitBills = []; 
-        let cachedDispatchedBills = []; 
-        let cachedDeliveredBills = []; 
-        let cachedDisputedBills = [];
-        let cachedReturnBills = []; 
-        let cachedUnplannedBills = [];
-        let cachedLedgers = [];
+        let loggedInUserType = "All"; 
+        let loggedInUserPermissions = "All"; 
         let currentViewMode = "today"; 
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
+        let cachedLedgers = [];
 
-        async function safeFetch(payload, retries = 1) { 
+        // LAZY LOAD VARIABLES
+        let tableCache = {};
+        let activeTableContext = null;
+
+        // 🚀 SAFE FETCH - 60 SECONDS NO RETRY LOOP
+        async function safeFetch(payload) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 120000); 
-                    const options = {
-                        method: 'POST',
-                        redirect: 'follow',
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    };
-                    const response = await fetch(noCacheUrl, options);
-                    clearTimeout(timeoutId);
-                    if (!response.ok) throw new Error("HTTP " + response.status);
-                    return await response.json();
-                } catch (err) {
-                    if (i === retries - 1) throw err;
-                    console.warn(`Connection dropped. Auto-reconnecting... Attempt ${i + 1} of ${retries}`);
-                    const btnSpan = document.getElementById('loginText');
-                    if(btnSpan && btnSpan.innerText.includes("Loading")) {
-                        btnSpan.innerText = `Reconnecting (${i + 1}/${retries})...`;
-                    }
-                    await new Promise(r => setTimeout(r, 2000));
-                }
-            }
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000);
+                const options = { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller.signal };
+                const response = await fetch(noCacheUrl, options);
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error("Server HTTP Error " + response.status);
+                const text = await response.text();
+                try { return JSON.parse(text); } catch (e) { throw new Error("Invalid format from server."); }
+            } catch (err) { console.error("Fetch Error:", err); throw err; }
         }
 
-        function safeStr(val) { 
-            return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
-        }
+        function safeStr(val) { return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const savedUser = localStorage.getItem('hatvetUser');
-            const savedPass = localStorage.getItem('hatvetPass');
-            if (savedUser && savedPass) {
-                document.getElementById('username').value = savedUser;
-                document.getElementById('password').value = savedPass;
-                document.getElementById('rememberMe').checked = true;
-                document.getElementById('loginBtn').click();
-            }
-
             setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null);
             setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName');
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName');
@@ -1402,22 +1371,15 @@
                 let a, b, val = this.value; 
                 closeAllLists();
                 if (!val) { return false;}
-                a = document.createElement("DIV");
-                a.setAttribute("id", this.id + "autocomplete-list");
-                a.setAttribute("class", "autocomplete-items");
-                this.parentNode.appendChild(a);
-                this.parentNode.style.position = "relative";
+                a = document.createElement("DIV"); a.setAttribute("id", this.id + "autocomplete-list"); a.setAttribute("class", "autocomplete-items"); this.parentNode.appendChild(a); this.parentNode.style.position = "relative";
                 let matchCount = 0;
                 for (let i = 0; i < cachedLedgers.length; i++) {
                     if (cachedLedgers[i].ledgerName.toUpperCase().includes(val.toUpperCase())) {
                         if(matchCount > 20) break; 
                         let currentLedger = cachedLedgers[i]; 
-                        b = document.createElement("DIV");
-                        let regex = new RegExp("(" + val.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ")", "gi");
+                        b = document.createElement("DIV"); let regex = new RegExp("(" + val.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ")", "gi");
                         b.innerHTML = currentLedger.ledgerName.replace(regex, "<strong>$1</strong>");
-                        if(currentLedger.city) {
-                            b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
-                        }
+                        if(currentLedger.city) b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
                         b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
                         b.addEventListener("click", function(e) {
                             inp.value = this.getElementsByTagName("input")[0].value;
@@ -1429,195 +1391,125 @@
                             if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
                             closeAllLists();
                         });
-                        a.appendChild(b);
-                        matchCount++;
+                        a.appendChild(b); matchCount++;
                     }
                 }
             });
-            function closeAllLists(elmnt) {
-                var x = document.getElementsByClassName("autocomplete-items");
-                for (var i = 0; i < x.length; i++) {
-                    if (elmnt != x[i] && elmnt != inp) { x[i].parentNode.removeChild(x[i]); }
-                }
-            }
+            function closeAllLists(elmnt) { var x = document.getElementsByClassName("autocomplete-items"); for (var i = 0; i < x.length; i++) { if (elmnt != x[i] && elmnt != inp) { x[i].parentNode.removeChild(x[i]); } } }
             document.addEventListener("click", function (e) { closeAllLists(e.target); });
         }
 
+        // 🚀 UPDATED checkIsToday FUNCTION
         function checkIsToday(dateStr) {
             if(!dateStr) return false;
             const d = new Date();
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yy = d.getFullYear();
-            const formats = [`${dd}-${mm}-${yy}`, `${dd}/${mm}/${yy}`, `${mm}/${dd}/${yy}`, `${mm}-${dd}-${yy}`];
-            const str = String(dateStr);
-            return formats.some(fmt => str.startsWith(fmt) || str.includes(fmt));
+            const yyyy = d.getFullYear();
+            const format1 = dd + "-" + mm + "-" + yyyy; // 15-09-2026
+            const format2 = dd + "/" + mm + "/" + yyyy; // 15/09/2026
+            const format3 = yyyy + "-" + mm + "-" + dd; // 2026-09-15
+            const dateStrCheck = String(dateStr);
+            return dateStrCheck.includes(format1) || dateStrCheck.includes(format2) || dateStrCheck.includes(format3);
         }
 
         function getCurrentFormattedDate() {
-            const d = new Date();
-            return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+            const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
         }
 
         function showToast(title, message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`;
             let iconSvg = '';
-            if(type === 'success') { 
-                iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; 
-            } else if (type === 'warning') { 
-                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; 
-            } else { 
-                iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; 
-            }
-            toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
-            container.appendChild(toast);
+            if(type === 'success') { iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; } 
+            else if (type === 'warning') { iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; } 
+            else { iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; }
+            toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`; container.appendChild(toast);
             setTimeout(() => { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        function isStandardUser() { 
-            return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; 
-        }
+        function isStandardUser() { return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; }
 
         function filterTable(inputId, tbodyId, colIndex) {
-            let input = document.getElementById(inputId).value.toUpperCase();
-            let table = document.getElementById(tbodyId);
-            let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName("td")[colIndex]; 
-                if (td) {
-                    let txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } 
-                    else { tr[i].style.display = "none"; }
-                }       
-            }
+            let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) { let td = tr[i].getElementsByTagName("td")[colIndex]; if (td) { let txtValue = td.textContent || td.innerText; if (txtValue.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } } }
         }
 
         function exportTableToCSV(tableId, filename) {
             let csv = []; let rows = document.querySelectorAll(`#${tableId} tr`);
-            for (let i = 0; i < rows.length; i++) {
-                if(rows[i].style.display === "none") continue; 
-                let row = [], cols = rows[i].querySelectorAll("td, th");
-                for (let j = 0; j < cols.length; j++) {
-                    if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]')) continue;
-                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
-                }
-                csv.push(row.join(","));
-            }
-            let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
-            let downloadLink = document.createElement("a"); 
-            downloadLink.download = filename; 
-            downloadLink.href = window.URL.createObjectURL(csvFile);
-            downloadLink.style.display = "none"; 
-            document.body.appendChild(downloadLink); 
-            downloadLink.click(); 
-            document.body.removeChild(downloadLink);
+            for (let i = 0; i < rows.length; i++) { if(rows[i].style.display === "none") continue; let row = [], cols = rows[i].querySelectorAll("td, th"); for (let j = 0; j < cols.length; j++) { if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]')) continue; row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"'); } csv.push(row.join(",")); }
+            let csvFile = new Blob([csv.join("\n")], {type: "text/csv"}); let downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
         }
 
-        function togglePassword() { 
-            const pwd = document.getElementById("password"); 
-            pwd.type = pwd.type === "password" ? "text" : "password"; 
-        }
+        function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
         
-        function updateDashboardCounts() {
-            // Dispatch counts
-            document.getElementById('todayPendingCount').innerText = cachedPendingBills.filter(bill => checkIsToday(bill.scanTime)).length;
-            document.getElementById('totalPendingCount').innerText = cachedPendingBills.length;
-            document.getElementById('assignedCount').innerText = cachedAssignedBills.length;
-            document.getElementById('transitCount').innerText = cachedTransitBills.length;
-            document.getElementById('deliveredCount').innerText = cachedDeliveredBills.length;
-            document.getElementById('dispatchCount').innerText = cachedDispatchedBills.length;
-            document.getElementById('disputedCount').innerText = cachedDisputedBills.length;
+        function updateDashboardCounts(c) {
+            if(!c) return;
+            document.getElementById('todayPendingCount').innerText = c.todayPending;
+            document.getElementById('totalPendingCount').innerText = c.totalPending;
+            document.getElementById('assignedCount').innerText = c.assigned;
+            document.getElementById('transitCount').innerText = c.transit;
+            document.getElementById('deliveredCount').innerText = c.delivered;
+            document.getElementById('dispatchCount').innerText = c.dispatched;
+            document.getElementById('disputedCount').innerText = c.disputed;
 
-            // Return counts
-            document.getElementById('pendingReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Expected Return').length;
-            document.getElementById('assignedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)').length;
-            document.getElementById('transitReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'In Transit (Return)').length;
-            document.getElementById('receivedReturnCount').innerText = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed').length;
-            document.getElementById('disputedReturnCount').innerText = cachedReturnBills.filter(r => r.status === 'Disputed (Return)').length;
-            
-            let processedCount = document.getElementById('processedReturnCount');
-            if (processedCount) processedCount.innerText = cachedReturnBills.filter(r => r.status === 'Return Processed').length;
-
-            let unpCount = document.getElementById('unplannedReturnCount');
-            if(unpCount) unpCount.innerText = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending').length;
+            document.getElementById('pendingReturnCount').innerText = c.returnPending;
+            document.getElementById('assignedReturnCount').innerText = c.returnAssigned;
+            document.getElementById('transitReturnCount').innerText = c.returnTransit;
+            document.getElementById('receivedReturnCount').innerText = c.returnReceived;
+            if (document.getElementById('processedReturnCount')) document.getElementById('processedReturnCount').innerText = c.returnProcessed;
+            document.getElementById('disputedReturnCount').innerText = c.returnDisputed;
+            if (document.getElementById('unplannedReturnCount')) document.getElementById('unplannedReturnCount').innerText = c.unplanned;
         }
 
-        // Apply Tab & Module Based Access Control logic here
         function applyAccessControl() {
             const dispatchSection = document.getElementById('dispatch-management-section');
             const returnSection = document.getElementById('return-management-section');
             const allCards = document.querySelectorAll('.kpi-card');
 
-            // 1. Column D (Module Selection) Logic
-            if (loggedInUserType === "Dispatch Courier Management") {
-                dispatchSection.style.display = 'block';
-                returnSection.style.display = 'none';
-            } else if (loggedInUserType === "Return Courier Management") {
-                dispatchSection.style.display = 'none';
-                returnSection.style.display = 'block';
-            } else {
-                dispatchSection.style.display = 'block';
-                returnSection.style.display = 'block';
-            }
+            if (loggedInUserType === "Dispatch Courier Management") { dispatchSection.style.display = 'block'; returnSection.style.display = 'none'; } 
+            else if (loggedInUserType === "Return Courier Management") { dispatchSection.style.display = 'none'; returnSection.style.display = 'block'; } 
+            else { dispatchSection.style.display = 'block'; returnSection.style.display = 'block'; }
 
-            // 2. Column E (Tabs) Logic
             const allowedTabsStr = loggedInUserPermissions.toLowerCase();
-            
             allCards.forEach(card => {
                 const tabName = (card.getAttribute('data-tab-name') || "").toLowerCase();
-                
-                if (allowedTabsStr === "all" || allowedTabsStr.includes("all")) {
-                    card.style.display = 'flex'; 
-                } else {
-                    if (tabName && allowedTabsStr.includes(tabName)) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
+                if (allowedTabsStr === "all" || allowedTabsStr.includes("all")) { card.style.display = 'flex'; } 
+                else { if (tabName && allowedTabsStr.includes(tabName)) { card.style.display = 'flex'; } else { card.style.display = 'none'; } }
             });
         }
 
         function handleLogin(event) {
             if(event) event.preventDefault();
-            const btn = document.getElementById('loginBtn'); 
-            const spinner = document.getElementById('loginSpinner');
-            const errorDiv = document.getElementById('loginError');
-            const user = document.getElementById('username').value; 
-            const pass = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+            const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner'); const errorDiv = document.getElementById('loginError');
+            const user = document.getElementById('username').value; const pass = document.getElementById('password').value;
             
             btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = "Authenticating...";
 
-            const payload = { action: 'login', username: user, password: pass };
-
-            safeFetch(payload).then(data => {
+            safeFetch({ action: 'login', username: user, password: pass }).then(data => {
                 if(data.status === "success") {
                     const allowed = data.allowedType ? data.allowedType.trim() : "All";
-                    if (allowed === "RESTRICTED") {
-                        errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return;
-                    }
-
-                    if (rememberMe) { 
-                        localStorage.setItem('hatvetUser', user); 
-                        localStorage.setItem('hatvetPass', pass); 
-                    } else { 
-                        localStorage.removeItem('hatvetUser'); 
-                        localStorage.removeItem('hatvetPass'); 
-                    }
+                    if (allowed === "RESTRICTED") { errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return; }
                     
-                    loggedInUser = user; 
-                    loggedInUserRole = data.role || "Standard"; 
-                    loggedInUserType = allowed;
-                    loggedInUserPermissions = data.permissions || "All"; 
+                    loggedInUser = user; loggedInUserRole = data.role || "Standard"; loggedInUserType = allowed; loggedInUserPermissions = data.permissions || "All"; 
                     
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
+                    
                     document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
+                    
+                    // 🚀 DYNAMIC WELCOME MESSAGE LOGIC
+                    const welcomeDesc = document.getElementById('welcomeDesc');
+                    if (welcomeDesc) {
+                        if (allowed === "Dispatch Courier Management") {
+                            welcomeDesc.innerText = "Here is your overview for Dispatch operations.";
+                        } else if (allowed === "Return Courier Management") {
+                            welcomeDesc.innerText = "Here is your overview for Return operations.";
+                        } else {
+                            welcomeDesc.innerText = "Here is your combined overview for Dispatch and Return operations.";
+                        }
+                    }
 
                     document.getElementById('login-view').style.display = 'none'; 
                     document.getElementById('dashboard-view').style.display = 'flex';
@@ -1627,69 +1519,84 @@
                     
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
 
+                    fetchLedgers();
                     syncData(true);
 
                 } else { 
-                    errorDiv.innerText = data.message; errorDiv.style.display = 'block'; localStorage.removeItem('hatvetUser'); localStorage.removeItem('hatvetPass');
+                    errorDiv.innerText = data.message; errorDiv.style.display = 'block';
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
                 }
             }).catch(error => { 
-                console.error("Login Failed:", error);
-                errorDiv.innerText = "Network timeout. Please check your connection and try again.";
-                errorDiv.style.display = 'block'; 
-                btn.disabled = false; 
-                spinner.style.display = 'none'; 
-                document.getElementById('loginText').innerText = "Sign In"; 
+                errorDiv.innerText = "Network timeout. Connection could not be established."; errorDiv.style.display = 'block'; 
+                btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; 
             });
         }
 
+        async function fetchLedgers() {
+            try {
+                const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers' });
+                if (resp.status === 'success') { cachedLedgers = resp.data; }
+            } catch (e) { console.error("Ledgers fetch failed"); }
+        }
+
+        // 🚀 UPDATED PRE-FETCHING LOGIC
         function syncData(isInitialLoad = false) {
             if (!loggedInUser) return;
-            const btn = document.getElementById('syncBtn'); 
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(16,185,129,0.3); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Loading...`; 
+            const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(20,52,130,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Refreshing...`; 
             btn.disabled = true;
 
             if(isInitialLoad) {
-                document.querySelectorAll('.kpi-value').forEach(el => {
-                    if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry") {
-                        el.innerText = "...";
-                    }
-                });
+                document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry") { el.innerText = "..."; el.style.color = ""; } });
             }
 
-            const payload = { action: 'syncData' };
-
-            safeFetch(payload).then(data => {
+            safeFetch({ action: 'syncData', reqType: 'counts' }).then(data => {
                 if(data.status === "success") {
-                    cachedPendingBills = data.pendingBills || []; 
-                    cachedAssignedBills = data.assignedBills || []; 
-                    cachedTransitBills = data.transitBills || []; 
-                    cachedDeliveredBills = data.deliveredBills || []; 
-                    cachedDispatchedBills = data.dispatchedBills || []; 
-                    cachedDisputedBills = data.disputedBills || []; 
-                    cachedReturnBills = data.returnBills || []; 
-                    cachedUnplannedBills = data.unplannedBills || [];
-                    cachedLedgers = data.ledgerList || [];
-
-                    updateDashboardCounts(); 
-                    
+                    updateDashboardCounts(data.counts); 
                     if(isInitialLoad) {
-                        showToast('Dashboard Ready', 'All data loaded successfully.', 'success');
-                    } else {
-                        showToast('Synced', 'Data updated to latest.', 'success');
+                        showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
+                        
+                        // 🚀 BACKGROUND PRE-FETCHING (Silent Data Load)
+                        setTimeout(() => {
+                           safeFetch({ action: 'syncData', reqType: 'pending' }).then(d => { if(d.status === 'success') tableCache['pending'] = d.data; });
+                           safeFetch({ action: 'syncData', reqType: 'assigned' }).then(d => { if(d.status === 'success') tableCache['assigned'] = d.data; });
+                           safeFetch({ action: 'syncData', reqType: 'transit' }).then(d => { if(d.status === 'success') tableCache['transit'] = d.data; });
+                        }, 2000); // Wait 2 seconds before silent fetching
                     }
-                } else { showToast("Error", "Sync failed.", "error"); }
-            }).catch(error => showToast("Error", "Network timeout during sync.", "error")).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+                } else { showToast("Error", "Data sync failed.", "error"); }
+            }).catch(error => {
+                showToast("Error", "Network timeout. Please refresh again.", "error");
+                if(isInitialLoad) { document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText === "...") { el.innerText = "Err"; el.style.color = "var(--danger)"; } }); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
+
+        // ======================= LAZY LOAD ENGINE & AUTO REFRESH =======================
+        async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
+            if (!forceRefresh && tableCache[reqType]) { renderFunction(tableCache[reqType]); return; }
+            const tbodies = document.querySelectorAll('.table-responsive tbody');
+            tbodies.forEach(tb => tb.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading data...</span></td></tr>`);
+            
+            try {
+                const resp = await safeFetch({ action: 'syncData', reqType: reqType });
+                if(resp.status === 'success') {
+                    let dataToCache = reqType === 'returnStatus' ? { returnBills: resp.returnBills, unplannedBills: resp.unplannedBills } : resp.data;
+                    tableCache[reqType] = dataToCache;
+                    renderFunction(dataToCache);
+                } else { showToast("Error", "Failed to load table data", "error"); }
+            } catch (err) { showToast("Error", "Network error while loading data.", "error"); }
+        }
+
+        function refreshDataAndView() {
+            tableCache = {}; // Flush cache
+            syncData();      // Fetch counts again in background
+            if (activeTableContext) { loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); }
+        }
+        // ==============================================================================
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
-            const savedUser = localStorage.getItem('hatvetUser');
-            const savedPass = localStorage.getItem('hatvetPass');
-            if (savedUser && savedPass) { document.getElementById('username').value = savedUser; document.getElementById('password').value = savedPass; document.getElementById('rememberMe').checked = true; }
             loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
-            cachedPendingBills = []; cachedAssignedBills = []; cachedTransitBills = []; cachedDispatchedBills = []; cachedDeliveredBills = []; cachedDisputedBills = []; cachedReturnBills = []; cachedUnplannedBills = []; cachedLedgers = [];
+            tableCache = {}; activeTableContext = null; cachedLedgers = [];
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
 
@@ -1699,183 +1606,158 @@
         }
 
         function showDashboardCards() { 
-            hideAllLists(); 
+            hideAllLists(); activeTableContext = null;
             document.getElementById('dashboard-unified-cards').style.display = 'block'; 
-            applyAccessControl(); // Ensures UI restrictions remain active when navigating back from tables
+            applyAccessControl(); 
         }
 
-        function openUnplannedReturnModal() { document.getElementById('unplannedReturnForm').reset(); document.getElementById('unplannedReturnModal').style.display = 'flex'; }
-        function closeUnplannedReturnModal() { document.getElementById('unplannedReturnModal').style.display = 'none'; }
-
-        function getBase64(file) { 
-            return new Promise((resolve, reject) => { 
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file); 
-                reader.onload = () => resolve(reader.result.split(',')[1]); 
-                reader.onerror = e => reject(e); 
-            }); 
+        // ========================== TABLE VIEW RENDERERS ==============================
+        
+        function showInvoiceList(type) {
+            hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; 
+            document.getElementById('btnExportPending').style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; 
+            document.getElementById('btnBulkUpload').style.display = (isStandardUser()) ? 'none' : 'flex'; 
+            document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
+            activeTableContext = { reqType: 'pending', renderFn: (data) => renderPendingTable(data, type) }; loadAndRenderTable('pending', activeTableContext.renderFn);
+        }
+        function renderPendingTable(dataList, type) {
+            let listToDisplay = (type === 'today') ? dataList.filter(b => checkIsToday(b.scanTime)) : dataList;
+            const tableBody = document.getElementById('invoiceTableBody');
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
         }
 
-        async function submitUnplannedReturn(e) {
-            e.preventDefault(); const btn = document.getElementById('saveUnplannedBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
-            const file = document.getElementById('unpFile').files[0];
-            let base64Data = "", fileName = "", mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = "UNP_" + new Date().getTime() + "_" + file.name; mimeType = file.type; }
-            const requestData = { drName: document.getElementById('unpDrName').value, ledgerName: document.getElementById('unpLedgerName').value, city: document.getElementById('unpCity').value, state: "", boxes: document.getElementById('unpBoxes').value, ledgerCode: "", zone: "", bdmName: "", status: "Confirmation Pending" };
-            const payload = { action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Unplanned Return logged successfully!"); cachedUnplannedBills.push({ ...requestData, id: data.id, date: getCurrentFormattedDate() }); updateDashboardCounts(); closeUnplannedReturnModal(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        function showAssignedList() {
+            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'assigned', renderFn: renderAssignedTable }; loadAndRenderTable('assigned', activeTableContext.renderFn);
+        }
+        function renderAssignedTable(dataList) {
+            const tableBody = document.getElementById('assignedTableBody');
+            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
+        }
+
+        function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
+
+        function showPodList() {
+            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'transit', renderFn: renderPodTable }; loadAndRenderTable('transit', activeTableContext.renderFn);
+        }
+        function renderPodTable(dataList) {
+            const tableBody = document.getElementById('podTableBody');
+            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
+        }
+
+        function showDeliveredList(startDate = null, endDate = null) {
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
+            hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'delivered', renderFn: (data) => renderDeliveredTable(data, startDate, endDate) }; loadAndRenderTable('delivered', activeTableContext.renderFn);
+        }
+        function renderDeliveredTable(dataList, startDate, endDate) {
+            const tableBody = document.getElementById('deliveredTableBody');
+            let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
+        }
+
+        function showDisputedList() {
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
+            hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'disputed', renderFn: renderDisputedTable }; loadAndRenderTable('disputed', activeTableContext.renderFn);
+        }
+        function renderDisputedTable(dataList) {
+            const tableBody = document.getElementById('disputedTableBody');
+            if(dataList.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
+        }
+
+        function showDispatchedList(startDate = null, endDate = null) {
+            if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
+            hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'dispatched', renderFn: (data) => renderDispatchedTable(data, startDate, endDate) }; loadAndRenderTable('dispatched', activeTableContext.renderFn);
+        }
+        function renderDispatchedTable(dataList, startDate, endDate) {
+            const tableBody = document.getElementById('dispatchedTableBody');
+            let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
+            if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); 
+            tableBody.innerHTML = html.join("");
         }
 
         function showUnplannedList() {
             hideAllLists(); document.getElementById('unplanned-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('unplannedTableBody'); const unplannedList = cachedUnplannedBills.filter(r => r.status === 'Confirmation Pending');
+            activeTableContext = { reqType: 'unplannedBills', renderFn: renderUnplannedTable }; loadAndRenderTable('unplannedBills', activeTableContext.renderFn);
+        }
+        function renderUnplannedTable(dataList) {
+            const tableBody = document.getElementById('unplannedTableBody'); const unplannedList = dataList.filter(r => r.status === 'Confirmation Pending');
             if(unplannedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No unplanned returns pending.</td></tr>"; return; }
             let html = []; unplannedList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.city}</td><td>${item.state}</td><td><b style="color:#c026d3;">${item.boxes}</b></td><td>${item.date}</td><td><span class="badge" style="background:#fce7f3; color:#be185d;">${item.status}</span></td><td><button class="action-btn btn-success" onclick="openConfirmUnplannedModal('${item.id}', '${item.boxes}')">Confirm</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
-        function handleConfirmedByChange() {
-            const val = document.getElementById('confUnpConfirmedBy').value;
-            const otherGrp = document.getElementById('confUnpOtherGroup');
-            const otherInp = document.getElementById('confUnpOtherSpec');
-            if(val === "Other") { otherGrp.style.display = 'block'; otherInp.required = true; } else { otherGrp.style.display = 'none'; otherInp.required = false; otherInp.value = ''; }
-        }
-
-        function openConfirmUnplannedModal(id, reportedBoxes) { 
-            document.getElementById('confirmUnplannedForm').reset(); document.getElementById('confUnpId').value = id; document.getElementById('confUnpExpected').value = reportedBoxes; 
-            let uItem = cachedUnplannedBills.find(u => u.id === id);
-            if (uItem) { document.getElementById('confUnpDrName').value = uItem.drName || ''; document.getElementById('confUnpLedgerName').value = uItem.ledgerName || ''; document.getElementById('confUnpCity').value = uItem.city || ''; }
-            document.getElementById('confUnpConfirmedBy').value = ''; handleConfirmedByChange(); document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
-        }
-        function closeConfirmUnplannedModal() { document.getElementById('confirmUnplannedModal').style.display = 'none'; }
-
-        async function submitConfirmUnplanned(e) {
-            e.preventDefault(); const btn = document.getElementById('saveConfirmUnpBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const id = document.getElementById('confUnpId').value; const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
-            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value; const confirmedBySpec = document.getElementById('confUnpOtherSpec').value; const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
-            const finalData = { drName: document.getElementById('confUnpDrName').value, ledgerName: document.getElementById('confUnpLedgerName').value, phone: document.getElementById('confUnpPhone').value, city: document.getElementById('confUnpCity').value, state: document.getElementById('confUnpState').value, ledgerCode: document.getElementById('confUnpLedgerCode').value, zone: document.getElementById('confUnpZone').value, bdmName: document.getElementById('confUnpBdmName').value };
-            
-            const payload = { action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Unplanned Return confirmed successfully!"); updateDashboardCounts(); closeConfirmUnplannedModal(); showUnplannedList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
-        function openGenerateReturnModal() { document.getElementById('generateReturnForm').reset(); document.getElementById('generateReturnModal').style.display = 'flex'; }
-        function closeGenerateReturnModal() { document.getElementById('generateReturnModal').style.display = 'none'; }
-
-        function submitReturnRequest(e) {
-            e.preventDefault(); const btn = document.getElementById('saveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
-            const requestData = { drName: document.getElementById('retDrName').value, ledgerName: document.getElementById('retLedgerName').value, boxes: "", phone: document.getElementById('retPhone').value, city: document.getElementById('retCity').value, pinCode: document.getElementById('retPinCode').value, state: document.getElementById('retState').value, address: document.getElementById('retAddress').value, ledgerCode: document.getElementById('retLedgerCode').value, zone: document.getElementById('retZone').value, bdmName: document.getElementById('retBdmName').value, status: "Expected Return", date: getCurrentFormattedDate(), remark: "" };
-            const payload = { action: 'createReturn', data: requestData, createdBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return request generated successfully!"); cachedReturnBills.push({ ...requestData, id: data.returnId, partner: '', docket: '', actionDate: '' }); updateDashboardCounts(); closeGenerateReturnModal(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
         function showReturnPendingList() {
             hideAllLists(); document.getElementById('return-pending-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnPendingTableBody'); const expectedReturns = cachedReturnBills.filter(r => r.status === 'Expected Return');
+            activeTableContext = { reqType: 'returnBills', renderFn: renderReturnPendingTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnPendingTable(dataList) {
+            const tableBody = document.getElementById('returnPendingTableBody'); const expectedReturns = dataList.filter(r => r.status === 'Expected Return');
             if(expectedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No pending returns found.</td></tr>"; return; }
             let html = []; expectedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes || '-'}</td><td>${item.phone}</td><td>${item.city}</td><td>${item.state}</td><td>${item.address || '-'}</td><td><span class="badge bg-pending">${item.status}</span></td><td>${item.date}</td><td><button class="action-btn btn-info" onclick="openAssignReturnCourierModal('${item.id}')">Assign Courier</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
-        function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; }
-        function closeAssignReturnCourierModal() { document.getElementById('assignReturnCourierModal').style.display = 'none'; }
-
-        function submitAssignReturnCourier(e) {
-            e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; const partner = document.getElementById('retCourierPartner').value; const docket = document.getElementById('retDocketNo').value;
-            const payload = { action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Courier assigned successfully!"); updateDashboardCounts(); closeAssignReturnCourierModal(); showReturnPendingList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
         function showReturnAssignedList() {
             hideAllLists(); document.getElementById('return-assigned-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnAssignedTableBody'); const assignedReturns = cachedReturnBills.filter(r => r.status === 'Courier Assigned (Return)');
+            activeTableContext = { reqType: 'returnBills', renderFn: renderReturnAssignedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnAssignedTable(dataList) {
+            const tableBody = document.getElementById('returnAssignedTableBody'); const assignedReturns = dataList.filter(r => r.status === 'Courier Assigned (Return)');
             if(assignedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No assigned returns pending pickup.</td></tr>"; return; }
             let html = []; assignedReturns.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="return-pickup-checkbox" value="${item.id}"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-assigned">${item.status}</span></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
-
         function toggleAllReturnPickup(source) { document.querySelectorAll('.return-pickup-checkbox').forEach(cb => cb.checked = source.checked); }
-        function openConfirmReturnPickupModal() { if(document.querySelectorAll('.return-pickup-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one return request.", "warning"); return; } document.getElementById('confirmReturnPickupModal').style.display = 'flex'; }
-        function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
-
-        function processReturnPickup() {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
-            const btn = document.getElementById('confirmReturnPickupBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const payload = { action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); updateDashboardCounts(); closeConfirmReturnPickupModal(); showReturnAssignedList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-        }
 
         function showReturnTransitList() {
             hideAllLists(); document.getElementById('return-transit-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = cachedReturnBills.filter(r => r.status === 'In Transit (Return)');
+            activeTableContext = { reqType: 'returnBills', renderFn: renderReturnTransitTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnTransitTable(dataList) {
+            const tableBody = document.getElementById('returnTransitTableBody'); const transitReturns = dataList.filter(r => r.status === 'In Transit (Return)');
             if(transitReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No return transit found.</td></tr>"; return; }
             let html = []; transitReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.state}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-transit">${item.status}</span></td><td style="color:#c2410c;">${item.dispatchDate || '-'}</td><td><button class="action-btn btn-success" onclick="openReceiveReturnModal('${item.id}', '${item.boxes}')">Received</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
         }
 
-        function openReceiveReturnModal(id, expectedBoxes) { document.getElementById('receiveReturnForm').reset(); document.getElementById('recvReturnId').value = id; document.getElementById('recvExpectedBoxes').value = expectedBoxes; document.getElementById('recvActualBoxes').max = expectedBoxes; document.getElementById('receiveReturnModal').style.display = 'flex'; }
-        function closeReceiveReturnModal() { document.getElementById('receiveReturnModal').style.display = 'none'; }
-
-        async function submitReceiveReturn(e) {
-            e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
-            const file = document.getElementById('recvFile').files[0];
-            let base64Data = "", fileName = "", mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = "RECV_" + id + "_" + file.name; mimeType = file.type; }
-            const payload = { action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); updateDashboardCounts(); closeReceiveReturnModal(); showReturnTransitList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
-        function calculateReturnTotalTime(startStr, endStr) {
-            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
-            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
-            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
-        }
-
         function showReturnReceivedList() {
             hideAllLists(); document.getElementById('return-received-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'returnBills', renderFn: renderReturnReceivedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnReceivedTable(dataList) {
             const tableBody = document.getElementById('returnReceivedTableBody'); 
-            let listToDisplay = cachedReturnBills.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
+            let listToDisplay = dataList.filter(r => (r.status.includes('Return Received') || r.status.includes('Closed')) && r.status !== 'Return Processed');
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='15' style='text-align:center;'>No received returns found.</td></tr>"; document.getElementById('btnFillCN').style.display = 'none'; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
                 let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
                 html.push(`<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
-            tableBody.innerHTML = html.join("");
-            toggleCNButton();
+            tableBody.innerHTML = html.join(""); toggleCNButton();
         }
-        
-        function toggleCNButton() { document.getElementById('btnFillCN').style.display = document.querySelectorAll('.return-received-checkbox:checked').length > 0 ? 'block' : 'none'; }
-        function openCNDetailsModal() { document.getElementById('cnDetailsForm').reset(); document.getElementById('cnDetailsModal').style.display = 'flex'; }
-        function closeCNDetailsModal() { document.getElementById('cnDetailsModal').style.display = 'none'; }
 
-        function submitCNDetails(e) {
-            e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
-            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
-            const payload = { action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, actionBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "CN Details updated successfully!"); updateDashboardCounts(); closeCNDetailsModal(); showReturnReceivedList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-        
+        function toggleCNButton() { document.getElementById('btnFillCN').style.display = document.querySelectorAll('.return-received-checkbox:checked').length > 0 ? 'block' : 'none'; }
+
         function showReturnProcessedList(startDate = null, endDate = null) {
             hideAllLists(); document.getElementById('return-processed-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnProcessedTableBody'); let listToDisplay = cachedReturnBills.filter(r => r.status === 'Return Processed');
+            activeTableContext = { reqType: 'returnBills', renderFn: (data) => renderReturnProcessedTable(data, startDate, endDate) }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnProcessedTable(dataList, startDate, endDate) {
+            const tableBody = document.getElementById('returnProcessedTableBody'); let listToDisplay = dataList.filter(r => r.status === 'Return Processed');
             if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
             if(listToDisplay.length === 0) { tableBody.innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
             let html = []; listToDisplay.forEach((item, index) => { 
@@ -1887,10 +1769,138 @@
 
         function showReturnDisputedList() {
             hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = cachedReturnBills.filter(r => r.status === 'Disputed (Return)');
+            activeTableContext = { reqType: 'returnBills', renderFn: renderReturnDisputedTable }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
+        }
+        function renderReturnDisputedTable(dataList) {
+            const tableBody = document.getElementById('returnDisputedTableBody'); const disputedReturns = dataList.filter(r => r.status === 'Disputed (Return)');
             if(disputedReturns.length === 0) { tableBody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
             let html = []; disputedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`); });
             tableBody.innerHTML = html.join("");
+        }
+
+        function showReturnStatusList() {
+            hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; 
+            activeTableContext = { reqType: 'returnStatus', renderFn: renderReturnStatusTable }; loadAndRenderTable('returnStatus', activeTableContext.renderFn);
+        }
+        function renderReturnStatusTable(dataObj) {
+            const tableBody = document.getElementById('returnStatusTableBody'); let combinedList = [];
+            dataObj.unplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
+            dataObj.returnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
+            if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
+            combinedList.reverse(); let html = [];
+            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
+            tableBody.innerHTML = html.join("");
+        }
+
+        // ========================== MODALS AND ACTION HANDLERS ========================
+        
+        function openUnplannedReturnModal() { document.getElementById('unplannedReturnForm').reset(); document.getElementById('unplannedReturnModal').style.display = 'flex'; }
+        function closeUnplannedReturnModal() { document.getElementById('unplannedReturnModal').style.display = 'none'; }
+
+        function getBase64(file) { 
+            return new Promise((resolve, reject) => { 
+                const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = e => reject(e); 
+            }); 
+        }
+
+        async function submitUnplannedReturn(e) {
+            e.preventDefault(); const btn = document.getElementById('saveUnplannedBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
+            const file = document.getElementById('unpFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
+            if (file) { base64Data = await getBase64(file); fileName = "UNP_" + new Date().getTime() + "_" + file.name; mimeType = file.type; }
+            const requestData = { drName: document.getElementById('unpDrName').value, ledgerName: document.getElementById('unpLedgerName').value, city: document.getElementById('unpCity').value, state: "", boxes: document.getElementById('unpBoxes').value, ledgerCode: "", zone: "", bdmName: "", status: "Confirmation Pending" };
+            const payload = { action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
+            safeFetch(payload).then(data => {
+                if(data.status === 'success') { showToast("Success", "Unplanned Return logged successfully!"); closeUnplannedReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function handleConfirmedByChange() {
+            const val = document.getElementById('confUnpConfirmedBy').value; const otherGrp = document.getElementById('confUnpOtherGroup'); const otherInp = document.getElementById('confUnpOtherSpec');
+            if(val === "Other") { otherGrp.style.display = 'block'; otherInp.required = true; } else { otherGrp.style.display = 'none'; otherInp.required = false; otherInp.value = ''; }
+        }
+
+        function openConfirmUnplannedModal(id, reportedBoxes) { 
+            document.getElementById('confirmUnplannedForm').reset(); document.getElementById('confUnpId').value = id; document.getElementById('confUnpExpected').value = reportedBoxes; 
+            let uItem = tableCache['unplannedBills'] ? tableCache['unplannedBills'].find(u => u.id === id) : null;
+            if (uItem) { document.getElementById('confUnpDrName').value = uItem.drName || ''; document.getElementById('confUnpLedgerName').value = uItem.ledgerName || ''; document.getElementById('confUnpCity').value = uItem.city || ''; }
+            document.getElementById('confUnpConfirmedBy').value = ''; handleConfirmedByChange(); document.getElementById('confirmUnplannedModal').style.display = 'flex'; 
+        }
+        function closeConfirmUnplannedModal() { document.getElementById('confirmUnplannedModal').style.display = 'none'; }
+
+        async function submitConfirmUnplanned(e) {
+            e.preventDefault(); const btn = document.getElementById('saveConfirmUnpBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const id = document.getElementById('confUnpId').value; const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
+            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value; const confirmedBySpec = document.getElementById('confUnpOtherSpec').value; const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
+            const finalData = { drName: document.getElementById('confUnpDrName').value, ledgerName: document.getElementById('confUnpLedgerName').value, phone: document.getElementById('confUnpPhone').value, city: document.getElementById('confUnpCity').value, state: document.getElementById('confUnpState').value, ledgerCode: document.getElementById('confUnpLedgerCode').value, zone: document.getElementById('confUnpZone').value, bdmName: document.getElementById('confUnpBdmName').value };
+            
+            safeFetch({ action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Unplanned Return confirmed successfully!"); closeConfirmUnplannedModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function openGenerateReturnModal() { document.getElementById('generateReturnForm').reset(); document.getElementById('generateReturnModal').style.display = 'flex'; }
+        function closeGenerateReturnModal() { document.getElementById('generateReturnModal').style.display = 'none'; }
+
+        function submitReturnRequest(e) {
+            e.preventDefault(); const btn = document.getElementById('saveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
+            const requestData = { drName: document.getElementById('retDrName').value, ledgerName: document.getElementById('retLedgerName').value, boxes: "", phone: document.getElementById('retPhone').value, city: document.getElementById('retCity').value, pinCode: document.getElementById('retPinCode').value, state: document.getElementById('retState').value, address: document.getElementById('retAddress').value, ledgerCode: document.getElementById('retLedgerCode').value, zone: document.getElementById('retZone').value, bdmName: document.getElementById('retBdmName').value, status: "Expected Return", date: getCurrentFormattedDate(), remark: "" };
+            safeFetch({ action: 'createReturn', data: requestData, createdBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Return request generated successfully!"); closeGenerateReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; }
+        function closeAssignReturnCourierModal() { document.getElementById('assignReturnCourierModal').style.display = 'none'; }
+
+        function submitAssignReturnCourier(e) {
+            e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; const partner = document.getElementById('retCourierPartner').value; const docket = document.getElementById('retDocketNo').value;
+            safeFetch({ action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Courier assigned successfully!"); closeAssignReturnCourierModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function openConfirmReturnPickupModal() { if(document.querySelectorAll('.return-pickup-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one return request.", "warning"); return; } document.getElementById('confirmReturnPickupModal').style.display = 'flex'; }
+        function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
+
+        function processReturnPickup() {
+            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
+            const btn = document.getElementById('confirmReturnPickupBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            safeFetch({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); closeConfirmReturnPickupModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+        }
+
+        function openReceiveReturnModal(id, expectedBoxes) { document.getElementById('receiveReturnForm').reset(); document.getElementById('recvReturnId').value = id; document.getElementById('recvExpectedBoxes').value = expectedBoxes; document.getElementById('recvActualBoxes').max = expectedBoxes; document.getElementById('receiveReturnModal').style.display = 'flex'; }
+        function closeReceiveReturnModal() { document.getElementById('receiveReturnModal').style.display = 'none'; }
+
+        async function submitReceiveReturn(e) {
+            e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
+            const file = document.getElementById('recvFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
+            if (file) { base64Data = await getBase64(file); fileName = "RECV_" + id + "_" + file.name; mimeType = file.type; }
+            safeFetch({ action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); closeReceiveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function calculateReturnTotalTime(startStr, endStr) {
+            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
+        }
+
+        function openCNDetailsModal() { document.getElementById('cnDetailsForm').reset(); document.getElementById('cnDetailsModal').style.display = 'flex'; }
+        function closeCNDetailsModal() { document.getElementById('cnDetailsModal').style.display = 'none'; }
+
+        function submitCNDetails(e) {
+            e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+            const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
+            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
+            safeFetch({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, actionBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", "CN Details updated successfully!"); closeCNDetailsModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
         function handleResolveRetActionChange() {
@@ -1906,24 +1916,11 @@
             const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
             const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
             let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
-            const file = document.getElementById('resolveRetFile').files[0];
-            let base64Data = "", fileName = "", mimeType = "";
+            const file = document.getElementById('resolveRetFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
             if (file) { base64Data = await getBase64(file); fileName = "DISP_RES_" + id + "_" + file.name; mimeType = file.type; }
-            const payload = { action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); updateDashboardCounts(); closeResolveReturnModal(); showReturnDisputedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            safeFetch({ action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); closeResolveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
-        function showReturnStatusList() {
-            hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; 
-            const tableBody = document.getElementById('returnStatusTableBody'); let combinedList = [];
-            cachedUnplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
-            cachedReturnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
-            if(combinedList.length === 0) { tableBody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
-            combinedList.reverse(); let html = [];
-            combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
-            tableBody.innerHTML = html.join("");
         }
 
         function filterTableGlobal(inputId, tbodyId) {
@@ -1947,69 +1944,6 @@
             if (isNaN(itemDate.getTime())) return true; const sDate = start ? new Date(start + "T00:00:00") : null; const eDate = end ? new Date(end + "T23:59:59") : null; if (sDate && itemDate < sDate) return false; if (eDate && itemDate > eDate) return false; return true;
         }
 
-        function showInvoiceList(type) {
-            hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; 
-            document.getElementById('btnExportPending').style.display = (isStandardUser() || type !== 'total') ? 'none' : 'flex'; 
-            document.getElementById('btnBulkUpload').style.display = (isStandardUser()) ? 'none' : 'flex'; 
-            let listToDisplay = (type === 'today') ? cachedPendingBills.filter(b => checkIsToday(b.scanTime)) : cachedPendingBills; 
-            document.getElementById('invoiceListTitle').innerText = (type === 'today') ? "Today's Pending Invoices" : "Total Pending Invoices";
-            if(listToDisplay.length === 0) { document.getElementById('invoiceTableBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); 
-            document.getElementById('invoiceTableBody').innerHTML = html.join("");
-        }
-
-        function showAssignedList() {
-            hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; 
-            if(cachedAssignedBills.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            let html = []; cachedAssignedBills.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); 
-            document.getElementById('assignedTableBody').innerHTML = html.join("");
-        }
-
-        function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
-
-        function showPodList() {
-            hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; 
-            if(cachedTransitBills.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            let html = []; cachedTransitBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); 
-            document.getElementById('podTableBody').innerHTML = html.join("");
-        }
-        
-        function showDeliveredList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
-            hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
-            let listToDisplay = cachedDeliveredBills; if(startDate || endDate) { listToDisplay = cachedDeliveredBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found for this range.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); 
-            document.getElementById('deliveredTableBody').innerHTML = html.join("");
-        }
-        
-        function showDisputedList() {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
-            hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; 
-            if(cachedDisputedBills.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
-            let html = []; cachedDisputedBills.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); 
-            document.getElementById('disputedTableBody').innerHTML = html.join("");
-        }
-
-        function showDispatchedList(startDate = null, endDate = null) {
-            if (isStandardUser()) { showToast("Access Denied", "You are not authorized for this section.", "error"); return; } 
-            hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; 
-            let listToDisplay = cachedDispatchedBills; if(startDate || endDate) { listToDisplay = cachedDispatchedBills.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); 
-            document.getElementById('dispatchedTableBody').innerHTML = html.join("");
-        }
-
-        function handleUploadTypeChange() {
-            const type = document.getElementById('uploadType').value; const remarkGroup = document.getElementById('remarkGroup'); const remarkInput = document.getElementById('podRemark'); const fileLabel = document.getElementById('transitFileLabel');
-            if (type === 'RTO' || type === 'Misplaced') { remarkGroup.style.display = 'block'; remarkInput.required = true; fileLabel.innerText = "Select Document (PDF/Image)"; } else { remarkGroup.style.display = 'none'; remarkInput.required = false; remarkInput.value = ''; fileLabel.innerText = "Select Delivery Confirmation (PDF/Image)"; }
-        }
-        
-        function handleFinalActionChange() {
-            const actionType = document.getElementById('finalActionType').value; const shortGroup = document.getElementById('finalShortDeliveryGroup'); const expBox = document.getElementById('finalExpectedBoxes'); const recBox = document.getElementById('finalReceivedBoxes'); const remarkGroup = document.getElementById('finalRemarkGroup'); const remarkInput = document.getElementById('finalPodRemark'); const fileGroup = document.getElementById('finalFileGroup'); const fileInput = document.getElementById('finalPodFile');
-            if (actionType === 'Short Delivered') { shortGroup.style.display = 'flex'; expBox.required = true; recBox.required = true; remarkGroup.style.display = 'block'; remarkInput.required = true; fileGroup.style.display = 'block'; fileInput.required = true; } else if (actionType === 'OTP based delivery - No POD Required') { shortGroup.style.display = 'none'; expBox.required = false; recBox.required = false; remarkGroup.style.display = 'none'; remarkInput.required = false; fileGroup.style.display = 'none'; fileInput.required = false; } else { shortGroup.style.display = 'none'; expBox.required = false; recBox.required = false; remarkGroup.style.display = 'none'; remarkInput.required = false; fileGroup.style.display = 'block'; fileInput.required = true; }
-        }
-
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
@@ -2024,14 +1958,14 @@
                     const rowUpper = {}; for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
                     const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
                     if (invNo) {
-                        const isPending = cachedPendingBills.find(b => String(b.invoiceNo).trim() === invNo);
+                        const isPending = tableCache['pending'] ? tableCache['pending'].find(b => String(b.invoiceNo).trim() === invNo) : true; 
                         if (isPending) {
                             const uniqueKey = invNo + "_" + excelDocket;
                             if (!groupedData[uniqueKey]) { groupedData[uniqueKey] = { invoiceNo: invNo, partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", weight: String(rowUpper["WEIGHT"] || ""), size: String(rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || ""), origin: "Meerut", city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", drName: rowUpper["DR NAME"] || "", ledgerName: rowUpper["LEDGER NAME"] || "", pinCode: String(rowUpper["PIN CODE"] || ""), docketNo: excelDocket }; } else { if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; if(rowUpper["DIMENSION"]) groupedData[uniqueKey].size += " | " + rowUpper["DIMENSION"]; }
                         }
                     }
                 }
-                const assignments = Object.values(groupedData); if(assignments.length === 0) { showToast("Error", "No matching pending invoices found in the uploaded Excel.", "error"); return; }
+                const assignments = Object.values(groupedData); if(assignments.length === 0) { showToast("Error", "No matching pending invoices found.", "error"); return; }
                 pendingBulkAssignments = assignments; populateConfirmBulkModal(assignments);
             };
             reader.readAsArrayBuffer(file);
@@ -2045,9 +1979,8 @@
 
         function submitBulkAssignment(assignments) {
             const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            const payload = { action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned successfully!`); updateDashboardCounts(); closeConfirmBulkModal(); showInvoiceList(currentViewMode); syncData(); } else { showToast("Error", data.message, "error"); }
+            safeFetch({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned!`); closeConfirmBulkModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
         }
 
@@ -2057,9 +1990,8 @@
         function processPhysicalDispatch() {
             const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
             const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const payload = { action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser };
-            safeFetch(payload).then(data => {
-                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); updateDashboardCounts(); closeConfirmDispatchModal(); showAssignedList(); syncData(); } else { showToast("Error", data.message, "error"); }
+            safeFetch({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); closeConfirmDispatchModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
@@ -2090,11 +2022,9 @@
             const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value; 
             let base64Data = ""; let fileName = ""; let mimeType = ""; const file = document.getElementById('podFile').files[0]; 
             if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name; mimeType = file.type; }
-            try {
-                const payload = { action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput };
-                const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); updateDashboardCounts(); closePodModal(); showPodList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
+            safeFetch({ action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput }).then(data => {
+                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); closePodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
         }
 
         async function submitFinalPodUpload(e) {
@@ -2102,13 +2032,11 @@
             const actionType = document.getElementById('finalActionType').value; const invoiceNo = document.getElementById('finalPodInvoiceNo').value; const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
             const expBoxes = document.getElementById('finalExpectedBoxes').value; const recBoxes = document.getElementById('finalReceivedBoxes').value; const rem = document.getElementById('finalPodRemark').value;
             const file = document.getElementById('finalPodFile').files[0]; 
-            try {
-                let base64Data = ""; let fileName = ""; let mimeType = "";
-                if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
-                const payload = { action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem };
-                const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); updateDashboardCounts(); closeFinalPodModal(); showDeliveredList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            } catch (err) { showToast("Error", "Update failed.", "error"); } finally { btn.innerHTML = "Update Status"; btn.disabled = false; }
+            let base64Data = ""; let fileName = ""; let mimeType = "";
+            if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
+            safeFetch({ action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem }).then(data => {
+                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); closeFinalPodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
         }
 
         async function submitResolveDispute(e) {
@@ -2116,11 +2044,9 @@
             const invoiceNo = document.getElementById('resolveInvNo').value; const docketNo = document.getElementById('resolveDocket').value; const actionStatus = document.getElementById('resolveAction').value; let remark = document.getElementById('resolveFinalRemark').value;
             const approvedBy = document.getElementById('resolveApprovedBy').value; if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
             let receiveDateStr = document.getElementById('resolveReceiveDate').value; if(receiveDateStr) { const d = new Date(receiveDateStr); receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
-            try {
-                const payload = { action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser };
-                const data = await safeFetch(payload);
-                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); updateDashboardCounts(); closeResolveModal(); showDisputedList(); syncData(); } else { showToast("Error", data.message, "error"); }
-            } catch (err) { showToast("Error", "Action failed.", "error"); } finally { btn.innerHTML = "Close Case"; btn.disabled = false; }
+            safeFetch({ action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser }).then(data => {
+                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); closeResolveModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
+            }).finally(() => { btn.innerHTML = "Close Case"; btn.disabled = false; });
         }
 
         function updateDateTime() {
