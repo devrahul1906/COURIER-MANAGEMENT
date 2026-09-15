@@ -1325,8 +1325,11 @@
     </div>
 
     <script>
-        // REPLACE WITH YOUR NEW DEPLOYMENT URL
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxUbb0nztIS-qHsg0MkGNncZG1cIIcjfPNqAoMioOGnQiPA0XVeaCiHhWS6oPjtbvm/exec"; 
+        // =====================================================================================
+        // ⚠️ CRITICAL: REPLACE THE URL BELOW WITH YOUR BRAND NEW GOOGLE APPS SCRIPT DEPLOYMENT URL
+        // =====================================================================================
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz25P96dmvy52Zrr9WAKo94NxnNz25XYa0m7FAEIlGZqbOyBvimT1ZEcqawRvXcGtF8/exec"; 
+        // =====================================================================================
         
         let loggedInUser = ""; 
         let loggedInUserRole = ""; 
@@ -1341,7 +1344,7 @@
         let tableCache = {};
         let activeTableContext = null;
 
-        // 🚀 SAFE FETCH - 60 SECONDS NO RETRY LOOP (UPDATED FOR REDIRECTS AND PROPER ERROR LOGGING)
+        // 🚀 SAFE FETCH
         async function safeFetch(payload) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             try {
@@ -1349,7 +1352,7 @@
                 const timeoutId = setTimeout(() => controller.abort(), 60000);
                 const options = { 
                     method: 'POST', 
-                    redirect: 'follow', // YAHAN CHANGE KIYA GAYA HAI
+                    redirect: 'follow',
                     headers: { "Content-Type": "text/plain;charset=utf-8" }, 
                     body: JSON.stringify(payload), 
                     signal: controller.signal 
@@ -1361,7 +1364,7 @@
                 try { 
                     return JSON.parse(text); 
                 } catch (e) { 
-                    console.error("Server Response:", text); // YAHAN CHANGE KIYA GAYA HAI
+                    console.error("Server Response:", text);
                     throw new Error("Invalid response from server. Check console for details."); 
                 }
             } catch (err) { console.error("Fetch Error:", err); throw err; }
@@ -1410,16 +1413,15 @@
             document.addEventListener("click", function (e) { closeAllLists(e.target); });
         }
 
-        // 🚀 UPDATED checkIsToday FUNCTION
         function checkIsToday(dateStr) {
             if(!dateStr) return false;
             const d = new Date();
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const yyyy = d.getFullYear();
-            const format1 = dd + "-" + mm + "-" + yyyy; // 15-09-2026
-            const format2 = dd + "/" + mm + "/" + yyyy; // 15/09/2026
-            const format3 = yyyy + "-" + mm + "-" + dd; // 2026-09-15
+            const format1 = dd + "-" + mm + "-" + yyyy; 
+            const format2 = dd + "/" + mm + "/" + yyyy; 
+            const format3 = yyyy + "-" + mm + "-" + dd; 
             const dateStrCheck = String(dateStr);
             return dateStrCheck.includes(format1) || dateStrCheck.includes(format2) || dateStrCheck.includes(format3);
         }
@@ -1510,7 +1512,6 @@
                     
                     document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
                     
-                    // 🚀 DYNAMIC WELCOME MESSAGE LOGIC
                     const welcomeDesc = document.getElementById('welcomeDesc');
                     if (welcomeDesc) {
                         if (allowed === "Dispatch Courier Management") {
@@ -1538,7 +1539,7 @@
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
                 }
             }).catch(error => { 
-                errorDiv.innerText = "Connection Error: " + error.message; // YAHAN CHANGE KIYA GAYA HAI
+                errorDiv.innerText = "Connection Error: " + error.message;
                 errorDiv.style.display = 'block'; 
                 btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; 
             });
@@ -1551,7 +1552,7 @@
             } catch (e) { console.error("Ledgers fetch failed"); }
         }
 
-        // 🚀 UPDATED PRE-FETCHING LOGIC
+        // 🚀 UPDATED PRE-FETCHING LOGIC (Sequential to prevent timeouts)
         function syncData(isInitialLoad = false) {
             if (!loggedInUser) return;
             const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
@@ -1568,12 +1569,21 @@
                     if(isInitialLoad) {
                         showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
                         
-                        // 🚀 BACKGROUND PRE-FETCHING (Silent Data Load)
-                        setTimeout(() => {
-                           safeFetch({ action: 'syncData', reqType: 'pending' }).then(d => { if(d.status === 'success') tableCache['pending'] = d.data; });
-                           safeFetch({ action: 'syncData', reqType: 'assigned' }).then(d => { if(d.status === 'success') tableCache['assigned'] = d.data; });
-                           safeFetch({ action: 'syncData', reqType: 'transit' }).then(d => { if(d.status === 'success') tableCache['transit'] = d.data; });
-                        }, 2000); // Wait 2 seconds before silent fetching
+                        // 🚀 SEQUENTIAL BACKGROUND PRE-FETCHING (Prevents Apps Script Locking/502s)
+                        setTimeout(async () => {
+                            try {
+                                const pData = await safeFetch({ action: 'syncData', reqType: 'pending' });
+                                if(pData.status === 'success') tableCache['pending'] = pData.data;
+                                
+                                const aData = await safeFetch({ action: 'syncData', reqType: 'assigned' });
+                                if(aData.status === 'success') tableCache['assigned'] = aData.data;
+                                
+                                const tData = await safeFetch({ action: 'syncData', reqType: 'transit' });
+                                if(tData.status === 'success') tableCache['transit'] = tData.data;
+                            } catch (e) {
+                                console.warn("Background fetch delayed", e);
+                            }
+                        }, 2000); 
                     }
                 } else { showToast("Error", "Data sync failed.", "error"); }
             }).catch(error => {
