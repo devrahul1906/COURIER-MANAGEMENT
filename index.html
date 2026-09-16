@@ -1928,7 +1928,7 @@
             .then(res => {
                 selectEl.disabled = false;
                 if(res.status === 'success') {
-                    showToast("Success", "Ledger status updated in Google Sheets!");
+                    showToast("Success", "Ledger status updated");
                     // update local cache to keep it in sync
                     let ledger = cachedLedgers.find(l => l.ledgerName === ledgerName);
                     if(ledger) ledger.status = newStatus;
