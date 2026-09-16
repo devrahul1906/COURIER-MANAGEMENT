@@ -210,7 +210,7 @@
             
             <div class="login-center-content">
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" class="login-center-logo">
-                <h2>Courier & Return Management System</h2>
+                <h2>Courier Management System</h2>
                 <p class="tagline">Secure • Fast • Trackable</p>
             </div>
         </div>
@@ -430,7 +430,6 @@
                 <div class="table-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
                     <div class="table-actions">
-                        <!-- DEBOUNCED SEARCH -->
                         <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('pendingSearchBox', 'invoiceTableBody', 1)">
                         <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
                         <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
@@ -702,10 +701,20 @@
                 </div>
             </div>
 
-            <!-- 🚀 NEW LEDGER MASTER DATA TABLE -->
+            <!-- 🚀 NEW LEDGER MASTER DATA TABLE (ISOLATED) -->
             <div id="ledger-master-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>Ledger Master</h2>
+                <div class="table-header" style="flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <h2 style="margin: 0;">Ledger Master</h2>
+                        
+                        <!-- 🚀 NEW COUNTS SECTION -->
+                        <div id="ledgerStats" style="display: flex; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--border);">
+                            <span style="color: var(--primary);">Total: <b id="countTotalLedgers">0</b></span>
+                            <span style="color: var(--success);">Active: <b id="countActiveLedgers">0</b></span>
+                            <span style="color: var(--danger);">Inactive: <b id="countInactiveLedgers">0</b></span>
+                        </div>
+                    </div>
+
                     <div class="table-actions">
                         <input type="text" id="ledgerSearchBox" class="search-box" placeholder="Search Ledger..." onkeyup="debouncedFilterTableGlobal('ledgerSearchBox', 'ledgerTableBody')">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('ledgerTable', 'Ledger_Master.csv')">Export CSV</button>
@@ -1884,13 +1893,32 @@
             renderLargeHtml('returnStatusTableBody', html);
         }
 
-        // 🚀 NEW LEDGER MASTER RENDER FUNCTION
+        // 🚀 NEW FUNCTION TO UPDATE COUNTS DYNAMICALLY
+        function updateLedgerCounts(dataList) {
+            if(!dataList) return;
+            let total = dataList.length;
+            let active = dataList.filter(l => (l.status || 'Active') === 'Active').length;
+            let inactive = total - active;
+            
+            var elTotal = document.getElementById('countTotalLedgers');
+            var elActive = document.getElementById('countActiveLedgers');
+            var elInactive = document.getElementById('countInactiveLedgers');
+            
+            if(elTotal) elTotal.innerText = total;
+            if(elActive) elActive.innerText = active;
+            if(elInactive) elInactive.innerText = inactive;
+        }
+
+        // 🚀 NEW LEDGER MASTER RENDER FUNCTION (ISOLATED)
         function showLedgerMasterList() {
             hideAllLists(); 
             document.getElementById('ledger-master-list-section').style.display = 'block';
             renderLedgerMasterTable(cachedLedgers);
         }
+
         function renderLedgerMasterTable(dataList) {
+            updateLedgerCounts(dataList); 
+            
             if(!dataList || dataList.length === 0) { 
                 document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Ledgers found.</td></tr>"; 
                 return; 
@@ -1921,6 +1949,8 @@
         // 🚀 NEW LEDGER UPDATE HANDLER
         function changeLedgerStatus(selectEl, ledgerName) {
             const newStatus = selectEl.value;
+            const originalStatus = newStatus === 'Active' ? 'Inactive' : 'Active'; 
+            
             selectEl.disabled = true;
             selectEl.style.color = (newStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
             
@@ -1928,16 +1958,22 @@
             .then(res => {
                 selectEl.disabled = false;
                 if(res.status === 'success') {
-                    showToast("Success", "Ledger status updated");
-                    // update local cache to keep it in sync
+                    showToast("Success", "Ledger status updated!");
                     let ledger = cachedLedgers.find(l => l.ledgerName === ledgerName);
-                    if(ledger) ledger.status = newStatus;
+                    if(ledger) {
+                        ledger.status = newStatus;
+                        updateLedgerCounts(cachedLedgers); 
+                    }
                 } else {
                     showToast("Error", res.message || "Failed to update", "error");
+                    selectEl.value = originalStatus;
+                    selectEl.style.color = (originalStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
                 }
             }).catch(err => {
                 selectEl.disabled = false;
                 showToast("Error", "Network error while saving.", "error");
+                selectEl.value = originalStatus;
+                selectEl.style.color = (originalStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
             });
         }
 
