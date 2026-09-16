@@ -408,6 +408,19 @@
                             <div class="kpi-header"><span class="kpi-title">Unplanned Received</span><div class="kpi-icon" style="background: rgba(225, 29, 72, 0.15); color: #e11d48;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div></div>
                             <div class="kpi-value" id="unplannedReturnCount">0</div><div class="kpi-desc">Confirmation Pending</div>
                         </div>
+
+                        <!-- 🚀 NEW LEDGER MASTER CARD -->
+                        <div class="kpi-card" id="card-ledger-master" style="background-color: #f8fafc; border-color: #cbd5e1; color: #334155;" onclick="showLedgerMasterList()" data-tab-name="Ledger Master">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Ledger Master</span>
+                                <div class="kpi-icon" style="background: rgba(100, 116, 139, 0.15); color: #475569;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" style="font-size: 24px;">Manage</div>
+                            <div class="kpi-desc">View & Update Ledgers</div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -417,7 +430,7 @@
                 <div class="table-header">
                     <h2 id="invoiceListTitle">Pending Invoices</h2>
                     <div class="table-actions">
-                        <!-- DEBOUNCED SEARCH ADDED -->
+                        <!-- DEBOUNCED SEARCH -->
                         <input type="text" id="pendingSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('pendingSearchBox', 'invoiceTableBody', 1)">
                         <button id="btnExportPending" class="btn-outline btn-export" style="display:none;" onclick="exportTableToCSV('invoiceTable', 'Pending_Invoices.csv')">Export CSV</button>
                         <button id="btnBulkUpload" class="btn-outline" style="display:none; background: var(--primary); color: white; border: none;" onclick="openBulkUploadModal()">Upload Invoices Details</button>
@@ -685,6 +698,28 @@
                             </tr>
                         </thead>
                         <tbody id="returnStatusTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 🚀 NEW LEDGER MASTER DATA TABLE -->
+            <div id="ledger-master-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Ledger Master</h2>
+                    <div class="table-actions">
+                        <input type="text" id="ledgerSearchBox" class="search-box" placeholder="Search Ledger..." onkeyup="debouncedFilterTableGlobal('ledgerSearchBox', 'ledgerTableBody')">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('ledgerTable', 'Ledger_Master.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="ledgerTable" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Ledger Name</th><th>City</th><th>State</th><th>Pin Code</th><th>Ledger Code</th><th>Zone</th><th>BDM Name</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -1327,9 +1362,9 @@
 
     <script>
         // =====================================================================================
-        // ⚠️ CRITICAL: REPLACE THE URL BELOW WITH YOUR BRAND NEW GOOGLE APPS SCRIPT DEPLOYMENT URL
+        // ⚠️ REPLACE WITH YOUR SCRIPT DEPLOYMENT URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwo-ydRaCcA4m22azwLOPe0LXsEouvrDcDa276ZMPByp19qKmOWD-2x-g-aDXNwEFZt/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_5z7fGQ9MMHfa8iuX71GnAP1htGycyzODYnSuKgZDF3WMMJxfT8Fx19Nu85o87mjg/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1341,11 +1376,9 @@
         let targetTabForDateRange = "";
         let cachedLedgers = [];
 
-        // LAZY LOAD VARIABLES
         let tableCache = {};
         let activeTableContext = null;
 
-        // --- NEW: CHUNKED HTML RENDERER (PREVENTS BROWSER FREEZING) ---
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = "";
@@ -1355,18 +1388,17 @@
             let index = 0;
             
             function renderChunk() {
-                if (!document.getElementById(tbodyId)) return; // Stop if user changed view
+                if (!document.getElementById(tbodyId)) return;
                 let chunk = htmlArray.slice(index, index + chunkSize).join("");
                 tbody.insertAdjacentHTML('beforeend', chunk);
                 index += chunkSize;
                 if (index < htmlArray.length) {
-                    setTimeout(renderChunk, 0); // yields to UI thread
+                    setTimeout(renderChunk, 0);
                 }
             }
             renderChunk();
         }
 
-        // --- NEW: DEBOUNCED SEARCH FILTERS ---
         let filterTimer;
         function debouncedFilterTable(inputId, tbodyId, colIndex) {
             clearTimeout(filterTimer);
@@ -1377,7 +1409,6 @@
             filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
         }
 
-        // 🚀 SAFE FETCH (Improved Error Logging)
         async function safeFetch(payload) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             try {
@@ -1401,7 +1432,7 @@
                 } catch (e) { 
                     console.error("Server Response:", text);
                     let snippet = text.substring(0, 50).replace(/</g, "&lt;");
-                    throw new Error("Invalid Server Response (It returned HTML). Check Web App Permissions. Preview: " + snippet); 
+                    throw new Error("Invalid Server Response (HTML returned). Check Web App Permissions. Preview: " + snippet); 
                 }
             } catch (err) { 
                 console.error("Fetch Error:", err); 
@@ -1530,7 +1561,6 @@
             });
         }
 
-        // 🚀 UPDATED: USING ASYNC/AWAIT TO CHAIN REQUESTS SEQUENTIALLY
         async function handleLogin(event) {
             if(event) event.preventDefault();
             const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner'); const errorDiv = document.getElementById('loginError');
@@ -1551,7 +1581,6 @@
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
-                    
                     document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
                     
                     const welcomeDesc = document.getElementById('welcomeDesc');
@@ -1573,8 +1602,6 @@
                     
                     btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
 
-                    // 🚀 SEQUENTIAL CALL (Prevents Google Apps Script 502 Crash)
-                    await fetchLedgers();
                     syncData(true);
 
                 } else { 
@@ -1588,23 +1615,19 @@
             }
         }
 
-        // 🚀 UPDATED FETCH LEDGERS FUNCTION
         async function fetchLedgers() {
             try {
-                console.log("Fetching ledgers...");
+                console.log("Fetching ledgers in background...");
                 const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers' });
                 if (resp && resp.status === 'success' && resp.data) { 
                     cachedLedgers = resp.data; 
-                    console.log("Ledgers loaded successfully: " + cachedLedgers.length);
-                } else {
-                    console.error("Ledger fetch response missing data:", resp);
+                    console.log("Ledgers loaded silently: " + cachedLedgers.length);
                 }
             } catch (e) { 
-                console.error("Ledgers fetch failed", e); 
+                console.warn("Silent ledger sync delayed:", e); 
             }
         }
 
-        // 🚀 UPDATED PRE-FETCHING LOGIC (Sequential to prevent timeouts)
         function syncData(isInitialLoad = false) {
             if (!loggedInUser) return;
             const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
@@ -1612,7 +1635,7 @@
             btn.disabled = true;
 
             if(isInitialLoad) {
-                document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry") { el.innerText = "..."; el.style.color = ""; } });
+                document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry" && el.innerText !== "Manage") { el.innerText = "..."; el.style.color = ""; } });
             }
 
             safeFetch({ action: 'syncData', reqType: 'counts' }).then(data => {
@@ -1621,7 +1644,10 @@
                     if(isInitialLoad) {
                         showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
                         
-                        // 🚀 SEQUENTIAL BACKGROUND PRE-FETCHING
+                        setTimeout(() => {
+                            fetchLedgers();
+                        }, 500);
+                        
                         setTimeout(async () => {
                             try {
                                 const pData = await safeFetch({ action: 'syncData', reqType: 'pending' });
@@ -1644,7 +1670,6 @@
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
-        // ======================= LAZY LOAD ENGINE & AUTO REFRESH =======================
         async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
             if (!forceRefresh && tableCache[reqType]) { renderFunction(tableCache[reqType]); return; }
             const tbodies = document.querySelectorAll('.table-responsive tbody');
@@ -1661,11 +1686,10 @@
         }
 
         function refreshDataAndView() {
-            tableCache = {}; // Flush cache
-            syncData();      // Fetch counts again in background
+            tableCache = {};
+            syncData();
             if (activeTableContext) { loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); }
         }
-        // ==============================================================================
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
@@ -1815,7 +1839,7 @@
                 html.push(`<tr><td><input type="checkbox" class="return-received-checkbox" value="${item.id}" onclick="toggleCNButton()"></td><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-delivered">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
             });
             renderLargeHtml('returnReceivedTableBody', html);
-            toggleCNButton(); // Initialize button state
+            toggleCNButton();
         }
 
         function toggleCNButton() { document.getElementById('btnFillCN').style.display = document.querySelectorAll('.return-received-checkbox:checked').length > 0 ? 'block' : 'none'; }
@@ -1859,6 +1883,64 @@
             combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
             renderLargeHtml('returnStatusTableBody', html);
         }
+
+        // 🚀 NEW LEDGER MASTER RENDER FUNCTION
+        function showLedgerMasterList() {
+            hideAllLists(); 
+            document.getElementById('ledger-master-list-section').style.display = 'block';
+            renderLedgerMasterTable(cachedLedgers);
+        }
+        function renderLedgerMasterTable(dataList) {
+            if(!dataList || dataList.length === 0) { 
+                document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Ledgers found.</td></tr>"; 
+                return; 
+            }
+            let html = []; 
+            dataList.forEach((item, index) => { 
+                let statusVal = item.status || 'Active';
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${safeStr(item.ledgerName)}</b></td>
+                    <td>${safeStr(item.city)}</td>
+                    <td>${safeStr(item.state)}</td>
+                    <td>${safeStr(item.pinCode)}</td>
+                    <td>${safeStr(item.ledgerCode)}</td>
+                    <td>${safeStr(item.zone)}</td>
+                    <td>${safeStr(item.bdmName)}</td>
+                    <td>
+                        <select onchange="changeLedgerStatus(this, '${safeStr(item.ledgerName)}')" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: ${statusVal==='Active'?'var(--success)':'var(--danger)'}; outline: none;">
+                            <option value="Active" ${statusVal==='Active'?'selected':''}>Active</option>
+                            <option value="Inactive" ${statusVal==='Inactive'?'selected':''}>Inactive</option>
+                        </select>
+                    </td>
+                </tr>`); 
+            });
+            renderLargeHtml('ledgerTableBody', html);
+        }
+
+        // 🚀 NEW LEDGER UPDATE HANDLER
+        function changeLedgerStatus(selectEl, ledgerName) {
+            const newStatus = selectEl.value;
+            selectEl.disabled = true;
+            selectEl.style.color = (newStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
+            
+            safeFetch({ action: 'updateLedgerStatus', data: { ledgerName: ledgerName, status: newStatus } })
+            .then(res => {
+                selectEl.disabled = false;
+                if(res.status === 'success') {
+                    showToast("Success", "Ledger status updated in Google Sheets!");
+                    // update local cache to keep it in sync
+                    let ledger = cachedLedgers.find(l => l.ledgerName === ledgerName);
+                    if(ledger) ledger.status = newStatus;
+                } else {
+                    showToast("Error", res.message || "Failed to update", "error");
+                }
+            }).catch(err => {
+                selectEl.disabled = false;
+                showToast("Error", "Network error while saving.", "error");
+            });
+        }
+
 
         // ========================== MODALS AND ACTION HANDLERS ========================
         
