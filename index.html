@@ -210,7 +210,7 @@
             
             <div class="login-center-content">
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" class="login-center-logo">
-                <h2>Courier Management System</h2>
+                <h2>Courier & Return Management System</h2>
                 <p class="tagline">Secure • Fast • Trackable</p>
             </div>
         </div>
@@ -701,13 +701,12 @@
                 </div>
             </div>
 
-            <!-- 🚀 NEW LEDGER MASTER DATA TABLE (ISOLATED) -->
+            <!-- 🚀 NEW LEDGER MASTER DATA TABLE (ISOLATED & AUTO-COUNTING) -->
             <div id="ledger-master-list-section" class="table-wrapper">
                 <div class="table-header" style="flex-wrap: wrap; gap: 15px;">
                     <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                         <h2 style="margin: 0;">Ledger Master</h2>
                         
-                        <!-- 🚀 NEW COUNTS SECTION -->
                         <div id="ledgerStats" style="display: flex; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--border);">
                             <span style="color: var(--primary);">Total: <b id="countTotalLedgers">0</b></span>
                             <span style="color: var(--success);">Active: <b id="countActiveLedgers">0</b></span>
@@ -1373,7 +1372,7 @@
         // =====================================================================================
         // ⚠️ REPLACE WITH YOUR SCRIPT DEPLOYMENT URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_5z7fGQ9MMHfa8iuX71GnAP1htGycyzODYnSuKgZDF3WMMJxfT8Fx19Nu85o87mjg/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyBKLqmKV9dNRWKNcoanDSw1D4gLYtSQj6HAaflY-zdNxRGzh0HMUh1eAaULxk-Gw/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1681,8 +1680,12 @@
 
         async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
             if (!forceRefresh && tableCache[reqType]) { renderFunction(tableCache[reqType]); return; }
-            const tbodies = document.querySelectorAll('.table-responsive tbody');
-            tbodies.forEach(tb => tb.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading data...</span></td></tr>`);
+            
+            // 🚀 UI Update: Show loading state without freezing the page
+            const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
+            if (activeTbody) {
+                activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Updating & Loading Data...</span></td></tr>`;
+            }
             
             try {
                 const resp = await safeFetch({ action: 'syncData', reqType: reqType });
@@ -1695,9 +1698,15 @@
         }
 
         function refreshDataAndView() {
+            // Keep ledger cache completely isolated from refresh
+            let tempLedger = tableCache['ledgersList'];
             tableCache = {};
-            syncData();
-            if (activeTableContext) { loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); }
+            if(tempLedger) tableCache['ledgersList'] = tempLedger; 
+
+            syncData(); // Get fresh counts
+            if (activeTableContext) { 
+                loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); 
+            }
         }
 
         function logoutSystem() {
@@ -1958,7 +1967,7 @@
             .then(res => {
                 selectEl.disabled = false;
                 if(res.status === 'success') {
-                    showToast("Success", "Ledger status updated!");
+                    showToast("Success", "Ledger status updated in Google Sheets!");
                     let ledger = cachedLedgers.find(l => l.ledgerName === ledgerName);
                     if(ledger) {
                         ledger.status = newStatus;
@@ -1979,6 +1988,41 @@
 
 
         // ========================== MODALS AND ACTION HANDLERS ========================
+        
+        // 🚀 NEW FIX: Update Action Modal Handler
+        function handleFinalActionChange() {
+            var action = document.getElementById('finalActionType').value;
+            var shortDeliveryGroup = document.getElementById('finalShortDeliveryGroup');
+            var remarkGroup = document.getElementById('finalRemarkGroup');
+            var fileGroup = document.getElementById('finalFileGroup');
+            var expectedInput = document.getElementById('finalExpectedBoxes');
+            var receivedInput = document.getElementById('finalReceivedBoxes');
+            var fileInput = document.getElementById('finalPodFile');
+            
+            if (action === "Short Delivered") {
+                shortDeliveryGroup.style.display = "flex";
+                remarkGroup.style.display = "block";
+                fileGroup.style.display = "block";
+                expectedInput.required = true;
+                receivedInput.required = true;
+                fileInput.required = true;
+            } else if (action === "OTP based delivery - No POD Required") {
+                shortDeliveryGroup.style.display = "none";
+                remarkGroup.style.display = "block"; 
+                fileGroup.style.display = "none";
+                expectedInput.required = false;
+                receivedInput.required = false;
+                fileInput.required = false;
+            } else { 
+                // Full Delivery POD
+                shortDeliveryGroup.style.display = "none";
+                remarkGroup.style.display = "none";
+                fileGroup.style.display = "block";
+                expectedInput.required = false;
+                receivedInput.required = false;
+                fileInput.required = true;
+            }
+        }
         
         function openUnplannedReturnModal() { document.getElementById('unplannedReturnForm').reset(); document.getElementById('unplannedReturnModal').style.display = 'flex'; }
         function closeUnplannedReturnModal() { document.getElementById('unplannedReturnModal').style.display = 'none'; }
