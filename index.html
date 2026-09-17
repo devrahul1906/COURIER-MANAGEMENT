@@ -268,7 +268,8 @@
             </div>
             
             <div class="user-nav">
-                <button class="btn-outline" id="syncBtn" onclick="syncData()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1; margin-right: 5px;" title="Refresh Latest Data">
+                <!-- 🚀 UPDATED ONCLICK -->
+                <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1; margin-right: 5px;" title="Refresh Latest Data">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
                     Refresh
                 </button>
@@ -409,7 +410,7 @@
                             <div class="kpi-value" id="unplannedReturnCount">0</div><div class="kpi-desc">Confirmation Pending</div>
                         </div>
 
-                        <!-- 🚀 NEW LEDGER MASTER CARD -->
+                        <!-- 🚀 LEDGER MASTER CARD -->
                         <div class="kpi-card" id="card-ledger-master" style="background-color: #f8fafc; border-color: #cbd5e1; color: #334155;" onclick="showLedgerMasterList()" data-tab-name="Ledger Master">
                             <div class="kpi-header">
                                 <span class="kpi-title">Ledger Master</span>
@@ -701,7 +702,7 @@
                 </div>
             </div>
 
-            <!-- 🚀 NEW LEDGER MASTER DATA TABLE (ISOLATED & AUTO-COUNTING) -->
+            <!-- 🚀 LEDGER MASTER DATA TABLE (ISOLATED & AUTO-COUNTING) -->
             <div id="ledger-master-list-section" class="table-wrapper">
                 <div class="table-header" style="flex-wrap: wrap; gap: 15px;">
                     <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
@@ -709,8 +710,10 @@
                         
                         <div id="ledgerStats" style="display: flex; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--border);">
                             <span style="color: var(--primary);">Total: <b id="countTotalLedgers">0</b></span>
-                            <span style="color: var(--success);">Active: <b id="countActiveLedgers">0</b></span>
-                            <span style="color: var(--danger);">Inactive: <b id="countInactiveLedgers">0</b></span>
+                            <span style="color: var(--success);">Current: <b id="countCurrentLedgers">0</b></span>
+                            <span style="color: var(--warning);">Old: <b id="countOldLedgers">0</b></span>
+                            <span style="color: var(--danger);">In Active: <b id="countInActiveLedgers">0</b></span>
+                            <span style="color: #991b1b;">Closed: <b id="countClosedLedgers">0</b></span>
                         </div>
                     </div>
 
@@ -781,6 +784,7 @@
         </div>
     </div>
 
+    <!-- 🚀 UPDATE 2: Confirm Unplanned Modal Modifications -->
     <div id="confirmUnplannedModal" class="modal-overlay">
         <div class="modal-box modal-lg">
             <div class="modal-header">
@@ -855,7 +859,7 @@
                             <option value="Doctor">Doctor</option>
                             <option value="Assistant">Assistant</option>
                             <option value="Office Staff">Office Staff</option>
-                            <option value="Other">Other</option>
+                            <option value="Other (Specify Name)">Other (Specify Name)</option>
                         </select>
                     </div>
 
@@ -873,6 +877,7 @@
         </div>
     </div>
 
+    <!-- 🚀 UPDATE 1: Generate Return Modal Modifications -->
     <div id="generateReturnModal" class="modal-overlay">
         <div class="modal-box modal-lg">
             <div class="modal-header">
@@ -914,20 +919,28 @@
                         </div>
                     </div>
                     
+                    <!-- FROZEN LEDGER CODE & ZONE -->
                     <div class="two-col">
                         <div class="form-group">
                             <label>Ledger Code</label>
-                            <input type="text" id="retLedgerCode" placeholder="Enter Ledger Code">
+                            <input type="text" id="retLedgerCode" placeholder="Auto-filled" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--text-muted);">
                         </div>
                         <div class="form-group">
                             <label>Zone</label>
-                            <input type="text" id="retZone" placeholder="Enter Zone">
+                            <input type="text" id="retZone" placeholder="Auto-filled" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--text-muted);">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>BDM Name</label>
-                        <input type="text" id="retBdmName" placeholder="Enter BDM Name">
+                    <!-- BDM NAME (Editable) & NEW LEDGER STATUS (Readonly) -->
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>BDM Name</label>
+                            <input type="text" id="retBdmName" placeholder="Enter BDM Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Ledger Status</label>
+                            <input type="text" id="retLedgerStatus" placeholder="Auto-filled" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -944,6 +957,7 @@
         </div>
     </div>
 
+    <!-- 🚀 Assign Return Courier Modal Modifications -->
     <div id="assignReturnCourierModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -959,20 +973,62 @@
                     </div>
                     <div class="form-group">
                         <label>Courier Partner <span style="color: red;">*</span></label>
-                        <select id="retCourierPartner" required>
+                        <select id="retCourierPartner" required onchange="handleCourierChange()">
                             <option value="">Select Option</option>
                             <option value="Blue Dart">Blue Dart</option>
                             <option value="DTDC">DTDC</option>
                             <option value="Delhivery">Delhivery</option>
+                            <option value="Other">Other</option>
                         </select>
+                        <input type="text" id="retCourierOther" placeholder="Enter Custom Courier Name" style="display: none; margin-top: 10px;">
                     </div>
                     <div class="form-group">
                         <label>Docket No <span style="color: red;">*</span></label>
                         <input type="text" id="retDocketNo" placeholder="Enter Tracking Number" required>
                     </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px; padding: 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                        <input type="checkbox" id="assignRetPhotoCheck" required style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="assignRetPhotoCheck" style="margin: 0; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--danger);">Boxes photo's received? <span style="color: red;">*</span></label>
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn-outline" onclick="closeAssignReturnCourierModal()">Cancel</button>
                         <button type="submit" id="saveAssignReturnBtn" class="action-btn btn-primary">Assign & Pickup</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 UPDATE 3: Ledger Closed Confirmation Popup -->
+    <div id="ledgerClosedModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Confirm Ledger Closure</h3>
+                <button type="button" class="close-btn" onclick="closeLedgerClosedModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ledgerClosedForm" onsubmit="submitLedgerClosed(event)">
+                    <input type="hidden" id="closedLedgerName">
+                    <input type="hidden" id="closedLedgerSelectId"> 
+                    
+                    <div class="form-group">
+                        <label>Closer Confirmed By <span style="color: red;">*</span></label>
+                        <select id="closerConfirmedBy" required>
+                            <option value="">Select Approver</option>
+                            <option value="BDM">BDM</option>
+                            <option value="Accounts">Accounts</option>
+                            <option value="MD Sir">MD Sir</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Remarks</label>
+                        <textarea id="closerRemarks" rows="3" placeholder="Optional remarks..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-outline" onclick="closeLedgerClosedModal()">Cancel</button>
+                        <button type="submit" id="saveLedgerClosedBtn" class="action-btn" style="background: var(--danger);">Confirm Close</button>
                     </div>
                 </form>
             </div>
@@ -1047,6 +1103,11 @@
                     <div class="form-group">
                         <label>CN Creation Date <span style="color: red;">*</span></label>
                         <input type="date" id="cnDateInput" required>
+                    </div>
+                    <!-- 🚀 Fill CN Details Modifications -->
+                    <div class="form-group">
+                        <label>CN Created By <span style="color: red;">*</span></label>
+                        <input type="text" id="cnCreatedByInput" required placeholder="Enter name of person who created CN">
                     </div>
                     <div class="form-group" id="cnDelayReasonGroup" style="display: none;">
                         <label>Reason for Delay (> 7 Days) <span style="color: red;">*</span></label>
@@ -1370,9 +1431,9 @@
 
     <script>
         // =====================================================================================
-        // ⚠️ REPLACE WITH YOUR SCRIPT DEPLOYMENT URL
+        // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyBKLqmKV9dNRWKNcoanDSw1D4gLYtSQj6HAaflY-zdNxRGzh0HMUh1eAaULxk-Gw/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHIUDvb66p7nvjdVa5ZeAqjVx6fyniCw3cAPeUSbGOun17h3ta_FhVhNKkWHSfiEOm/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1386,6 +1447,7 @@
 
         let tableCache = {};
         let activeTableContext = null;
+        let fetchVersion = 0; // 🚀 NAYA VERSION TOKEN
 
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
@@ -1417,6 +1479,34 @@
             filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
         }
 
+        let bgQueue = Promise.resolve();
+
+        // 🚀 UPDATED BACKGROUND FETCH (Uses Token)
+        function enqueueBackgroundFetch(payload, cacheKey, version) {
+            bgQueue = bgQueue.then(async () => {
+                if (version !== fetchVersion) return; // 🚀 Token Verification
+                try {
+                    if(tableCache[cacheKey]) return; 
+                    let res = await safeFetch(payload);
+                    if (version !== fetchVersion) return; // 🚀 Token Verification
+                    if(res.status === 'success') {
+                        tableCache[cacheKey] = (cacheKey === 'returnStatus') ? { returnBills: res.returnBills, unplannedBills: res.unplannedBills } : res.data;
+                    }
+                } catch(e) {
+                    console.warn("Background fetch delayed:", e);
+                }
+                await new Promise(r => setTimeout(r, 500)); 
+            });
+        }
+
+        // 🚀 UPDATED PRE-FETCH
+        async function backgroundPreFetch(version) {
+            enqueueBackgroundFetch({ action: 'syncData', reqType: 'pending' }, 'pending', version);
+            enqueueBackgroundFetch({ action: 'syncData', reqType: 'assigned' }, 'assigned', version);
+            enqueueBackgroundFetch({ action: 'syncData', reqType: 'transit' }, 'transit', version);
+            enqueueBackgroundFetch({ action: 'syncData', reqType: 'returnBills' }, 'returnBills', version);
+        }
+
         async function safeFetch(payload) { 
             const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
             try {
@@ -1440,7 +1530,7 @@
                 } catch (e) { 
                     console.error("Server Response:", text);
                     let snippet = text.substring(0, 50).replace(/</g, "&lt;");
-                    throw new Error("Invalid Server Response (HTML returned). Check Web App Permissions. Preview: " + snippet); 
+                    throw new Error("Invalid Server Response. Check Web App Permissions. Preview: " + snippet); 
                 }
             } catch (err) { 
                 console.error("Fetch Error:", err); 
@@ -1451,12 +1541,12 @@
         function safeStr(val) { return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         document.addEventListener('DOMContentLoaded', () => {
-            setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null);
-            setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName');
-            setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName');
+            setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null, null);
+            setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName', 'retLedgerStatus');
+            setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName', null);
         });
 
-        function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId) {
+        function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId, statusId) {
             const inp = document.getElementById(inputId);
             if(!inp) return;
             inp.addEventListener("input", function(e) {
@@ -1480,7 +1570,15 @@
                             if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
                             if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
                             if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
+                            
+                            // Let BDM name populate but stay editable
                             if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
+                            
+                            if(statusId && document.getElementById(statusId)) {
+                                document.getElementById(statusId).value = currentLedger.status || "Current Ledger";
+                                document.getElementById(statusId).style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
+                            }
+
                             closeAllLists();
                         });
                         a.appendChild(b); matchCount++;
@@ -1527,7 +1625,7 @@
 
         function exportTableToCSV(tableId, filename) {
             let csv = []; let rows = document.querySelectorAll(`#${tableId} tr`);
-            for (let i = 0; i < rows.length; i++) { if(rows[i].style.display === "none") continue; let row = [], cols = rows[i].querySelectorAll("td, th"); for (let j = 0; j < cols.length; j++) { if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]')) continue; row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"'); } csv.push(row.join(",")); }
+            for (let i = 0; i < rows.length; i++) { if(rows[i].style.display === "none") continue; let row = [], cols = rows[i].querySelectorAll("td, th"); for (let j = 0; j < cols.length; j++) { if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]') || cols[j].querySelector('select')) continue; row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"'); } csv.push(row.join(",")); }
             let csvFile = new Blob([csv.join("\n")], {type: "text/csv"}); let downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
         }
 
@@ -1625,70 +1723,68 @@
 
         async function fetchLedgers() {
             try {
-                console.log("Fetching ledgers in background...");
                 const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers' });
                 if (resp && resp.status === 'success' && resp.data) { 
                     cachedLedgers = resp.data; 
-                    console.log("Ledgers loaded silently: " + cachedLedgers.length);
                 }
             } catch (e) { 
                 console.warn("Silent ledger sync delayed:", e); 
             }
         }
 
-        function syncData(isInitialLoad = false) {
-            if (!loggedInUser) return;
-            const btn = document.getElementById('syncBtn'); const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(20,52,130,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Refreshing...`; 
-            btn.disabled = true;
+        // 🚀 UPDATED SYNC DATA (Returns Promise for sequential execution)
+        function syncData(isInitialLoad = false, forceRefresh = false) {
+            return new Promise((resolve) => {
+                if (!loggedInUser) return resolve();
+                const btn = document.getElementById('syncBtn'); 
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(20,52,130,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Refreshing...`; 
+                btn.disabled = true;
 
-            if(isInitialLoad) {
-                document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry" && el.innerText !== "Manage") { el.innerText = "..."; el.style.color = ""; } });
-            }
+                if(isInitialLoad) {
+                    document.querySelectorAll('.kpi-value').forEach(el => { 
+                        if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry" && el.innerText !== "Manage") { 
+                            el.innerText = "..."; el.style.color = ""; 
+                        } 
+                    });
+                }
 
-            safeFetch({ action: 'syncData', reqType: 'counts' }).then(data => {
-                if(data.status === "success") {
-                    updateDashboardCounts(data.counts); 
-                    if(isInitialLoad) {
-                        showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
-                        
-                        setTimeout(() => {
-                            fetchLedgers();
-                        }, 500);
-                        
-                        setTimeout(async () => {
-                            try {
-                                const pData = await safeFetch({ action: 'syncData', reqType: 'pending' });
-                                if(pData.status === 'success') tableCache['pending'] = pData.data;
-                                
-                                const aData = await safeFetch({ action: 'syncData', reqType: 'assigned' });
-                                if(aData.status === 'success') tableCache['assigned'] = aData.data;
-                                
-                                const tData = await safeFetch({ action: 'syncData', reqType: 'transit' });
-                                if(tData.status === 'success') tableCache['transit'] = tData.data;
-                            } catch (e) {
-                                console.warn("Background fetch delayed", e);
-                            }
-                        }, 2000); 
+                // 🚀 Backend ko forceRefresh flag bhejna
+                safeFetch({ action: 'syncData', reqType: 'counts', forceRefresh: forceRefresh }).then(data => {
+                    if(data.status === "success") {
+                        updateDashboardCounts(data.counts); 
+                        if(isInitialLoad) {
+                            showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
+                            setTimeout(() => { fetchLedgers(); }, 500);
+                            
+                            fetchVersion++; // Setup Version for initial load
+                            setTimeout(() => { backgroundPreFetch(fetchVersion); }, 2000); 
+                        }
+                    } else { showToast("Error", "Data sync failed: " + data.message, "error"); }
+                }).catch(error => {
+                    showToast("System Error", error.message, "error");
+                    if(isInitialLoad) { 
+                        document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText === "...") { el.innerText = "Err"; el.style.color = "var(--danger)"; } }); 
                     }
-                } else { showToast("Error", "Data sync failed: " + data.message, "error"); }
-            }).catch(error => {
-                showToast("System Error", error.message, "error");
-                if(isInitialLoad) { document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText === "...") { el.innerText = "Err"; el.style.color = "var(--danger)"; } }); }
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+                }).finally(() => { 
+                    btn.innerHTML = originalHTML; btn.disabled = false; 
+                    resolve(); // 🚀 Sequential step complete
+                });
+            });
         }
 
+        // 🚀 UPDATED LOAD AND RENDER (Accepts forceRefresh)
         async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
             if (!forceRefresh && tableCache[reqType]) { renderFunction(tableCache[reqType]); return; }
             
-            // 🚀 UI Update: Show loading state without freezing the page
             const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
             if (activeTbody) {
                 activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Updating & Loading Data...</span></td></tr>`;
             }
             
             try {
-                const resp = await safeFetch({ action: 'syncData', reqType: reqType });
+                // 🚀 Backend ko forceRefresh flag bhejna
+                const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: forceRefresh });
                 if(resp.status === 'success') {
                     let dataToCache = reqType === 'returnStatus' ? { returnBills: resp.returnBills, unplannedBills: resp.unplannedBills } : resp.data;
                     tableCache[reqType] = dataToCache;
@@ -1697,22 +1793,38 @@
             } catch (err) { showToast("Error", "Network error while loading data.", "error"); }
         }
 
-        function refreshDataAndView() {
-            // Keep ledger cache completely isolated from refresh
+        // 🚀 UPDATED SEQUENTIAL REFRESH HANDLER (1 By 1 Executions)
+        async function refreshDataAndView() {
+            fetchVersion++; // 🚀 Old background requests ko invalid karna
+            let currentVer = fetchVersion;
+            
             let tempLedger = tableCache['ledgersList'];
-            tableCache = {};
+            tableCache = {}; 
             if(tempLedger) tableCache['ledgersList'] = tempLedger; 
 
-            syncData(); // Get fresh counts
+            // 1. Pehle Counts update honge (Aur GS mein Cache bypass hoga)
+            await syncData(false, true); 
+            
+            // Safety check - agar user ne counts update hote waqt dubara refresh daba diya ho
+            if (currentVer !== fetchVersion) return; 
+
+            // 2. Fir Screen Par Active Table Update Hoga (Aur GS Cache Bypass Hoga)
             if (activeTableContext) { 
-                loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); 
+                await loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); 
             }
+            
+            if (currentVer !== fetchVersion) return;
+
+            // 3. Last mein naye data fetching ke liye background worker chalega
+            setTimeout(() => { 
+                backgroundPreFetch(currentVer); 
+            }, 1000); 
         }
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
             loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
-            tableCache = {}; activeTableContext = null; cachedLedgers = [];
+            tableCache = {}; activeTableContext = null; cachedLedgers = []; bgQueue = Promise.resolve(); fetchVersion++;
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
 
@@ -1902,23 +2014,23 @@
             renderLargeHtml('returnStatusTableBody', html);
         }
 
-        // 🚀 NEW FUNCTION TO UPDATE COUNTS DYNAMICALLY
+        // 🚀 UPDATED FUNCTION TO UPDATE COUNTS DYNAMICALLY (4 STATUSES)
         function updateLedgerCounts(dataList) {
             if(!dataList) return;
             let total = dataList.length;
-            let active = dataList.filter(l => (l.status || 'Active') === 'Active').length;
-            let inactive = total - active;
+            let current = dataList.filter(l => (l.status || 'Current Ledger') === 'Current Ledger').length;
+            let oldL = dataList.filter(l => l.status === 'Old Ledger').length;
+            let inActive = dataList.filter(l => l.status === 'In Active').length;
+            let closed = dataList.filter(l => l.status === 'Closed').length;
             
-            var elTotal = document.getElementById('countTotalLedgers');
-            var elActive = document.getElementById('countActiveLedgers');
-            var elInactive = document.getElementById('countInactiveLedgers');
-            
-            if(elTotal) elTotal.innerText = total;
-            if(elActive) elActive.innerText = active;
-            if(elInactive) elInactive.innerText = inactive;
+            if(document.getElementById('countTotalLedgers')) document.getElementById('countTotalLedgers').innerText = total;
+            if(document.getElementById('countCurrentLedgers')) document.getElementById('countCurrentLedgers').innerText = current;
+            if(document.getElementById('countOldLedgers')) document.getElementById('countOldLedgers').innerText = oldL;
+            if(document.getElementById('countInActiveLedgers')) document.getElementById('countInActiveLedgers').innerText = inActive;
+            if(document.getElementById('countClosedLedgers')) document.getElementById('countClosedLedgers').innerText = closed;
         }
 
-        // 🚀 NEW LEDGER MASTER RENDER FUNCTION (ISOLATED)
+        // 🚀 ISOLATED LEDGER RENDER FUNCTION
         function showLedgerMasterList() {
             hideAllLists(); 
             document.getElementById('ledger-master-list-section').style.display = 'block';
@@ -1932,9 +2044,17 @@
                 document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No Ledgers found.</td></tr>"; 
                 return; 
             }
+            
+            let statusOptions = ["Current Ledger", "Old Ledger", "In Active", "Closed"];
             let html = []; 
+            
             dataList.forEach((item, index) => { 
-                let statusVal = item.status || 'Active';
+                let statusVal = item.status || 'Current Ledger';
+                let color = 'var(--text-main)';
+                if(statusVal === 'Current Ledger') color = 'var(--success)';
+                else if(statusVal === 'Closed' || statusVal === 'In Active') color = 'var(--danger)';
+                else if(statusVal === 'Old Ledger') color = 'var(--warning)';
+
                 html.push(`<tr>
                     <td>${index + 1}</td>
                     <td><b>${safeStr(item.ledgerName)}</b></td>
@@ -1945,9 +2065,9 @@
                     <td>${safeStr(item.zone)}</td>
                     <td>${safeStr(item.bdmName)}</td>
                     <td>
-                        <select onchange="changeLedgerStatus(this, '${safeStr(item.ledgerName)}')" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: ${statusVal==='Active'?'var(--success)':'var(--danger)'}; outline: none;">
-                            <option value="Active" ${statusVal==='Active'?'selected':''}>Active</option>
-                            <option value="Inactive" ${statusVal==='Inactive'?'selected':''}>Inactive</option>
+                        <select id="ledger_sel_${index}" data-original="${statusVal}" onchange="changeLedgerStatus(this, '${safeStr(item.ledgerName)}')"\ 
+                        style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: ${color}; outline: none;">
+                            ${statusOptions.map(opt => `<option value="${opt}" ${statusVal === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                         </select>
                     </td>
                 </tr>`); 
@@ -1955,15 +2075,61 @@
             renderLargeHtml('ledgerTableBody', html);
         }
 
-        // 🚀 NEW LEDGER UPDATE HANDLER
+        // 🚀 UPDATED LEDGER STATUS HANDLER (TRIGGERS POPUP ON 'CLOSED')
         function changeLedgerStatus(selectEl, ledgerName) {
             const newStatus = selectEl.value;
-            const originalStatus = newStatus === 'Active' ? 'Inactive' : 'Active'; 
+            const originalStatus = selectEl.dataset.original; 
+
+            if (newStatus === 'Closed') {
+                document.getElementById('ledgerClosedForm').reset();
+                document.getElementById('closedLedgerName').value = ledgerName;
+                document.getElementById('closedLedgerSelectId').value = selectEl.id;
+                document.getElementById('ledgerClosedModal').style.display = 'flex';
+                return; 
+            }
             
+            executeLedgerStatusUpdate(selectEl, ledgerName, newStatus, originalStatus, "", "");
+        }
+
+        function closeLedgerClosedModal() {
+            document.getElementById('ledgerClosedModal').style.display = 'none';
+            let selectId = document.getElementById('closedLedgerSelectId').value;
+            if(selectId) {
+                let selectEl = document.getElementById(selectId);
+                selectEl.value = selectEl.dataset.original; 
+            }
+        }
+
+        function submitLedgerClosed(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveLedgerClosedBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Processing...";
+            btn.disabled = true;
+
+            let ledgerName = document.getElementById('closedLedgerName').value;
+            let selectId = document.getElementById('closedLedgerSelectId').value;
+            let selectEl = document.getElementById(selectId);
+            let confirmedBy = document.getElementById('closerConfirmedBy').value;
+            let remarks = document.getElementById('closerRemarks').value;
+            let originalStatus = selectEl.dataset.original;
+
+            executeLedgerStatusUpdate(selectEl, ledgerName, 'Closed', originalStatus, confirmedBy, remarks, btn, originalHTML);
+        }
+
+        function executeLedgerStatusUpdate(selectEl, ledgerName, newStatus, originalStatus, confirmedBy, remarks, btnEl = null, btnOrigHtml = null) {
             selectEl.disabled = true;
-            selectEl.style.color = (newStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
+            let color = 'var(--text-main)';
+            if(newStatus === 'Current Ledger') color = 'var(--success)';
+            else if(newStatus === 'Closed' || newStatus === 'In Active') color = 'var(--danger)';
+            else if(newStatus === 'Old Ledger') color = 'var(--warning)';
             
-            safeFetch({ action: 'updateLedgerStatus', data: { ledgerName: ledgerName, status: newStatus } })
+            selectEl.style.color = color;
+            
+            safeFetch({ 
+                action: 'updateLedgerStatus', 
+                data: { ledgerName: ledgerName, status: newStatus, confirmedBy: confirmedBy, remarks: remarks } 
+            })
             .then(res => {
                 selectEl.disabled = false;
                 if(res.status === 'success') {
@@ -1972,24 +2138,38 @@
                     if(ledger) {
                         ledger.status = newStatus;
                         updateLedgerCounts(cachedLedgers); 
+                        selectEl.dataset.original = newStatus; 
+                    }
+                    if (newStatus === 'Closed') {
+                        document.getElementById('ledgerClosedModal').style.display = 'none';
                     }
                 } else {
                     showToast("Error", res.message || "Failed to update", "error");
                     selectEl.value = originalStatus;
-                    selectEl.style.color = (originalStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
+                    selectEl.style.color = getStatusColor(originalStatus);
                 }
             }).catch(err => {
                 selectEl.disabled = false;
                 showToast("Error", "Network error while saving.", "error");
                 selectEl.value = originalStatus;
-                selectEl.style.color = (originalStatus === 'Active') ? 'var(--success)' : 'var(--danger)';
+                selectEl.style.color = getStatusColor(originalStatus);
+            }).finally(() => {
+                if(btnEl) {
+                    btnEl.innerHTML = btnOrigHtml;
+                    btnEl.disabled = false;
+                }
             });
         }
 
+        function getStatusColor(statusVal) {
+            if(statusVal === 'Current Ledger') return 'var(--success)';
+            if(statusVal === 'Closed' || statusVal === 'In Active') return 'var(--danger)';
+            if(statusVal === 'Old Ledger') return 'var(--warning)';
+            return 'var(--text-main)';
+        }
 
         // ========================== MODALS AND ACTION HANDLERS ========================
         
-        // 🚀 NEW FIX: Update Action Modal Handler
         function handleFinalActionChange() {
             var action = document.getElementById('finalActionType').value;
             var shortDeliveryGroup = document.getElementById('finalShortDeliveryGroup');
@@ -2014,7 +2194,6 @@
                 receivedInput.required = false;
                 fileInput.required = false;
             } else { 
-                // Full Delivery POD
                 shortDeliveryGroup.style.display = "none";
                 remarkGroup.style.display = "none";
                 fileGroup.style.display = "block";
@@ -2022,6 +2201,13 @@
                 receivedInput.required = false;
                 fileInput.required = true;
             }
+        }
+
+        // 🚀 NEW FIX: Handle Custom Courier selection
+        function handleCourierChange() {
+            var val = document.getElementById('retCourierPartner').value;
+            document.getElementById('retCourierOther').style.display = (val === "Other") ? "block" : "none";
+            document.getElementById('retCourierOther').required = (val === "Other");
         }
         
         function openUnplannedReturnModal() { document.getElementById('unplannedReturnForm').reset(); document.getElementById('unplannedReturnModal').style.display = 'flex'; }
@@ -2046,7 +2232,7 @@
 
         function handleConfirmedByChange() {
             const val = document.getElementById('confUnpConfirmedBy').value; const otherGrp = document.getElementById('confUnpOtherGroup'); const otherInp = document.getElementById('confUnpOtherSpec');
-            if(val === "Other") { otherGrp.style.display = 'block'; otherInp.required = true; } else { otherGrp.style.display = 'none'; otherInp.required = false; otherInp.value = ''; }
+            if(val === "Other (Specify Name)") { otherGrp.style.display = 'block'; otherInp.required = true; } else { otherGrp.style.display = 'none'; otherInp.required = false; otherInp.value = ''; }
         }
 
         function openConfirmUnplannedModal(id, reportedBoxes) { 
@@ -2060,7 +2246,7 @@
         async function submitConfirmUnplanned(e) {
             e.preventDefault(); const btn = document.getElementById('saveConfirmUnpBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const id = document.getElementById('confUnpId').value; const expected = parseInt(document.getElementById('confUnpActual').value, 10) || 0; const received = parseInt(document.getElementById('confUnpExpected').value, 10) || 0; 
-            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value; const confirmedBySpec = document.getElementById('confUnpOtherSpec').value; const finalConfirmedBy = confirmedByVal === "Other" ? confirmedBySpec : confirmedByVal;
+            const confirmedByVal = document.getElementById('confUnpConfirmedBy').value; const confirmedBySpec = document.getElementById('confUnpOtherSpec').value; const finalConfirmedBy = confirmedByVal === "Other (Specify Name)" ? confirmedBySpec : confirmedByVal;
             const finalData = { drName: document.getElementById('confUnpDrName').value, ledgerName: document.getElementById('confUnpLedgerName').value, phone: document.getElementById('confUnpPhone').value, city: document.getElementById('confUnpCity').value, state: document.getElementById('confUnpState').value, ledgerCode: document.getElementById('confUnpLedgerCode').value, zone: document.getElementById('confUnpZone').value, bdmName: document.getElementById('confUnpBdmName').value };
             
             safeFetch({ action: 'confirmUnplannedReturn', unpId: id, expected: expected, received: received, confirmedBy: finalConfirmedBy, actionBy: loggedInUser, finalData: finalData }).then(data => {
@@ -2079,12 +2265,19 @@
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
-        function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; }
+        function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; handleCourierChange(); }
         function closeAssignReturnCourierModal() { document.getElementById('assignReturnCourierModal').style.display = 'none'; }
 
         function submitAssignReturnCourier(e) {
             e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; const partner = document.getElementById('retCourierPartner').value; const docket = document.getElementById('retDocketNo').value;
+            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; 
+            
+            let partner = document.getElementById('retCourierPartner').value; 
+            if(partner === "Other") {
+                partner = document.getElementById('retCourierOther').value;
+            }
+            
+            const docket = document.getElementById('retDocketNo').value;
             safeFetch({ action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser }).then(data => {
                 if(data.status === 'success') { showToast("Success", "Courier assigned successfully!"); closeAssignReturnCourierModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
@@ -2127,8 +2320,10 @@
         function submitCNDetails(e) {
             e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
+            const cnCreatedBy = document.getElementById('cnCreatedByInput').value.trim(); 
             const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
-            safeFetch({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, actionBy: loggedInUser }).then(data => {
+            
+            safeFetch({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, cnCreatedBy: cnCreatedBy, actionBy: loggedInUser }).then(data => {
                 if(data.status === 'success') { showToast("Success", "CN Details updated successfully!"); closeCNDetailsModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
