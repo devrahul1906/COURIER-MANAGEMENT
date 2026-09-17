@@ -268,7 +268,6 @@
             </div>
             
             <div class="user-nav">
-                <!-- 🚀 UPDATED ONCLICK -->
                 <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1; margin-right: 5px;" title="Refresh Latest Data">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
                     Refresh
@@ -1449,6 +1448,48 @@
         let activeTableContext = null;
         let fetchVersion = 0; // 🚀 NAYA VERSION TOKEN
 
+        // 🚀 NEW: Compress image before converting to base64
+        function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Proportionate scaling
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to compressed base64 JPEG/PNG
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        const base64Data = dataUrl.split(',')[1];
+                        resolve(base64Data);
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = "";
@@ -2222,7 +2263,11 @@
         async function submitUnplannedReturn(e) {
             e.preventDefault(); const btn = document.getElementById('saveUnplannedBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Submitting..."; btn.disabled = true;
             const file = document.getElementById('unpFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = "UNP_" + new Date().getTime() + "_" + file.name; mimeType = file.type; }
+            if (file) { 
+                base64Data = await compressImage(file, 800, 800, 0.7); 
+                fileName = "UNP_" + new Date().getTime() + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
+                mimeType = "image/jpeg"; 
+            }
             const requestData = { drName: document.getElementById('unpDrName').value, ledgerName: document.getElementById('unpLedgerName').value, city: document.getElementById('unpCity').value, state: "", boxes: document.getElementById('unpBoxes').value, ledgerCode: "", zone: "", bdmName: "", status: "Confirmation Pending" };
             const payload = { action: 'createUnplannedReturn', data: requestData, createdBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType };
             safeFetch(payload).then(data => {
@@ -2301,7 +2346,11 @@
             e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
             const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
             const file = document.getElementById('recvFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = "RECV_" + id + "_" + file.name; mimeType = file.type; }
+            if (file) { 
+                base64Data = await compressImage(file, 800, 800, 0.7); 
+                fileName = "RECV_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
+                mimeType = "image/jpeg"; 
+            }
             safeFetch({ action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
                 if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); closeReceiveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
@@ -2342,7 +2391,11 @@
             const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
             let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
             const file = document.getElementById('resolveRetFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = "DISP_RES_" + id + "_" + file.name; mimeType = file.type; }
+            if (file) { 
+                base64Data = await compressImage(file, 800, 800, 0.7); 
+                fileName = "DISP_RES_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
+                mimeType = "image/jpeg"; 
+            }
             safeFetch({ action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
                 if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); closeResolveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
@@ -2446,7 +2499,15 @@
             e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
             const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value; 
             let base64Data = ""; let fileName = ""; let mimeType = ""; const file = document.getElementById('podFile').files[0]; 
-            if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name; mimeType = file.type; }
+            if (file && file.type.startsWith('image/')) { 
+                base64Data = await compressImage(file, 800, 800, 0.7); 
+                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + ".jpg"; 
+                mimeType = "image/jpeg"; 
+            } else if (file) {
+                base64Data = await getBase64(file);
+                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name;
+                mimeType = file.type;
+            }
             safeFetch({ action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput }).then(data => {
                 if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); closePodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
@@ -2458,7 +2519,15 @@
             const expBoxes = document.getElementById('finalExpectedBoxes').value; const recBoxes = document.getElementById('finalReceivedBoxes').value; const rem = document.getElementById('finalPodRemark').value;
             const file = document.getElementById('finalPodFile').files[0]; 
             let base64Data = ""; let fileName = ""; let mimeType = "";
-            if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
+            if (file && file.type.startsWith('image/')) { 
+                base64Data = await compressImage(file, 800, 800, 0.7); 
+                fileName = invoiceNo + "_POD_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
+                mimeType = "image/jpeg"; 
+            } else if (file) {
+                base64Data = await getBase64(file); 
+                fileName = invoiceNo + "_POD_" + file.name; 
+                mimeType = file.type; 
+            }
             safeFetch({ action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem }).then(data => {
                 if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); closeFinalPodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
             }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
