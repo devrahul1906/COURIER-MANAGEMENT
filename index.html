@@ -988,7 +988,7 @@
                     
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px; padding: 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
                         <input type="checkbox" id="assignRetPhotoCheck" required style="width: 18px; height: 18px; cursor: pointer;">
-                        <label for="assignRetPhotoCheck" style="margin: 0; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--danger);">Boxes photo's received? <span style="color: red;">*</span></label>
+                        <label for="assignRetPhotoCheck" style="margin: 0; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--danger);">Tick the checkbox after receiving the box's photograph. <span style="color: red;">*</span></label>
                     </div>
 
                     <div class="modal-footer">
@@ -1432,7 +1432,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpeYcfPbNh-myiLsiw5d2RaDtqzSaC_Cw8x56OFb6FyI7fJX-fvRjmopAtW7md6mk/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAfP66eb4SqKEXUAk4PfPX4eB9NyvCceVIj1V8NPOkWhiewuHqhFLnEQw8Z17YFu-8/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1530,62 +1530,74 @@
             filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
         }
 
+        // ========================== ISOLATED BACKGROUND FETCH ==========================
+        // Ledger Master is intentionally separate from dashboard/table synchronization.
         let bgQueue = Promise.resolve();
 
-        // 🚀 UPDATED BACKGROUND FETCH (Uses Token)
         function enqueueBackgroundFetch(payload, cacheKey, version) {
             bgQueue = bgQueue.then(async () => {
-                if (version !== fetchVersion) return; // 🚀 Token Verification
+                if (version !== fetchVersion) return;
+                if (tableCache[cacheKey]) return;
                 try {
-                    if(tableCache[cacheKey]) return; 
-                    let res = await safeFetch(payload);
-                    if (version !== fetchVersion) return; // 🚀 Token Verification
-                    if(res.status === 'success') {
-                        tableCache[cacheKey] = (cacheKey === 'returnStatus') ? { returnBills: res.returnBills, unplannedBills: res.unplannedBills } : res.data;
+                    const res = await safeFetch(payload);
+                    if (version !== fetchVersion) return;
+                    if (res && res.status === 'success') {
+                        tableCache[cacheKey] = (cacheKey === 'returnStatus')
+                            ? { returnBills: res.returnBills || [], unplannedBills: res.unplannedBills || [] }
+                            : (res.data || []);
                     }
-                } catch(e) {
-                    console.warn("Background fetch delayed:", e);
+                } catch (e) {
+                    console.warn('Background fetch delayed:', e);
                 }
-                await new Promise(r => setTimeout(r, 500)); 
             });
+            return bgQueue;
         }
 
-        // 🚀 UPDATED PRE-FETCH
         async function backgroundPreFetch(version) {
-            enqueueBackgroundFetch({ action: 'syncData', reqType: 'pending' }, 'pending', version);
-            enqueueBackgroundFetch({ action: 'syncData', reqType: 'assigned' }, 'assigned', version);
-            enqueueBackgroundFetch({ action: 'syncData', reqType: 'transit' }, 'transit', version);
-            enqueueBackgroundFetch({ action: 'syncData', reqType: 'returnBills' }, 'returnBills', version);
+            if (version !== fetchVersion) return;
+            if (!cachedLedgers.length && !tableCache['ledgersList']) {
+                enqueueBackgroundFetch({ action: 'syncData', reqType: 'ledgers' }, 'ledgersList', version);
+            }
         }
 
-        async function safeFetch(payload) { 
-            const noCacheUrl = WEB_APP_URL + "?t=" + new Date().getTime();
+        async function safeFetch(payload, retryCount = 1) {
+            const noCacheUrl = WEB_APP_URL + '?t=' + Date.now();
+            let controller = null;
+            let timeoutId = null;
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000);
-                const options = { 
-                    method: 'POST', 
+                controller = new AbortController();
+                // 35 seconds is enough for normal Apps Script calls while avoiding
+                // a minute-long frozen UI when the endpoint is unavailable.
+                timeoutId = setTimeout(() => controller.abort(), 35000);
+                const response = await fetch(noCacheUrl, {
+                    method: 'POST',
                     redirect: 'follow',
-                    headers: { "Content-Type": "text/plain" }, 
-                    body: JSON.stringify(payload), 
-                    signal: controller.signal 
-                };
-                const response = await fetch(noCacheUrl, options);
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error("Server HTTP Error " + response.status);
-                
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                if (!response.ok) throw new Error('Server HTTP Error ' + response.status);
+
                 const text = await response.text();
-                try { 
-                    return JSON.parse(text); 
-                } catch (e) { 
-                    console.error("Server Response:", text);
-                    let snippet = text.substring(0, 50).replace(/</g, "&lt;");
-                    throw new Error("Invalid Server Response. Check Web App Permissions. Preview: " + snippet); 
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Server Response:', text);
+                    const snippet = text.substring(0, 80).replace(/</g, '&lt;');
+                    throw new Error('Invalid Server Response. Preview: ' + snippet);
                 }
-            } catch (err) { 
-                console.error("Fetch Error:", err); 
-                throw err; 
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                // One short retry helps with intermittent Apps Script cold starts
+                // without creating a request storm.
+                if (retryCount > 0 && !(err && err.name === 'AbortError') && (payload.action === 'login' || payload.action === 'syncData')) {
+                    await new Promise(r => setTimeout(r, 800));
+                    return safeFetch(payload, retryCount - 1);
+                }
+                throw err;
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
             }
         }
 
@@ -1719,163 +1731,241 @@
         }
 
         async function handleLogin(event) {
-            if(event) event.preventDefault();
-            const btn = document.getElementById('loginBtn'); const spinner = document.getElementById('loginSpinner'); const errorDiv = document.getElementById('loginError');
-            const user = document.getElementById('username').value; const pass = document.getElementById('password').value;
-            
-            btn.disabled = true; spinner.style.display = 'inline-block'; errorDiv.style.display = 'none';
-            document.getElementById('loginText').innerText = "Authenticating...";
+            if (event) event.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+            const errorDiv = document.getElementById('loginError');
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+            document.getElementById('loginText').innerText = 'Authenticating...';
 
             try {
                 const data = await safeFetch({ action: 'login', username: user, password: pass });
-                
-                if(data.status === "success") {
-                    const allowed = data.allowedType ? data.allowedType.trim() : "All";
-                    if (allowed === "RESTRICTED") { errorDiv.innerText = "Access Denied: Your account is restricted."; errorDiv.style.display = 'block'; btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; return; }
-                    
-                    loggedInUser = user; loggedInUserRole = data.role || "Standard"; loggedInUserType = allowed; loggedInUserPermissions = data.permissions || "All"; 
-                    
+
+                if (data.status === 'success') {
+                    const allowed = data.allowedType ? data.allowedType.trim() : 'All';
+                    if (allowed === 'RESTRICTED') {
+                        errorDiv.innerText = 'Access Denied: Your account is restricted.';
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+
+                    loggedInUser = user;
+                    loggedInUserRole = data.role || 'Standard';
+                    loggedInUserType = allowed;
+                    loggedInUserPermissions = data.permissions || 'All';
+
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
-                    document.getElementById('welcomeGreeting').innerText = "Welcome, " + loggedInUser;
-                    
+                    document.getElementById('welcomeGreeting').innerText = 'Welcome, ' + loggedInUser;
+
                     const welcomeDesc = document.getElementById('welcomeDesc');
                     if (welcomeDesc) {
-                        if (allowed === "Dispatch Courier Management") {
-                            welcomeDesc.innerText = "Here is your overview for Dispatch operations.";
-                        } else if (allowed === "Return Courier Management") {
-                            welcomeDesc.innerText = "Here is your overview for Return operations.";
+                        if (allowed === 'Dispatch Courier Management') {
+                            welcomeDesc.innerText = 'Here is your overview for Dispatch operations.';
+                        } else if (allowed === 'Return Courier Management') {
+                            welcomeDesc.innerText = 'Here is your overview for Return operations.';
                         } else {
-                            welcomeDesc.innerText = "Here is your combined overview for Dispatch and Return operations.";
+                            welcomeDesc.innerText = 'Here is your combined overview for Dispatch and Return operations.';
                         }
                     }
 
-                    document.getElementById('login-view').style.display = 'none'; 
+                    // Show the dashboard immediately after authentication.
+                    // Data synchronization continues asynchronously.
+                    document.getElementById('login-view').style.display = 'none';
                     document.getElementById('dashboard-view').style.display = 'flex';
-                    
-                    showDashboardCards(); 
-                    showToast('Login Successful', `Fetching your dashboard data...`, 'success');
-                    
-                    btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
+                    showDashboardCards();
+                    showToast('Login Successful', 'Dashboard is opening. Data will sync in the background.', 'success');
 
-                    syncData(true);
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    document.getElementById('loginText').innerText = 'Sign In';
 
-                } else { 
-                    errorDiv.innerText = data.message; errorDiv.style.display = 'block';
-                    btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In";
+                    // Dashboard and Ledger Master start independently.
+                    fetchVersion++;
+                    const loginVersion = fetchVersion;
+                    syncData(true, false);
+                    setTimeout(() => {
+                        if (loginVersion === fetchVersion && loggedInUser) fetchLedgers(false);
+                    }, 50);
+                    setTimeout(() => {
+                        if (loginVersion === fetchVersion && loggedInUser) backgroundPreFetch(loginVersion);
+                    }, 500);
+                } else {
+                    errorDiv.innerText = data.message || 'Invalid credentials.';
+                    errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                errorDiv.innerText = "Connection Error: " + error.message;
-                errorDiv.style.display = 'block'; 
-                btn.disabled = false; spinner.style.display = 'none'; document.getElementById('loginText').innerText = "Sign In"; 
+                errorDiv.innerText = 'Connection Error: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                document.getElementById('loginText').innerText = 'Sign In';
             }
         }
 
-        async function fetchLedgers() {
-            try {
-                const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers' });
-                if (resp && resp.status === 'success' && resp.data) { 
-                    cachedLedgers = resp.data; 
-                }
-            } catch (e) { 
-                console.warn("Silent ledger sync delayed:", e); 
-            }
-        }
+        let ledgerRequestPromise = null;
 
-        // 🚀 UPDATED SYNC DATA (Returns Promise for sequential execution)
-        function syncData(isInitialLoad = false, forceRefresh = false) {
-            return new Promise((resolve) => {
-                if (!loggedInUser) return resolve();
-                const btn = document.getElementById('syncBtn'); 
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(20,52,130,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Refreshing...`; 
-                btn.disabled = true;
-
-                if(isInitialLoad) {
-                    document.querySelectorAll('.kpi-value').forEach(el => { 
-                        if (el.innerText !== "New Request" && el.innerText !== "Surprise Entry" && el.innerText !== "Search Entry" && el.innerText !== "Manage") { 
-                            el.innerText = "..."; el.style.color = ""; 
-                        } 
-                    });
-                }
-
-                // 🚀 Backend ko forceRefresh flag bhejna
-                safeFetch({ action: 'syncData', reqType: 'counts', forceRefresh: forceRefresh }).then(data => {
-                    if(data.status === "success") {
-                        updateDashboardCounts(data.counts); 
-                        if(isInitialLoad) {
-                            showToast('Dashboard Ready', 'Data loaded successfully.', 'success');
-                            setTimeout(() => { fetchLedgers(); }, 500);
-                            
-                            fetchVersion++; // Setup Version for initial load
-                            setTimeout(() => { backgroundPreFetch(fetchVersion); }, 2000); 
-                        }
-                    } else { showToast("Error", "Data sync failed: " + data.message, "error"); }
-                }).catch(error => {
-                    showToast("System Error", error.message, "error");
-                    if(isInitialLoad) { 
-                        document.querySelectorAll('.kpi-value').forEach(el => { if (el.innerText === "...") { el.innerText = "Err"; el.style.color = "var(--danger)"; } }); 
+        async function fetchLedgers(forceRefresh = false) {
+            if (ledgerRequestPromise && !forceRefresh) return ledgerRequestPromise;
+            ledgerRequestPromise = (async () => {
+                try {
+                    const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers', forceRefresh: !!forceRefresh });
+                    if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                        cachedLedgers = resp.data;
+                        tableCache['ledgersList'] = resp.data;
+                        updateLedgerCounts(cachedLedgers);
                     }
-                }).finally(() => { 
-                    btn.innerHTML = originalHTML; btn.disabled = false; 
-                    resolve(); // 🚀 Sequential step complete
-                });
-            });
+                    return cachedLedgers;
+                } catch (e) {
+                    console.warn('Ledger Master sync delayed:', e);
+                    return cachedLedgers;
+                } finally {
+                    ledgerRequestPromise = null;
+                }
+            })();
+            return ledgerRequestPromise;
         }
 
-        // 🚀 UPDATED LOAD AND RENDER (Accepts forceRefresh)
+        let countsRequestPromise = null;
+        let freshCountsRequestPromise = null;
+        let refreshRequestPromise = null;
+
+        // ========================== DASHBOARD SYNC ==========================
+        // Dashboard and Ledger Master are deliberately independent.
+        function syncData(isInitialLoad = false, forceRefresh = false) {
+            if (!loggedInUser) return Promise.resolve();
+            if (countsRequestPromise) return countsRequestPromise;
+
+            const btn = document.getElementById('syncBtn');
+            const originalHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = `<span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid rgba(20,52,130,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:5px;"></span> Refreshing...`;
+                btn.disabled = true;
+            }
+
+            if (isInitialLoad) {
+                document.querySelectorAll('.kpi-value').forEach(el => {
+                    if (el.innerText !== 'New Request' && el.innerText !== 'Surprise Entry' && el.innerText !== 'Search Entry' && el.innerText !== 'Manage') {
+                        el.innerText = '...';
+                        el.style.color = '';
+                    }
+                });
+            }
+
+            countsRequestPromise = safeFetch({ action: 'syncData', reqType: 'counts', forceRefresh: false })
+                .then(data => {
+                    if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Dashboard data sync failed.');
+                    updateDashboardCounts(data.counts || {});
+                    if (isInitialLoad) {
+                        showToast('Dashboard Ready', data.staleSnapshot ? 'Dashboard opened with the latest saved snapshot. Fresh data is syncing.' : 'Data loaded successfully.', 'success');
+                    }
+                    if (data.staleSnapshot || forceRefresh) setTimeout(() => refreshCountsInBackground(), 250);
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Dashboard sync error:', error);
+                    showToast('System Error', error.message || 'Unable to sync dashboard.', 'error');
+                    if (isInitialLoad) {
+                        document.querySelectorAll('.kpi-value').forEach(el => {
+                            if (el.innerText === '...') { el.innerText = 'Err'; el.style.color = 'var(--danger)'; }
+                        });
+                    }
+                    return null;
+                })
+                .finally(() => {
+                    countsRequestPromise = null;
+                    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+                });
+
+            return countsRequestPromise;
+        }
+
+        function refreshCountsInBackground() {
+            if (!loggedInUser || freshCountsRequestPromise) return freshCountsRequestPromise || Promise.resolve();
+            freshCountsRequestPromise = safeFetch({ action: 'syncData', reqType: 'countsFresh' })
+                .then(data => {
+                    if (data && data.status === 'success') {
+                        updateDashboardCounts(data.counts || {});
+                        showToast('Dashboard Updated', 'Latest dashboard are now available.', 'success');
+                    }
+                    return data;
+                })
+                .catch(err => {
+                    console.warn('Background fresh counts delayed:', err);
+                    return null;
+                })
+                .finally(() => { freshCountsRequestPromise = null; });
+            return freshCountsRequestPromise;
+        }
+
         async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
-            if (!forceRefresh && tableCache[reqType]) { renderFunction(tableCache[reqType]); return; }
-            
+            // Frontend cache is the fastest path. Backend also maintains its own
+            // cache, so forceRefresh no longer causes an expensive spreadsheet read.
+            if (!forceRefresh && tableCache[reqType]) {
+                renderFunction(tableCache[reqType]);
+                return;
+            }
+
             const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
             if (activeTbody) {
-                activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Updating & Loading Data...</span></td></tr>`;
+                activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Data...</span></td></tr>`;
             }
-            
+
             try {
-                // 🚀 Backend ko forceRefresh flag bhejna
-                const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: forceRefresh });
-                if(resp.status === 'success') {
-                    let dataToCache = reqType === 'returnStatus' ? { returnBills: resp.returnBills, unplannedBills: resp.unplannedBills } : resp.data;
+                const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: false });
+                if (resp && resp.status === 'success') {
+                    const dataToCache = reqType === 'returnStatus'
+                        ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
+                        : (resp.data || []);
                     tableCache[reqType] = dataToCache;
                     renderFunction(dataToCache);
-                } else { showToast("Error", "Failed to load table data", "error"); }
-            } catch (err) { showToast("Error", "Network error while loading data.", "error"); }
+                } else {
+                    showToast('Error', (resp && resp.message) || 'Failed to load table data.', 'error');
+                }
+            } catch (err) {
+                console.error('Table load error:', err);
+                showToast('Error', 'Network error while loading data.', 'error');
+            }
         }
 
-        // 🚀 UPDATED SEQUENTIAL REFRESH HANDLER (1 By 1 Executions)
         async function refreshDataAndView() {
-            fetchVersion++; // 🚀 Old background requests ko invalid karna
-            let currentVer = fetchVersion;
-            
-            let tempLedger = tableCache['ledgersList'];
-            tableCache = {}; 
-            if(tempLedger) tableCache['ledgersList'] = tempLedger; 
+            if (refreshRequestPromise) return refreshRequestPromise;
+            fetchVersion++;
+            const currentVer = fetchVersion;
+            const currentContext = activeTableContext;
 
-            // 1. Pehle Counts update honge (Aur GS mein Cache bypass hoga)
-            await syncData(false, true); 
-            
-            // Safety check - agar user ne counts update hote waqt dubara refresh daba diya ho
-            if (currentVer !== fetchVersion) return; 
+            refreshRequestPromise = (async () => {
+                try {
+                    // Dashboard gets cached/last-good counts immediately.
+                    await syncData(false, true);
+                    if (currentVer !== fetchVersion) return;
 
-            // 2. Fir Screen Par Active Table Update Hoga (Aur GS Cache Bypass Hoga)
-            if (activeTableContext) { 
-                await loadAndRenderTable(activeTableContext.reqType, activeTableContext.renderFn, true); 
-            }
-            
-            if (currentVer !== fetchVersion) return;
+                    // Fresh KPI calculation runs separately in the background.
+                    refreshCountsInBackground();
 
-            // 3. Last mein naye data fetching ke liye background worker chalega
-            setTimeout(() => { 
-                backgroundPreFetch(currentVer); 
-            }, 1000); 
+                    // Refresh only the currently open operational table.
+                    // Ledger Master is never part of this dashboard refresh.
+                    if (currentContext && currentContext.reqType !== 'ledgers') {
+                        await loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                    }
+                } finally {
+                    refreshRequestPromise = null;
+                }
+            })();
+            return refreshRequestPromise;
         }
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
             loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
-            tableCache = {}; activeTableContext = null; cachedLedgers = []; bgQueue = Promise.resolve(); fetchVersion++;
+            tableCache = {}; activeTableContext = null; cachedLedgers = []; ledgerRequestPromise = null; bgQueue = Promise.resolve(); fetchVersion++;
             document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
         }
 
@@ -2082,10 +2172,16 @@
         }
 
         // 🚀 ISOLATED LEDGER RENDER FUNCTION
-        function showLedgerMasterList() {
-            hideAllLists(); 
+        async function showLedgerMasterList() {
+            hideAllLists();
             document.getElementById('ledger-master-list-section').style.display = 'block';
-            renderLedgerMasterTable(cachedLedgers);
+            if (cachedLedgers.length) {
+                renderLedgerMasterTable(cachedLedgers);
+                return;
+            }
+            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'>Loading Ledger Master...</td></tr>";
+            const data = await fetchLedgers(false);
+            renderLedgerMasterTable(data || []);
         }
 
         function renderLedgerMasterTable(dataList) {
