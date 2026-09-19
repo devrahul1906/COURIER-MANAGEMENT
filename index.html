@@ -210,7 +210,7 @@
             
             <div class="login-center-content">
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" class="login-center-logo">
-                <h2>Courier & Return Management System</h2>
+                <h2>Courier Management System</h2>
                 <p class="tagline">Secure • Fast • Trackable</p>
             </div>
         </div>
@@ -1432,7 +1432,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxn7KIQThwGa4bTTAQg2wipIjd7fK5G_NW7yBhhE5FL0RHcKECxr-HiECqTxg7al8_-/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpeYcfPbNh-myiLsiw5d2RaDtqzSaC_Cw8x56OFb6FyI7fJX-fvRjmopAtW7md6mk/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1490,24 +1490,34 @@
             });
         }
 
+        // 🚀 NEW: Lazy load rows seamlessly for smooth DOM
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = "";
             if (!htmlArray || htmlArray.length === 0) return;
             
-            let chunkSize = 150;
+            let chunkSize = 50; 
             let index = 0;
             
-            function renderChunk() {
-                if (!document.getElementById(tbodyId)) return;
+            function renderNextChunk() {
+                if (!document.getElementById(tbodyId) || index >= htmlArray.length) return;
                 let chunk = htmlArray.slice(index, index + chunkSize).join("");
                 tbody.insertAdjacentHTML('beforeend', chunk);
                 index += chunkSize;
-                if (index < htmlArray.length) {
-                    setTimeout(renderChunk, 0);
-                }
             }
-            renderChunk();
+
+            renderNextChunk();
+
+            const container = tbody.closest('.table-responsive');
+            if (container) {
+                container.onscroll = null; // Clear previous listener
+                container.onscroll = function() {
+                    // If scrolled within 150px of the bottom
+                    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 150) {
+                        renderNextChunk();
+                    }
+                };
+            }
         }
 
         let filterTimer;
