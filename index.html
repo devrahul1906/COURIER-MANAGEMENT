@@ -1970,7 +1970,7 @@
             }
         }
 
-        async function refreshDataAndView() {
+async function refreshDataAndView() {
             if (refreshRequestPromise) return refreshRequestPromise;
             fetchVersion++;
             const currentVer = fetchVersion;
@@ -1978,6 +1978,14 @@
 
             refreshRequestPromise = (async () => {
                 try {
+                    // 🔥 FIX: Frontend cache ko clear karna taaki doosre tabs me purana data na dikhe
+                    for (let key in tableCache) {
+                        // Ledger master jaldi update nahi hota, isliye usko cache me rakh sakte hain
+                        if (key !== 'ledgersList') {
+                            delete tableCache[key]; 
+                        }
+                    }
+
                     await syncData(false, true);
                     if (currentVer !== fetchVersion) return;
                     refreshCountsInBackground();
