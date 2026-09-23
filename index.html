@@ -1438,7 +1438,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySvKAlLghSvs2zVQkDwDY4__AUgLCzvJGV2h_4-vZEggPEydwT4EztPIhvxvOn_kFO/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw5qNc-twunwQ_SK807oyWo91xTp5uT6T_vsyKpeRPTjW41KT9M5Qe4-i5cLvTWDSg_/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1452,7 +1452,7 @@
 
         let tableCache = {};
         let activeTableContext = null;
-        let fetchVersion = 0; // 🚀 NAYA VERSION TOKEN
+        let fetchVersion = 0; 
 
         // 🚀 NEW: Compress image before converting to base64
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
@@ -1496,11 +1496,13 @@
             });
         }
 
-        // 🚀 NEW: Lazy load rows seamlessly for smooth DOM
+        // 🚀 NAYA: Search filtering ke liye pure array ko store kar liya
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = "";
             if (!htmlArray || htmlArray.length === 0) return;
+            
+            tbody._fullHtmlArray = htmlArray; 
             
             let chunkSize = 50; 
             let index = 0;
@@ -1516,9 +1518,8 @@
 
             const container = tbody.closest('.table-responsive');
             if (container) {
-                container.onscroll = null; // Clear previous listener
+                container.onscroll = null; 
                 container.onscroll = function() {
-                    // If scrolled within 150px of the bottom
                     if (container.scrollTop + container.clientHeight >= container.scrollHeight - 150) {
                         renderNextChunk();
                     }
@@ -1536,8 +1537,51 @@
             filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
         }
 
-        // ========================== ISOLATED BACKGROUND FETCH ==========================
-        // Ledger Master is intentionally separate from dashboard/table synchronization.
+        // 🔥 POINT 1 FIX: Filter Table search
+        function filterTable(inputId, tbodyId, colIndex) {
+            let input = document.getElementById(inputId).value.toUpperCase(); 
+            let tbody = document.getElementById(tbodyId); 
+            if (!tbody) return;
+
+            // Agar user search kar raha hai, toh pehle saari rows properly render kar do
+            if (input.length > 0 && tbody._fullHtmlArray && tbody.children.length < tbody._fullHtmlArray.length) {
+                tbody.innerHTML = tbody._fullHtmlArray.join("");
+            }
+
+            let tr = tbody.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) { 
+                let td = tr[i].getElementsByTagName("td")[colIndex]; 
+                if (td) { 
+                    let txtValue = td.textContent || td.innerText; 
+                    if (txtValue.toUpperCase().indexOf(input) > -1) { 
+                        tr[i].style.display = ""; 
+                    } else { 
+                        tr[i].style.display = "none"; 
+                    } 
+                } 
+            }
+        }
+
+        // 🔥 POINT 1 FIX: Filter Table Global search
+        function filterTableGlobal(inputId, tbodyId) {
+            let input = document.getElementById(inputId).value.toUpperCase(); 
+            let tbody = document.getElementById(tbodyId); 
+            if (!tbody) return;
+
+            if (input.length > 0 && tbody._fullHtmlArray && tbody.children.length < tbody._fullHtmlArray.length) {
+                tbody.innerHTML = tbody._fullHtmlArray.join("");
+            }
+
+            let tr = tbody.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) { 
+                if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { 
+                    tr[i].style.display = ""; 
+                } else { 
+                    tr[i].style.display = "none"; 
+                } 
+            }
+        }
+
         let bgQueue = Promise.resolve();
 
         function enqueueBackgroundFetch(payload, cacheKey, version) {
@@ -1572,7 +1616,6 @@
             let timeoutId = null;
             try {
                 controller = new AbortController();
-                // 🔥 50 seconds to handle any heavy traffic backend processing safely
                 timeoutId = setTimeout(() => controller.abort(), 50000);
                 const response = await fetch(noCacheUrl, {
                     method: 'POST',
@@ -1672,23 +1715,28 @@
             const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
         }
 
+        // 🔥 POINT 2 FIX: Native alert hata diya gaya
         function showToast(title, message, type = 'success') {
-            if (message && message.includes("Duplicate Alert")) { alert("⚠️ WARNING: " + message); }
-            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`;
+            const container = document.getElementById('toast-container'); 
+            const toast = document.createElement('div'); 
+            toast.className = `toast ${type}`;
             let iconSvg = '';
-            if(type === 'success') { iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; } 
-            else if (type === 'warning') { iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; } 
-            else { iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; }
-            toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`; container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+            if(type === 'success') { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; 
+            } else if (type === 'warning') { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; 
+            } else { 
+                iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; 
+            }
+            toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`; 
+            container.appendChild(toast);
+            setTimeout(() => { 
+                toast.style.animation = 'fadeOut 0.3s forwards'; 
+                setTimeout(() => toast.remove(), 300); 
+            }, 3000);
         }
 
         function isStandardUser() { return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; }
-
-        function filterTable(inputId, tbodyId, colIndex) {
-            let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) { let td = tr[i].getElementsByTagName("td")[colIndex]; if (td) { let txtValue = td.textContent || td.innerText; if (txtValue.toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } } }
-        }
 
         function exportTableToCSV(tableId, filename) {
             let csv = []; let rows = document.querySelectorAll(`#${tableId} tr`);
@@ -1717,7 +1765,6 @@
             if (document.getElementById('unplannedReturnCount')) document.getElementById('unplannedReturnCount').innerText = c.unplanned;
         }
 
-        // 🔥 FIREWALL: STRICT ACCESS CONTROL & MODULE SWITCHER LOGIC
         function handleModuleSwitch() {
             const newVal = document.getElementById('adminModuleSwitcher').value;
             loggedInUserType = newVal;
@@ -1731,7 +1778,6 @@
             const returnSection = document.getElementById('return-management-section');
             const allCards = document.querySelectorAll('.kpi-card');
 
-            // 1. SECTION VISIBILITY BASED ON LOGGED IN TYPE
             if (loggedInUserType === "Dispatch Courier Management") { 
                 dispatchSection.style.display = 'block'; 
                 returnSection.style.display = 'none'; 
@@ -1743,7 +1789,6 @@
                 returnSection.style.display = 'block'; 
             }
 
-            // 2. STRICT PERMISSION TAB MAPPING
             const allowedTabs = loggedInUserPermissions.split(',').map(p => p.trim().toLowerCase());
             
             allCards.forEach(card => {
@@ -1790,12 +1835,11 @@
                     loggedInUserType = allowed; 
                     loggedInUserPermissions = data.permissions || 'All';
 
-                    // 🔥 ADMIN MODULE SWITCHER VISIBILITY
                     const moduleSwitcher = document.getElementById('adminModuleSwitcher');
                     if (loggedInUserRole.toLowerCase().includes('admin') || loggedInUserRole.toLowerCase().includes('master') || allowed === "All") {
                         moduleSwitcher.style.display = 'inline-block';
                         moduleSwitcher.value = 'All';
-                        loggedInUserType = 'All'; // Default view for Admin
+                        loggedInUserType = 'All'; 
                     } else {
                         moduleSwitcher.style.display = 'none';
                     }
@@ -1875,7 +1919,6 @@
         let freshCountsRequestPromise = null;
         let refreshRequestPromise = null;
 
-        // ========================== DASHBOARD SYNC ==========================
         function syncData(isInitialLoad = false, forceRefresh = false) {
             if (!loggedInUser) return Promise.resolve();
             if (countsRequestPromise) return countsRequestPromise;
@@ -1970,7 +2013,8 @@
             }
         }
 
-async function refreshDataAndView() {
+        // 🔥 FIX: Cache clear implementation 
+        async function refreshDataAndView() {
             if (refreshRequestPromise) return refreshRequestPromise;
             fetchVersion++;
             const currentVer = fetchVersion;
@@ -1978,9 +2022,7 @@ async function refreshDataAndView() {
 
             refreshRequestPromise = (async () => {
                 try {
-                    // 🔥 FIX: Frontend cache ko clear karna taaki doosre tabs me purana data na dikhe
                     for (let key in tableCache) {
-                        // Ledger master jaldi update nahi hota, isliye usko cache me rakh sakte hain
                         if (key !== 'ledgersList') {
                             delete tableCache[key]; 
                         }
@@ -2017,8 +2059,6 @@ async function refreshDataAndView() {
             document.getElementById('dashboard-unified-cards').style.display = 'block'; 
             applyAccessControl(); 
         }
-
-        // ========================== TABLE VIEW RENDERERS ==============================
         
         function showInvoiceList(type) {
             hideAllLists(); currentViewMode = type; document.getElementById('invoice-list-section').style.display = 'block'; 
