@@ -1438,7 +1438,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz93YhRF3ufut_3KzHRTTe_I1y52ZyvDHEHegwHmFp1slwt8EDsWHRk2kSmr7awENci/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrByr7zFMQyXnVV9hu3-fIleKsInMsxOKebP3aLNt4NxmbtZveOSpy2bxY7CKblYAp/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1453,6 +1453,7 @@
         let tableCache = {};
         let activeTableContext = null;
         let fetchVersion = 0; 
+        let lastWriteTime = 0; // 🔥 TRACK LAST WRITE ACTION
 
         // 🚀 NEW: Compress image before converting to base64
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
@@ -1633,7 +1634,13 @@
 
                 const text = await response.text();
                 try {
-                    return JSON.parse(text);
+                    const resObj = JSON.parse(text);
+                    const isWriteAction = payload.action !== 'login' && payload.action !== 'syncData';
+                    // 🔥 NAYA LOGIC: Agar write success hua to time record kar lo
+                    if (isWriteAction && resObj.status === 'success') {
+                        lastWriteTime = Date.now();
+                    }
+                    return resObj;
                 } catch (e) {
                     console.error('Server Response:', text);
                     const snippet = text.substring(0, 80).replace(/</g, '&lt;');
@@ -2032,12 +2039,25 @@
                         }
                     }
 
-                    await syncData(false, true);
-                    if (currentVer !== fetchVersion) return;
-                    
-                    if (currentContext && currentContext.reqType !== 'ledgers') {
-                        await loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                    // 🔥 SMART BUFFER: Google Sheets ko update hone ka pura time do (2.5 sec), 
+                    // lekin sirf tab jab user ne koi NAYA data submit kiya ho. Normal refresh instant rahega.
+                    let timeSinceWrite = Date.now() - lastWriteTime;
+                    if (timeSinceWrite < 2500) {
+                        await new Promise(resolve => setTimeout(resolve, 2500 - timeSinceWrite));
                     }
+
+                    // 🔥 SPEED FIX: Heavy counts ko await mat karo. 
+                    // Pura focus current table render karne pe lagao taaki user ko fast response mile.
+                    let tablePromise = Promise.resolve();
+                    if (currentContext && currentContext.reqType !== 'ledgers') {
+                        tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                    }
+
+                    // Background me fresh counts manga lo (UI block nahi hoga)
+                    refreshCountsInBackground();
+
+                    await tablePromise; // Sirf fast table loading ka wait karo
+
                 } finally {
                     refreshRequestPromise = null;
                 }
