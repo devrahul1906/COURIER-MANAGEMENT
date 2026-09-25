@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier Management System | HATVET PHARMA</title>
+    <!-- Favicon Added for Webpage Tab Icon -->
     <link rel="icon" href="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" type="image/jpeg">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -269,7 +270,6 @@
             </div>
             
             <div class="user-nav">
-                <!-- Module Switcher for Admin/Master -->
                 <select id="adminModuleSwitcher" style="display: none; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); margin-right: 10px; background: #f8fafc; outline: none; cursor: pointer;" onchange="handleModuleSwitch()">
                     <option value="All">All Modules View</option>
                     <option value="Dispatch Courier Management">Dispatch Management Only</option>
@@ -1439,7 +1439,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3QpWrYmp5HooL5Fo__2rfVGkRE8f2EK06heprHOUC4AR-uH0hhKRP0Bx19CI5BK6_/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweYFeYKRMAa-q-MYeUwblUBorBsiWzoG_IPNORQpaJHcBEQnFUB4yLyBNvKM33iyuP/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1456,7 +1456,6 @@
         let fetchVersion = 0; 
         let lastWriteTime = 0; 
 
-        // Compress image before converting to base64
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1611,12 +1610,11 @@
                 payload.reqId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
             const noCacheUrl = WEB_APP_URL + '?t=' + Date.now();
-            let controller = null;
-            let timeoutId = null;
+            let controller = new AbortController();
+            const timeoutLimit = (payload.action === 'login' || payload.action === 'syncData') ? 50000 : 120000;
+            let timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
+            
             try {
-                controller = new AbortController();
-                const timeoutLimit = (payload.action === 'login' || payload.action === 'syncData') ? 50000 : 120000;
-                timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
                 const response = await fetch(noCacheUrl, {
                     method: 'POST',
                     redirect: 'follow',
@@ -2242,25 +2240,6 @@
             dataObj.unplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
             dataObj.returnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
             
-            // Apply Custom sort logic using date only for the combined list
-            combinedList = combinedList.sort((a, b) => {
-                function parseD(val) {
-                    if (!val || val === '-' || val === 'N/A') return 0;
-                    let str = String(val).trim();
-                    if (str.includes('-') || str.includes('/')) {
-                        let parts = str.split(/[- :\/]/);
-                        if (parts.length >= 3) {
-                            let p0 = parseInt(parts[0], 10), p1 = parseInt(parts[1], 10) - 1, p2 = parseInt(parts[2], 10);
-                            let hr = parts[3] ? parseInt(parts[3], 10) : 0, min = parts[4] ? parseInt(parts[4], 10) : 0, sec = parts[5] ? parseInt(parts[5], 10) : 0;
-                            if (p0 > 1000) return new Date(p0, p1, p2, hr, min, sec).getTime();
-                            return new Date(p2, p1, p0, hr, min, sec).getTime();
-                        }
-                    }
-                    let t = new Date(str).getTime(); return isNaN(t) ? 0 : t;
-                }
-                return parseD(a.date) - parseD(b.date);
-            });
-
             if(combinedList.length === 0) { document.getElementById('returnStatusTableBody').innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
             
             let html = [];
@@ -2585,13 +2564,27 @@
 
         function calculateTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            function parseCustomDate(dStr) { 
+                if(dStr.includes('-')) { 
+                    const parts = dStr.split(/[- :]/); 
+                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); 
+                    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
+                } 
+                return new Date(dStr); 
+            }
             const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
         }
 
         function calculateReturnTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            function parseCustomDate(dStr) { 
+                if(dStr.includes('-')) { 
+                    const parts = dStr.split(/[- :]/); 
+                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); 
+                    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
+                } 
+                return new Date(dStr); 
+            }
             const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
             if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
         }
@@ -2636,6 +2629,11 @@
             }).catch(err => {
                 showToast("Error", err.message || "Request failed", "error");
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+        }
+
+        function filterTableGlobal(inputId, tbodyId) {
+            let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) { if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
         }
 
         function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
