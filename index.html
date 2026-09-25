@@ -200,7 +200,7 @@
 
     <div id="toast-container"></div>
 
-    <!-- Login View (DROPDOWN REMOVED FOR CLEAN UX) -->
+    <!-- Login View -->
     <div id="login-view">
         <div class="login-left">
             <div class="login-left-top">
@@ -268,7 +268,7 @@
             </div>
             
             <div class="user-nav">
-                <!-- 🔥 NAYA: Module Switcher for Admin/Master (Visible only if allowedType is 'All') -->
+                <!-- Module Switcher for Admin/Master -->
                 <select id="adminModuleSwitcher" style="display: none; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); margin-right: 10px; background: #f8fafc; outline: none; cursor: pointer;" onchange="handleModuleSwitch()">
                     <option value="All">All Modules View</option>
                     <option value="Dispatch Courier Management">Dispatch Management Only</option>
@@ -1438,7 +1438,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrByr7zFMQyXnVV9hu3-fIleKsInMsxOKebP3aLNt4NxmbtZveOSpy2bxY7CKblYAp/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyebXLRM4FdWdsDYNodv3Ox04yopClKZDaW00HrSGkO29y4g8WF2lF-NjvB-wRSu4LV/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1454,6 +1454,39 @@
         let activeTableContext = null;
         let fetchVersion = 0; 
         let lastWriteTime = 0; // 🔥 TRACK LAST WRITE ACTION
+
+        // 🚀 NEW: Universal Sorter (Oldest on Top, Newest on Bottom)
+        function sortOldestToNewest(list) {
+            function parseD(val) {
+                if (!val || val === '-' || val === 'N/A') return 0;
+                let str = String(val).trim();
+                if (str.includes('-') || str.includes('/')) {
+                    let parts = str.split(/[- :\/]/);
+                    if (parts.length >= 3) {
+                        let p0 = parseInt(parts[0], 10);
+                        let p1 = parseInt(parts[1], 10) - 1;
+                        let p2 = parseInt(parts[2], 10);
+                        let hr = parts[3] ? parseInt(parts[3], 10) : 0;
+                        let min = parts[4] ? parseInt(parts[4], 10) : 0;
+                        let sec = parts[5] ? parseInt(parts[5], 10) : 0;
+                        // Handle DD-MM-YYYY or YYYY-MM-DD
+                        if (p0 > 1000) return new Date(p0, p1, p2, hr, min, sec).getTime();
+                        return new Date(p2, p1, p0, hr, min, sec).getTime();
+                    }
+                }
+                let t = new Date(str).getTime();
+                return isNaN(t) ? 0 : t;
+            }
+
+            return list.sort((a, b) => {
+                let tA = parseD(a.date);
+                let tB = parseD(b.date);
+                if (tA === 0 && tB === 0) return 0;
+                if (tA === 0) return 1;
+                if (tB === 0) return -1;
+                return tA - tB;
+            });
+        }
 
         // 🚀 NEW: Compress image before converting to base64
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
@@ -2150,7 +2183,13 @@
         function renderDispatchedTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; let totalTimeStr = calculateTotalTime(item.assignTime, item.dispatchTime, item.deliveredTime); html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); }); 
+            let html = []; listToDisplay.forEach((item, index) => { 
+                let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; 
+                // 🔥 Using exact extracted times for Total Time computation (Assign Time & Delivered/Action Time)
+                let finalDeliveredTime = item.deliveredTime && item.deliveredTime !== '-' ? item.deliveredTime : item.actionTime;
+                let totalTimeStr = calculateTotalTime(item.assignTime, finalDeliveredTime); 
+                html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); 
+            }); 
             renderLargeHtml('dispatchedTableBody', html);
         }
 
@@ -2251,7 +2290,11 @@
             dataObj.unplannedBills.forEach(u => { combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: u.status, date: u.date, remark: '-' }); });
             dataObj.returnBills.forEach(r => { let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: r.status, date: latestDate, remark: r.remark || '-' }); });
             if(combinedList.length === 0) { document.getElementById('returnStatusTableBody').innerHTML = "<tr><td colspan='8' style='text-align:center;'>No entries found to track.</td></tr>"; return; }
-            combinedList.reverse(); let html = [];
+            
+            // 🔥 Sort combined list universally
+            combinedList = sortOldestToNewest(combinedList);
+            
+            let html = [];
             combinedList.forEach((item, index) => { let badgeClass = "bg-assigned"; let s = item.status.toLowerCase(); if(s.includes('pending') || s.includes('expected')) badgeClass = "bg-pending"; else if(s.includes('transit')) badgeClass = "bg-transit"; else if(s.includes('received') || s.includes('closed') || s.includes('confirmed') || s.includes('processed')) badgeClass = "bg-delivered"; else if(s.includes('dispute') || s.includes('partial') || s.includes('short')) badgeClass = "bg-rto"; html.push(`<tr><td>${index + 1}</td><td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td><span class="badge ${badgeClass}">${item.status}</span></td><td style="font-size:13px;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.remark}</td></tr>`); });
             renderLargeHtml('returnStatusTableBody', html);
         }
@@ -2571,6 +2614,12 @@
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
+        function calculateTotalTime(startStr, endStr) {
+            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
+            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
+        }
+
         function calculateReturnTotalTime(startStr, endStr) {
             if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
             function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
@@ -2623,12 +2672,6 @@
         function filterTableGlobal(inputId, tbodyId) {
             let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
             for (let i = 0; i < tr.length; i++) { if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
-        }
-
-        function calculateTotalTime(startStr, endStr) {
-            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { if(dStr.includes('-')) { const parts = dStr.split(/[- :]/); if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); } return new Date(dStr); }
-            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
         }
 
         function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
