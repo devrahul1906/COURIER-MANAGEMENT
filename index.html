@@ -1658,47 +1658,82 @@
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName', null);
         });
 
-        function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId, statusId) {
-            const inp = document.getElementById(inputId);
-            if(!inp) return;
-            inp.addEventListener("input", function(e) {
-                let a, b, val = this.value; 
-                closeAllLists();
-                if (!val) { return false;}
-                a = document.createElement("DIV"); a.setAttribute("id", this.id + "autocomplete-list"); a.setAttribute("class", "autocomplete-items"); this.parentNode.appendChild(a); this.parentNode.style.position = "relative";
-                let matchCount = 0;
-                for (let i = 0; i < cachedLedgers.length; i++) {
-                    if (cachedLedgers[i].ledgerName.toUpperCase().includes(val.toUpperCase())) {
-                        if(matchCount > 20) break; 
-                        let currentLedger = cachedLedgers[i]; 
-                        b = document.createElement("DIV"); let regex = new RegExp("(" + val.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ")", "gi");
-                        b.innerHTML = currentLedger.ledgerName.replace(regex, "<strong>$1</strong>");
-                        if(currentLedger.city) b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
-                        b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
-                        b.addEventListener("click", function(e) {
-                            inp.value = this.getElementsByTagName("input")[0].value;
-                            if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
-                            if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
-                            if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
-                            if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
-                            if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
-                            
-                            if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
-                            
-                            if(statusId && document.getElementById(statusId)) {
-                                document.getElementById(statusId).value = currentLedger.status || "Current Ledger";
-                                document.getElementById(statusId).style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
-                            }
+// SMART GOOGLE-LIKE AUTOCOMPLETE FUNCTION
+function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId, statusId) {
+    const inp = document.getElementById(inputId);
+    if(!inp) return;
+    
+    inp.addEventListener("input", function(e) {
+        let a, b, val = this.value; 
+        closeAllLists();
+        if (!val) { return false; }
+        
+        // Dropdown container create karna
+        a = document.createElement("DIV"); 
+        a.setAttribute("id", this.id + "autocomplete-list"); 
+        a.setAttribute("class", "autocomplete-items"); 
+        this.parentNode.appendChild(a); 
+        this.parentNode.style.position = "relative";
+        
+        let matchCount = 0;
+        // Google Jaisa Smart Search: User ke type kiye gaye har word ko split karke check karna
+        let searchTerms = val.toUpperCase().split(" ").filter(t => t.trim() !== "");
 
-                            closeAllLists();
-                        });
-                        a.appendChild(b); matchCount++;
-                    }
+        for (let i = 0; i < cachedLedgers.length; i++) {
+            let currentLedgerName = cachedLedgers[i].ledgerName.toUpperCase();
+            
+            // Check karna ki type kiye gaye SAARE words ledger name me majood hain ya nahi (aage-peeche kahin bhi)
+            let isMatch = searchTerms.every(term => currentLedgerName.includes(term));
+
+            if (isMatch) {
+                if(matchCount > 20) break; // List ko 20 items tak limit karna
+                let currentLedger = cachedLedgers[i]; 
+                b = document.createElement("DIV"); 
+                
+                // Dropdown me naam aur city show karna
+                b.innerHTML = `<strong>${currentLedger.ledgerName}</strong>`;
+                if(currentLedger.city) {
+                    b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
                 }
-            });
-            function closeAllLists(elmnt) { var x = document.getElementsByClassName("autocomplete-items"); for (var i = 0; i < x.length; i++) { if (elmnt != x[i] && elmnt != inp) { x[i].parentNode.removeChild(x[i]); } } }
-            document.addEventListener("click", function (e) { closeAllLists(e.target); });
+                b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
+                
+                // Jab user dropdown se koi naam select kare
+                b.addEventListener("click", function(e) {
+                    inp.value = this.getElementsByTagName("input")[0].value;
+                    
+                    // BAAKI SAARE FIELDS KO AUTO-FILL KARNA
+                    if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
+                    if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
+                    if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
+                    if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
+                    if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
+                    if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
+                    
+                    if(statusId && document.getElementById(statusId)) {
+                        let statusInput = document.getElementById(statusId);
+                        statusInput.value = currentLedger.status || "Current Ledger";
+                        // Status ke hisaab se color change karna (Red for Inactive/Closed, Green for Active)
+                        statusInput.style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
+                    }
+
+                    closeAllLists();
+                });
+                a.appendChild(b); 
+                matchCount++;
+            }
         }
+    });
+    
+    function closeAllLists(elmnt) { 
+        var x = document.getElementsByClassName("autocomplete-items"); 
+        for (var i = 0; i < x.length; i++) { 
+            if (elmnt != x[i] && elmnt != inp) { 
+                x[i].parentNode.removeChild(x[i]); 
+            } 
+        } 
+    }
+    document.addEventListener("click", function (e) { closeAllLists(e.target); });
+}
 
         function checkIsToday(dateStr) {
             if(!dateStr) return false;
@@ -1870,19 +1905,23 @@
                     spinner.style.display = 'none';
                     document.getElementById('loginText').innerText = 'Sign In';
 
-                    fetchVersion++;
+		fetchVersion++;
                     const loginVersion = fetchVersion;
-                    syncData(true, false);
-                    setTimeout(() => {
-                        if (loginVersion === fetchVersion && loggedInUser) fetchLedgers(false);
-                    }, 50);
-                    setTimeout(() => {
-                        if (loginVersion === fetchVersion && loggedInUser) backgroundPreFetch(loginVersion);
-                    }, 500);
+                    
+                    // 🚀 FIX: Requests ko ek sath bhejne ke bajaye ek ke baad ek (await) lagakar bhejein
+                    // Taaki Google Apps Script block na kare aur "Err" na aaye
+                    await syncData(true, false);
+                    
+                    if (loginVersion === fetchVersion && loggedInUser) {
+                        await fetchLedgers(false);
+                        backgroundPreFetch(loginVersion);
+                    }
+
                 } else {
                     errorDiv.innerText = data.message || 'Invalid credentials.';
                     errorDiv.style.display = 'block';
                 }
+
             } catch (error) {
                 errorDiv.innerText = 'Connection Error: ' + error.message;
                 errorDiv.style.display = 'block';
