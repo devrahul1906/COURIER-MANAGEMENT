@@ -1435,11 +1435,11 @@
         </div>
     </div>
 
-    <script>
+<script>
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweYFeYKRMAa-q-MYeUwblUBorBsiWzoG_IPNORQpaJHcBEQnFUB4yLyBNvKM33iyuP/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybK1pPR5vsXDstNTcu4I9P81DRktaLF0V_rD97hbClt1zfgUby0x9UJWxhqpoVVj6l/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1526,54 +1526,49 @@
         }
 
         let filterTimer;
+        
+        // Dono search box type (specific aur global) ke liye ek hi debouncer call karega
         function debouncedFilterTable(inputId, tbodyId, colIndex) {
             clearTimeout(filterTimer);
-            filterTimer = setTimeout(() => filterTable(inputId, tbodyId, colIndex), 350);
+            filterTimer = setTimeout(() => applyJsonFilter(inputId), 300);
         }
         function debouncedFilterTableGlobal(inputId, tbodyId) {
             clearTimeout(filterTimer);
-            filterTimer = setTimeout(() => filterTableGlobal(inputId, tbodyId), 350);
+            filterTimer = setTimeout(() => applyJsonFilter(inputId), 300);
         }
 
-        function filterTable(inputId, tbodyId, colIndex) {
-            let input = document.getElementById(inputId).value.toUpperCase(); 
-            let tbody = document.getElementById(tbodyId); 
-            if (!tbody) return;
+        // 🚀 NAYA JSON FILTER LOGIC (SUPER FAST)
+        function applyJsonFilter(inputId) {
+            let inputVal = document.getElementById(inputId).value.toLowerCase().trim();
+            
+            // 1. Current active table pata lagana
+            if (!activeTableContext || !activeTableContext.reqType) return;
+            let reqKey = activeTableContext.reqType;
+            let rawData = tableCache[reqKey]; 
+            
+            if (!rawData) return; // Data background mein load nahi hua hai
 
-            if (input.length > 0 && tbody._fullHtmlArray && tbody.children.length < tbody._fullHtmlArray.length) {
-                tbody.innerHTML = tbody._fullHtmlArray.join("");
+            // 2. Data check karne ka function (Global Search: pure object mein check karega)
+            function isMatch(item) {
+                if (!inputVal) return true;
+                return Object.values(item).some(val => 
+                    String(val || "").toLowerCase().includes(inputVal)
+                );
             }
 
-            let tr = tbody.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) { 
-                let td = tr[i].getElementsByTagName("td")[colIndex]; 
-                if (td) { 
-                    let txtValue = td.textContent || td.innerText; 
-                    if (txtValue.toUpperCase().indexOf(input) > -1) { 
-                        tr[i].style.display = ""; 
-                    } else { 
-                        tr[i].style.display = "none"; 
-                    } 
-                } 
-            }
-        }
-
-        function filterTableGlobal(inputId, tbodyId) {
-            let input = document.getElementById(inputId).value.toUpperCase(); 
-            let tbody = document.getElementById(tbodyId); 
-            if (!tbody) return;
-
-            if (input.length > 0 && tbody._fullHtmlArray && tbody.children.length < tbody._fullHtmlArray.length) {
-                tbody.innerHTML = tbody._fullHtmlArray.join("");
-            }
-
-            let tr = tbody.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) { 
-                if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { 
-                    tr[i].style.display = ""; 
-                } else { 
-                    tr[i].style.display = "none"; 
-                } 
+            // 3. Data filter karna aur HTML update karna
+            if (reqKey === 'returnStatus') {
+                // Track Status wale table mein 2 alag lists hain (unplanned aur generated)
+                let filteredObj = {
+                    returnBills: (rawData.returnBills || []).filter(isMatch),
+                    unplannedBills: (rawData.unplannedBills || []).filter(isMatch)
+                };
+                activeTableContext.renderFn(filteredObj);
+            } else {
+                // Baaki sabhi standard tables ke liye
+                let filteredList = rawData.filter(isMatch);
+                // Sirf filtered array ka naya HTML banega, jisse chunking system tutega nahi
+                activeTableContext.renderFn(filteredList);
             }
         }
 
@@ -2304,6 +2299,10 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
         async function showLedgerMasterList() {
             hideAllLists();
             document.getElementById('ledger-master-list-section').style.display = 'block';
+            
+            // 🚀 ADD THIS: Search ko batane ke liye ki Ledger Master open hai
+            activeTableContext = { reqType: 'ledgersList', renderFn: renderLedgerMasterTable };
+            
             if (cachedLedgers.length) {
                 renderLedgerMasterTable(cachedLedgers);
                 return;
@@ -2668,11 +2667,6 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             }).catch(err => {
                 showToast("Error", err.message || "Request failed", "error");
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
-
-        function filterTableGlobal(inputId, tbodyId) {
-            let input = document.getElementById(inputId).value.toUpperCase(); let table = document.getElementById(tbodyId); let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) { if ((tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(input) > -1) { tr[i].style.display = ""; } else { tr[i].style.display = "none"; } }
         }
 
         function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
