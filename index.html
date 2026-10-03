@@ -664,10 +664,10 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="returnProcessedTable" style="min-width: 1950px;">
-                        <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>CN No.</th><th>CN Date</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th></tr></thead>
-                        <tbody id="returnProcessedTableBody"></tbody>
-                    </table>
+			<table id="returnProcessedTable" style="min-width: 1950px;">
+    <thead><tr><th>#</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes Recv'd</th><th>City, State</th><th>Courier Partner</th><th>Docket No</th><th>CN No.</th><th>CN Date</th><th>Status</th><th>Req. Creation</th><th>Courier Assign</th><th>Pickup Date</th><th>Receiving Date</th><th>Total Time</th><th>Remark</th><th>Link URL</th></tr></thead>
+    <tbody id="returnProcessedTableBody"></tbody>
+</table>
                 </div>
             </div>
 
@@ -1439,7 +1439,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybK1pPR5vsXDstNTcu4I9P81DRktaLF0V_rD97hbClt1zfgUby0x9UJWxhqpoVVj6l/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxsJK5_yCBxVhWAOH0JhGAZxDN9f8beR7w19PcfDhh65e6GN2-5T7zQAYBNd6FAb8XM/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1653,7 +1653,6 @@
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName', null);
         });
 
-// SMART GOOGLE-LIKE AUTOCOMPLETE FUNCTION
 function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId, statusId) {
     const inp = document.getElementById(inputId);
     if(!inp) return;
@@ -1663,7 +1662,6 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
         closeAllLists();
         if (!val) { return false; }
         
-        // Dropdown container create karna
         a = document.createElement("DIV"); 
         a.setAttribute("id", this.id + "autocomplete-list"); 
         a.setAttribute("class", "autocomplete-items"); 
@@ -1671,32 +1669,28 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
         this.parentNode.style.position = "relative";
         
         let matchCount = 0;
-        // Google Jaisa Smart Search: User ke type kiye gaye har word ko split karke check karna
         let searchTerms = val.toUpperCase().split(" ").filter(t => t.trim() !== "");
 
         for (let i = 0; i < cachedLedgers.length; i++) {
-            let currentLedgerName = cachedLedgers[i].ledgerName.toUpperCase();
+            // Use pre-calculated uppercase name for speed
+            let currentLedgerName = cachedLedgers[i].upperName || cachedLedgers[i].ledgerName.toUpperCase();
             
-            // Check karna ki type kiye gaye SAARE words ledger name me majood hain ya nahi (aage-peeche kahin bhi)
             let isMatch = searchTerms.every(term => currentLedgerName.includes(term));
 
             if (isMatch) {
-                if(matchCount > 20) break; // List ko 20 items tak limit karna
+                if(matchCount > 20) break; 
                 let currentLedger = cachedLedgers[i]; 
                 b = document.createElement("DIV"); 
                 
-                // Dropdown me naam aur city show karna
                 b.innerHTML = `<strong>${currentLedger.ledgerName}</strong>`;
                 if(currentLedger.city) {
                     b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
                 }
                 b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
                 
-                // Jab user dropdown se koi naam select kare
                 b.addEventListener("click", function(e) {
                     inp.value = this.getElementsByTagName("input")[0].value;
                     
-                    // BAAKI SAARE FIELDS KO AUTO-FILL KARNA
                     if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
                     if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
                     if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
@@ -1707,10 +1701,8 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     if(statusId && document.getElementById(statusId)) {
                         let statusInput = document.getElementById(statusId);
                         statusInput.value = currentLedger.status || "Current Ledger";
-                        // Status ke hisaab se color change karna (Red for Inactive/Closed, Green for Active)
                         statusInput.style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
                     }
-
                     closeAllLists();
                 });
                 a.appendChild(b); 
@@ -1929,26 +1921,30 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
 
         let ledgerRequestPromise = null;
 
-        async function fetchLedgers(forceRefresh = false) {
-            if (ledgerRequestPromise && !forceRefresh) return ledgerRequestPromise;
-            ledgerRequestPromise = (async () => {
-                try {
-                    const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers', forceRefresh: !!forceRefresh });
-                    if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
-                        cachedLedgers = resp.data;
-                        tableCache['ledgersList'] = resp.data;
-                        updateLedgerCounts(cachedLedgers);
-                    }
-                    return cachedLedgers;
-                } catch (e) {
-                    console.warn('Ledger Master sync delayed:', e);
-                    return cachedLedgers;
-                } finally {
-                    ledgerRequestPromise = null;
-                }
-            })();
-            return ledgerRequestPromise;
+async function fetchLedgers(forceRefresh = false) {
+    if (ledgerRequestPromise && !forceRefresh) return ledgerRequestPromise;
+    ledgerRequestPromise = (async () => {
+        try {
+            const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers', forceRefresh: !!forceRefresh });
+            if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                // Pre-calculate uppercase for ultra-fast autocomplete
+                cachedLedgers = resp.data.map(l => {
+                    l.upperName = (l.ledgerName || "").toUpperCase();
+                    return l;
+                });
+                tableCache['ledgersList'] = cachedLedgers;
+                updateLedgerCounts(cachedLedgers);
+            }
+            return cachedLedgers;
+        } catch (e) {
+            console.warn('Ledger Master sync delayed:', e);
+            return cachedLedgers;
+        } finally {
+            ledgerRequestPromise = null;
         }
+    })();
+    return ledgerRequestPromise;
+}
 
         let countsRequestPromise = null;
         let freshCountsRequestPromise = null;
@@ -1978,10 +1974,11 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                 .then(data => {
                     if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Dashboard data sync failed.');
                     updateDashboardCounts(data.counts || {});
-                    if (isInitialLoad) {
+		    if (isInitialLoad) {
                         showToast('Dashboard Ready', data.staleSnapshot ? 'Dashboard opened with the latest saved snapshot. Fresh data is syncing.' : 'Data loaded successfully.', 'success');
                     }
-                    if (data.staleSnapshot || forceRefresh) setTimeout(() => refreshCountsInBackground(), 250);
+                    // 🔥 FIX: forceRefresh hone par data already naya aata hai, isliye dobara background sync nahi karna hai.
+                    if (data.staleSnapshot) setTimeout(() => refreshCountsInBackground(), 800);
                     return data;
                 })
                 .catch(error => {
@@ -2020,7 +2017,7 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             return freshCountsRequestPromise;
         }
 
-        async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
+async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
             if (!forceRefresh && tableCache[reqType]) {
                 renderFunction(tableCache[reqType]);
                 return;
@@ -2041,14 +2038,18 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     renderFunction(dataToCache);
                 } else {
                     showToast('Error', (resp && resp.message) || 'Failed to load table data.', 'error');
+                    // 🚀 FAILSAFE: Agar data fail ho jaye toh loading ghumta na rahe
+                    if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
                 }
             } catch (err) {
                 console.error('Table load error:', err);
                 showToast('Error', 'Network error while loading data.', 'error');
+                // 🚀 FAILSAFE: Network error par loading roko
+                if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Network Error. Please click Refresh button.</td></tr>`;
             }
         }
 
-        async function refreshDataAndView() {
+async function refreshDataAndView() {
             if (refreshRequestPromise) return refreshRequestPromise;
             fetchVersion++;
             const currentVer = fetchVersion;
@@ -2068,11 +2069,21 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     }
 
                     let tablePromise = Promise.resolve();
-                    if (currentContext && currentContext.reqType !== 'ledgers') {
-                        tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                    
+                    if (currentContext) {
+                        if (currentContext.reqType === 'ledgers') {
+                            // 🚀 LEDGER MASTER ISOLATION: Ledger master apne independent function se refresh hoga
+                            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Refreshing Ledger Master...</td></tr>";
+                            tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
+                        } else {
+                            // Baaki sabhi regular tables normal tareeqe se refresh hongi
+                            tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                        }
+                    } else {
+                        // Dashboard counters
+                        refreshCountsInBackground();
                     }
 
-                    refreshCountsInBackground();
                     await tablePromise; 
 
                 } finally {
@@ -2243,16 +2254,24 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             hideAllLists(); document.getElementById('return-processed-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'returnBills', renderFn: (data) => renderReturnProcessedTable(data, startDate, endDate) }; loadAndRenderTable('returnBills', activeTableContext.renderFn);
         }
-        function renderReturnProcessedTable(dataList, startDate, endDate) {
-            let listToDisplay = dataList.filter(r => r.status === 'Return Processed');
-            if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('returnProcessedTableBody').innerHTML = "<tr><td colspan='16' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { 
-                let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
-                html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td></tr>`); 
-            });
-            renderLargeHtml('returnProcessedTableBody', html);
-        }
+
+function renderReturnProcessedTable(dataList, startDate, endDate) {
+    let listToDisplay = dataList.filter(r => r.status === 'Return Processed');
+    if(startDate || endDate) { listToDisplay = listToDisplay.filter(item => isDateInRange(item.recvDate, startDate, endDate)); }
+    if(listToDisplay.length === 0) { document.getElementById('returnProcessedTableBody').innerHTML = "<tr><td colspan='17' style='text-align:center;'>No processed returns found.</td></tr>"; return; }
+    
+    let html = []; 
+    listToDisplay.forEach((item, index) => { 
+        let rcvdText = item.rcvdBoxes ? item.rcvdBoxes : item.boxes; 
+        let totalTimeStr = calculateReturnTotalTime(item.date, item.recvDate); 
+        
+        // Naya: Link ko alag column me dikhane ke liye
+        let linkCell = item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" style="color:var(--info); font-weight:600; text-decoration:underline;">View Link</a>` : '-';
+        
+        html.push(`<tr><td>${index + 1}</td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td><b style="color:var(--primary);">${rcvdText}</b> / ${item.boxes}</td><td>${item.city}, ${item.state || ''}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td style="color:#c026d3; font-weight:bold;">${item.cnNo || '-'}</td><td style="color:#64748b; font-weight:600;">${item.cnDate || '-'}</td><td><span class="badge" style="background:#fdf4ff; color:#86198f; border:1px solid #f0abfc;">${item.status}</span></td><td style="font-size:12px; color:#64748b;">${item.date || '-'}</td><td style="font-size:12px; color:#64748b;">${item.assignDate || '-'}</td><td style="font-size:12px; color:#64748b;">${item.dispatchDate || '-'}</td><td style="color:#15803d; font-size:12px; font-weight:bold;">${item.recvDate || '-'}</td><td style="font-weight:700; font-size:13px;">${totalTimeStr}</td><td style="font-size: 12px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td>${linkCell}</td></tr>`); 
+    });
+    renderLargeHtml('returnProcessedTableBody', html);
+}
 
         function showReturnDisputedList() {
             hideAllLists(); document.getElementById('return-disputed-list-section').style.display = 'block'; 
@@ -2296,18 +2315,18 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             if(document.getElementById('countClosedLedgers')) document.getElementById('countClosedLedgers').innerText = closed;
         }
 
-        async function showLedgerMasterList() {
+	async function showLedgerMasterList() {
             hideAllLists();
             document.getElementById('ledger-master-list-section').style.display = 'block';
             
-            // 🚀 ADD THIS: Search ko batane ke liye ki Ledger Master open hai
-            activeTableContext = { reqType: 'ledgersList', renderFn: renderLedgerMasterTable };
+            // 🚀 Isko wapas 'ledgers' set kiya taaki ye main system se alag rahe
+            activeTableContext = { reqType: 'ledgers', renderFn: renderLedgerMasterTable };
             
             if (cachedLedgers.length) {
                 renderLedgerMasterTable(cachedLedgers);
                 return;
             }
-            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'>Loading Ledger Master...</td></tr>";
+            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Loading Ledger Master...</td></tr>";
             const data = await fetchLedgers(false);
             renderLedgerMasterTable(data || []);
         }
@@ -2600,32 +2619,39 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
         }
 
-        function calculateTotalTime(startStr, endStr) {
-            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { 
-                if(dStr.includes('-')) { 
-                    const parts = dStr.split(/[- :]/); 
-                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); 
-                    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
-                } 
-                return new Date(dStr); 
-            }
-            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000); if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; return `${diffHrs}h`;
-        }
+function parseCustomDate(dStr) { 
+    if (!dStr || dStr === '-') return new Date(NaN);
+    if (dStr.includes('-')) { 
+        const parts = dStr.split(/[- :]/); 
+        if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); 
+        if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
+    } 
+    return new Date(dStr); 
+}
 
-        function calculateReturnTotalTime(startStr, endStr) {
-            if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
-            function parseCustomDate(dStr) { 
-                if(dStr.includes('-')) { 
-                    const parts = dStr.split(/[- :]/); 
-                    if (parts.length >= 6) return new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4], parts[5]); 
-                    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
-                } 
-                return new Date(dStr); 
-            }
-            const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); if (isNaN(sDate) || isNaN(eDate)) return '-'; const diffMs = eDate - sDate; if (diffMs < 0) return '-'; const diffDays = Math.floor(diffMs / 86400000); const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
-            if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; return `${diffHrs} Hrs`;
-        }
+function calculateTotalTime(startStr, endStr) {
+    if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+    const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); 
+    if (isNaN(sDate) || isNaN(eDate)) return '-'; 
+    const diffMs = eDate - sDate; 
+    if (diffMs < 0) return '-'; 
+    const diffDays = Math.floor(diffMs / 86400000); 
+    const diffHrs = Math.floor((diffMs % 86400000) / 3600000); 
+    if (diffDays > 0) return `${diffDays}d ${diffHrs}h`; 
+    return `${diffHrs}h`;
+}
+
+function calculateReturnTotalTime(startStr, endStr) {
+    if (!startStr || !endStr || startStr === '-' || endStr === '-') return '-';
+    const sDate = parseCustomDate(startStr); const eDate = parseCustomDate(endStr); 
+    if (isNaN(sDate) || isNaN(eDate)) return '-'; 
+    const diffMs = eDate - sDate; 
+    if (diffMs < 0) return '-'; 
+    const diffDays = Math.floor(diffMs / 86400000); 
+    const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+    if (diffDays > 0) return `${diffDays} Day - ${diffHrs} Hrs`; 
+    return `${diffHrs} Hrs`;
+}
 
         function openCNDetailsModal() { document.getElementById('cnDetailsForm').reset(); document.getElementById('cnDetailsModal').style.display = 'flex'; }
         function closeCNDetailsModal() { document.getElementById('cnDetailsModal').style.display = 'none'; }
@@ -2673,11 +2699,17 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
         function closeDateRangeModal() { document.getElementById('dateRangeModal').style.display = 'none'; }
         function applyDateFilterAndShow() { const start = document.getElementById('filterStartDate').value; const end = document.getElementById('filterEndDate').value; closeDateRangeModal(); if (targetTabForDateRange === 'delivered') { showDeliveredList(start, end); } else if (targetTabForDateRange === 'dispatched') { showDispatchedList(start, end); } else if (targetTabForDateRange === 'returnProcessed') { showReturnProcessedList(start, end); } }
         
-        function isDateInRange(dateStr, start, end) {
-            if (!start && !end) return true; if (!dateStr || dateStr === "N/A" || dateStr === "") return false;
-            let itemDate; if (dateStr.includes('-')) { const parts = dateStr.split(/[- :]/); if (parts.length >= 3) { itemDate = new Date(parts[2], parts[1] - 1, parts[0], parts[3] || 0, parts[4] || 0, parts[5] || 0); } else { itemDate = new Date(dateStr); } } else { itemDate = new Date(dateStr); }
-            if (isNaN(itemDate.getTime())) return true; const sDate = start ? new Date(start + "T00:00:00") : null; const eDate = end ? new Date(end + "T23:59:59") : null; if (sDate && itemDate < sDate) return false; if (eDate && itemDate > eDate) return false; return true;
-        }
+function isDateInRange(dateStr, start, end) {
+    if (!start && !end) return true; 
+    if (!dateStr || dateStr === "N/A" || dateStr === "" || dateStr === "-") return false;
+    let itemDate = parseCustomDate(dateStr);
+    if (isNaN(itemDate.getTime())) return true; 
+    const sDate = start ? new Date(start + "T00:00:00") : null; 
+    const eDate = end ? new Date(end + "T23:59:59") : null; 
+    if (sDate && itemDate < sDate) return false; 
+    if (eDate && itemDate > eDate) return false; 
+    return true;
+}
 
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
