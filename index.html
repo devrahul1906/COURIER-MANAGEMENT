@@ -1439,7 +1439,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxsJK5_yCBxVhWAOH0JhGAZxDN9f8beR7w19PcfDhh65e6GN2-5T7zQAYBNd6FAb8XM/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxX1IVeTMJlDsPfi3k0fwcthb09yN-zMVBApcjp7RIe9VvaLqIHKFaIOHcExXpPISKB/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1538,41 +1538,39 @@
         }
 
         // 🚀 NAYA JSON FILTER LOGIC (SUPER FAST)
-        function applyJsonFilter(inputId) {
-            let inputVal = document.getElementById(inputId).value.toLowerCase().trim();
-            
-            // 1. Current active table pata lagana
-            if (!activeTableContext || !activeTableContext.reqType) return;
-            let reqKey = activeTableContext.reqType;
-            let rawData = tableCache[reqKey]; 
-            
-            if (!rawData) return; // Data background mein load nahi hua hai
+		function applyJsonFilter(inputId) {
+    let inputVal = document.getElementById(inputId).value.toLowerCase().trim();
+    
+    // 1. Current active table pata lagana
+    if (!activeTableContext || !activeTableContext.reqType) return;
+    let reqKey = activeTableContext.reqType;
+    
+    // 🚀 FIX: Ledger search ke liye sahi cache key ('ledgersList') use karein
+    let cacheKey = (reqKey === 'ledgers') ? 'ledgersList' : reqKey;
+    let rawData = tableCache[cacheKey]; 
+    
+    if (!rawData) return; // Data background mein load nahi hua hai
 
-            // 2. Data check karne ka function (Global Search: pure object mein check karega)
-            function isMatch(item) {
-                if (!inputVal) return true;
-                return Object.values(item).some(val => 
-                    String(val || "").toLowerCase().includes(inputVal)
-                );
-            }
+    // 2. Data check karne ka function (Global Search)
+    function isMatch(item) {
+        if (!inputVal) return true;
+        return Object.values(item).some(val => 
+            String(val || "").toLowerCase().includes(inputVal)
+        );
+    }
 
-            // 3. Data filter karna aur HTML update karna
-            if (reqKey === 'returnStatus') {
-                // Track Status wale table mein 2 alag lists hain (unplanned aur generated)
-                let filteredObj = {
-                    returnBills: (rawData.returnBills || []).filter(isMatch),
-                    unplannedBills: (rawData.unplannedBills || []).filter(isMatch)
-                };
-                activeTableContext.renderFn(filteredObj);
-            } else {
-                // Baaki sabhi standard tables ke liye
-                let filteredList = rawData.filter(isMatch);
-                // Sirf filtered array ka naya HTML banega, jisse chunking system tutega nahi
-                activeTableContext.renderFn(filteredList);
-            }
-        }
-
-        let bgQueue = Promise.resolve();
+    // 3. Data filter karna aur HTML update karna
+    if (reqKey === 'returnStatus') {
+        let filteredObj = {
+            returnBills: (rawData.returnBills || []).filter(isMatch),
+            unplannedBills: (rawData.unplannedBills || []).filter(isMatch)
+        };
+        activeTableContext.renderFn(filteredObj);
+    } else {
+        let filteredList = rawData.filter(isMatch);
+        activeTableContext.renderFn(filteredList);
+    }
+}
 
         function enqueueBackgroundFetch(payload, cacheKey, version) {
             bgQueue = bgQueue.then(async () => {
@@ -1593,11 +1591,38 @@
             return bgQueue;
         }
 
-        async function backgroundPreFetch(version) {
+	async function backgroundPreFetch(version) {
             if (version !== fetchVersion) return;
+            
+            // 1. Sabse pehle Ledger load karein
             if (!cachedLedgers.length && !tableCache['ledgersList']) {
                 enqueueBackgroundFetch({ action: 'syncData', reqType: 'ledgers' }, 'ledgersList', version);
             }
+            
+            // 2. 🚀 ALL TABS SILENT PRE-LOADING (Instant Load Trick for EVERYTHING)
+            let tabsToPreload = [];
+            
+            // User ke access ke hisaab se tabs decide karein taki faaltu data load na ho
+            if (loggedInUserType === 'Dispatch Courier Management') {
+                tabsToPreload = ['pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed'];
+            } else if (loggedInUserType === 'Return Courier Management') {
+                tabsToPreload = ['returnBills', 'unplannedBills', 'returnStatus'];
+            } else {
+                // Admin ya 'All' access wale users ke liye saare tabs preload honge
+                tabsToPreload = [
+                    'pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed', 
+                    'returnBills', 'unplannedBills', 'returnStatus'
+                ];
+            }
+            
+            // Background Queue mein sabko daal dein
+            tabsToPreload.forEach(tab => {
+                if (!tableCache[tab]) {
+                    // Ye queue system (enqueueBackgroundFetch) in sabhi requests ko ek sath nahi balki 
+                    // ek ke baad ek bhejega taki server crash na ho aur data memory me save ho jaye.
+                    enqueueBackgroundFetch({ action: 'syncData', reqType: tab }, tab, version);
+                }
+            });
         }
 
         async function safeFetch(payload, retryCount = 1) {
