@@ -1439,7 +1439,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwctIg_pSvYLKE9-4_hsC9QE1MQl3cQNwORbNsxxq-CH4usJ0n-v8UyDucO5VkyO9Kn/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsToSqDr1Jd2PBvQmcWoJWYmcp_tlahLiWQt9-vKy4PfRG9x3PDnJBqRfzmfDNPYm-/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1450,6 +1450,7 @@
         let pendingBulkAssignments = []; 
         let targetTabForDateRange = "";
         let cachedLedgers = [];
+	let ledgerRequestPromise = null;
 
         let tableCache = {};
         let activeTableContext = null;
@@ -1517,6 +1518,20 @@ function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn
     }
     refreshCountsInBackground();
 }
+	function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
+        if (tableCache[reqType]) {
+            // Local table se item ko instantly hatao (0.1 second me)
+            tableCache[reqType] = tableCache[reqType].filter(filterFn);
+            if (activeTableContext && activeTableContext.reqType === reqType) {
+                activeTableContext.renderFn(tableCache[reqType]);
+            }
+        }
+        // Sirf un tabs ka cache clear karein jahan item gaya hai
+        if (refreshTabs && refreshTabs.length > 0) {
+            refreshTabs.forEach(tab => { delete tableCache[tab]; });
+        }
+        refreshCountsInBackground();
+    }
 
 	function updateReturnItemStatus(id, newStatus, additionalUpdates = {}) {
     // Return Bills cache ko update karna
@@ -1639,56 +1654,6 @@ function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn
             return bgQueue;
         }
 
-	async function backgroundPreFetch(version) {
-    if (version !== fetchVersion) return;
-    
-    // 1. Sabse pehle Ledger load karein
-    if (!cachedLedgers.length && !tableCache['ledgersList']) {
-        try {
-            await fetchLedgers(false);
-        } catch(e) {
-            console.warn('Ledger prefetch failed:', e);
-        }
-    }
-    
-    // 2. Tabs decide karein
-    let tabsToPreload = [];
-    if (loggedInUserType === 'Dispatch Courier Management') {
-        tabsToPreload = ['pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed'];
-    } else if (loggedInUserType === 'Return Courier Management') {
-        tabsToPreload = ['returnBills', 'unplannedBills', 'returnStatus'];
-    } else {
-        tabsToPreload = [
-            'pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed', 
-            'returnBills', 'unplannedBills', 'returnStatus'
-        ];
-    }
-    
-    // 3. 🚀 FIX: Queue ki jagah For loop use kiya taaki calls ek-ke-baad-ek jayein
-    for (const tab of tabsToPreload) {
-        // Agar loading ke dauran user ne koi naya action perform kar diya, toh purani loading rok dega
-        if (version !== fetchVersion) break; 
-        
-        if (!tableCache[tab]) {
-            try {
-                const res = await safeFetch({ action: 'syncData', reqType: tab });
-                if (version !== fetchVersion) break; 
-                
-                if (res && res.status === 'success') {
-                    tableCache[tab] = (tab === 'returnStatus')
-                        ? { returnBills: res.returnBills || [], unplannedBills: res.unplannedBills || [] }
-                        : (res.data || []);
-                }
-                
-                // Har data load hone ke baad thoda rukega (Speed & Stability ke liye)
-                await new Promise(r => setTimeout(r, 800)); 
-            } catch (e) {
-                console.warn(`Background fetch delayed for ${tab}:`, e);
-            }
-        }
-    }
-}
-
         async function safeFetch(payload, retryCount = 1) {
             if (payload.action !== 'login' && payload.action !== 'syncData' && !payload.reqId) {
                 payload.reqId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
@@ -1736,11 +1701,58 @@ function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn
 
         function safeStr(val) { return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
-        document.addEventListener('DOMContentLoaded', () => {
+	document.addEventListener('DOMContentLoaded', () => {
+            // Page khulte hi memory se Ledger utha lo taaki autocomplete instantly chale
+            try {
+                let savedLedgers = localStorage.getItem("cms_table_ledgers");
+                if (savedLedgers) {
+                    cachedLedgers = JSON.parse(savedLedgers);
+                }
+            } catch(e) {}
+
             setupAutocomplete('unpLedgerName', 'unpCity', null, null, null, null, null, null);
             setupAutocomplete('retLedgerName', 'retCity', 'retState', 'retPinCode', 'retLedgerCode', 'retZone', 'retBdmName', 'retLedgerStatus');
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName', null);
+            
+            checkAutoLogin();
         });
+
+	function checkAutoLogin() {
+            const savedUser = localStorage.getItem("cms_user");
+            if (savedUser) {
+                loggedInUser = savedUser;
+                loggedInUserRole = localStorage.getItem("cms_role") || "Standard";
+                loggedInUserType = localStorage.getItem("cms_type") || "All";
+                loggedInUserPermissions = localStorage.getItem("cms_perms") || "All";
+
+                const moduleSwitcher = document.getElementById('adminModuleSwitcher');
+                if (loggedInUserRole.toLowerCase().includes('admin') || loggedInUserRole.toLowerCase().includes('master') || loggedInUserType === "All") {
+                    moduleSwitcher.style.display = 'inline-block';
+                    moduleSwitcher.value = 'All';
+                    loggedInUserType = 'All'; 
+                } else {
+                    moduleSwitcher.style.display = 'none';
+                }
+
+                document.getElementById('userNameDisplay').innerText = loggedInUser;
+                document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
+                document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
+                document.getElementById('welcomeGreeting').innerText = 'Welcome, ' + loggedInUser;
+
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'flex';
+                showDashboardCards();
+                
+                fetchVersion++;
+                const loginVersion = fetchVersion;
+                
+                syncData(true, false).then(() => {
+                    if (loginVersion === fetchVersion && loggedInUser) {
+                        fetchLedgers(false);
+                    }
+                });              
+            }
+        }
 
 	// Bahar global scope me rakha gaya common list closer
 function closeAllAutocompleteLists(elmnt) { 
@@ -1837,18 +1849,23 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
         }
 
-        function showToast(title, message, type = 'success') {
+	function showToast(title, message, type = 'success') {
             const container = document.getElementById('toast-container'); 
             const toast = document.createElement('div'); 
             toast.className = `toast ${type}`;
             let iconSvg = '';
+            
             if(type === 'success') { 
                 iconSvg = `<svg class="icon-lg" style="color:var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`; 
             } else if (type === 'warning') { 
                 iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`; 
+            } else if (type === 'info') { 
+                // 🚀 NAYA: 'info' type ke liye yahan yellow/warning color ka dot ya icon set kar diya hai
+                iconSvg = `<svg class="icon-lg" style="color:var(--warning)" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>`; 
             } else { 
                 iconSvg = `<svg class="icon-lg" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; 
             }
+            
             toast.innerHTML = `${iconSvg}<div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`; 
             container.appendChild(toast);
             setTimeout(() => { 
@@ -1867,8 +1884,12 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
 
         function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
         
-        function updateDashboardCounts(c) {
+	function updateDashboardCounts(c) {
             if(!c) return;
+            
+            // 🚀 NAYA HACK: Dashboard ke counts ko local browser memory me turant save kar lo
+            localStorage.setItem("saved_dashboard_counts", JSON.stringify(c));
+            
             document.getElementById('todayPendingCount').innerText = c.todayPending;
             document.getElementById('totalPendingCount').innerText = c.totalPending;
             document.getElementById('assignedCount').innerText = c.assigned;
@@ -1927,7 +1948,7 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             });
         }
 
-        async function handleLogin(event) {
+	async function handleLogin(event) {
             if (event) event.preventDefault();
             const btn = document.getElementById('loginBtn');
             const spinner = document.getElementById('loginSpinner');
@@ -1935,12 +1956,14 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
 
+            // UI ko turant block karein taaki double click na ho
             btn.disabled = true;
             spinner.style.display = 'inline-block';
             errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = 'Authenticating...';
 
             try {
+                // Sirf 1-2 second me backend se login verify karega
                 const data = await safeFetch({ action: 'login', username: user, password: pass });
 
                 if (data.status === 'success') {
@@ -1964,7 +1987,13 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     } else {
                         moduleSwitcher.style.display = 'none';
                     }
-
+                    
+                    // NAYA: Successful login ke baad user detail memory me save karein
+                    localStorage.setItem("cms_user", loggedInUser);
+                    localStorage.setItem("cms_role", loggedInUserRole);
+                    localStorage.setItem("cms_type", loggedInUserType);
+                    localStorage.setItem("cms_perms", loggedInUserPermissions);
+                    
                     document.getElementById('userNameDisplay').innerText = loggedInUser;
                     document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
@@ -1981,26 +2010,29 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                         }
                     }
 
+                    // 🚀 FIX: Turant login screen hata kar dashboard dikhayein (0 seconds wait!)
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('dashboard-view').style.display = 'flex';
                     showDashboardCards();
-                    showToast('Login Successful', 'Dashboard is opening. Data will sync in the background.', 'success');
+                    showToast('Login Successful', 'Dashboard is opening...', 'success');
 
+                    // 🚀 FIX: Spinner ko turant band karein, user ko wait nahi karwana hai
                     btn.disabled = false;
                     spinner.style.display = 'none';
                     document.getElementById('loginText').innerText = 'Sign In';
 
-		fetchVersion++;
+                    fetchVersion++;
                     const loginVersion = fetchVersion;
                     
-                    // 🚀 FIX: Requests ko ek sath bhejne ke bajaye ek ke baad ek (await) lagakar bhejein
-                    // Taaki Google Apps Script block na kare aur "Err" na aaye
-                    await syncData(true, false);
-                    
-                    if (loginVersion === fetchVersion && loggedInUser) {
-                        await fetchLedgers(false);
-                        backgroundPreFetch(loginVersion);
-                    }
+                    // 🚀 THE MAGIC: setTimeout lagakar browser ko UI render karne ka time diya.
+                    // Data ab chupchap background me aayega, login screen par nahi atkega!
+			setTimeout(() => {
+                        syncData(true, false).then(() => {
+                            if (loginVersion === fetchVersion && loggedInUser) {
+                                fetchLedgers(false);
+                            }
+                        });
+                    }, 100);
 
                 } else {
                     errorDiv.innerText = data.message || 'Invalid credentials.';
@@ -2011,44 +2043,18 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                 errorDiv.innerText = 'Connection Error: ' + error.message;
                 errorDiv.style.display = 'block';
             } finally {
+                // Kisi error ki wajah se atke na, isliye safe fallback
                 btn.disabled = false;
                 spinner.style.display = 'none';
                 document.getElementById('loginText').innerText = 'Sign In';
             }
         }
 
-        let ledgerRequestPromise = null;
-
-async function fetchLedgers(forceRefresh = false) {
-    if (ledgerRequestPromise && !forceRefresh) return ledgerRequestPromise;
-    ledgerRequestPromise = (async () => {
-        try {
-            const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers', forceRefresh: !!forceRefresh });
-            if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
-                // Pre-calculate uppercase for ultra-fast autocomplete
-                cachedLedgers = resp.data.map(l => {
-                    l.upperName = (l.ledgerName || "").toUpperCase();
-                    return l;
-                });
-                tableCache['ledgersList'] = cachedLedgers;
-                updateLedgerCounts(cachedLedgers);
-            }
-            return cachedLedgers;
-        } catch (e) {
-            console.warn('Ledger Master sync delayed:', e);
-            return cachedLedgers;
-        } finally {
-            ledgerRequestPromise = null;
-        }
-    })();
-    return ledgerRequestPromise;
-}
-
         let countsRequestPromise = null;
         let freshCountsRequestPromise = null;
         let refreshRequestPromise = null;
 
-        function syncData(isInitialLoad = false, forceRefresh = false) {
+	function syncData(isInitialLoad = false, forceRefresh = false) {
             if (!loggedInUser) return Promise.resolve();
             if (countsRequestPromise) return countsRequestPromise;
 
@@ -2060,22 +2066,27 @@ async function fetchLedgers(forceRefresh = false) {
             }
 
             if (isInitialLoad) {
-                document.querySelectorAll('.kpi-value').forEach(el => {
-                    if (el.innerText !== 'New Request' && el.innerText !== 'Surprise Entry' && el.innerText !== 'Search Entry' && el.innerText !== 'Manage') {
-                        el.innerText = '...';
-                        el.style.color = '';
-                    }
-                });
+                // 🚀 NAYA HACK: '...' dikhane ki jagah seedha local memory se numbers dikha do (0 seconds loading!)
+                let savedCounts = localStorage.getItem("saved_dashboard_counts");
+                if (savedCounts) {
+                    updateDashboardCounts(JSON.parse(savedCounts));
+                } else {
+                    document.querySelectorAll('.kpi-value').forEach(el => {
+                        if (el.innerText !== 'New Request' && el.innerText !== 'Surprise Entry' && el.innerText !== 'Search Entry' && el.innerText !== 'Manage') {
+                            el.innerText = '...';
+                            el.style.color = '';
+                        }
+                    });
+                }
             }
 
             countsRequestPromise = safeFetch({ action: 'syncData', reqType: 'counts', forceRefresh: forceRefresh, module: loggedInUserType })
                 .then(data => {
                     if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Dashboard data sync failed.');
                     updateDashboardCounts(data.counts || {});
-		    if (isInitialLoad) {
+                    if (isInitialLoad) {
                         showToast('Dashboard Ready', data.staleSnapshot ? 'Dashboard opened with the latest saved snapshot. Fresh data is syncing.' : 'Data loaded successfully.', 'success');
                     }
-                    // 🔥 FIX: forceRefresh hone par data already naya aata hai, isliye dobara background sync nahi karna hai.
                     if (data.staleSnapshot) setTimeout(() => refreshCountsInBackground(), 800);
                     return data;
                 })
@@ -2115,87 +2126,121 @@ async function fetchLedgers(forceRefresh = false) {
             return freshCountsRequestPromise;
         }
 
-async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
-            if (!forceRefresh && tableCache[reqType]) {
-                renderFunction(tableCache[reqType]);
-                return;
-            }
+	async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
+    if (!forceRefresh && tableCache[reqType]) {
+        renderFunction(tableCache[reqType]);
+        return;
+    }
 
-            const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
-            if (activeTbody) {
-                activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Data...</span></td></tr>`;
-            }
-
-            try {
-                const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: forceRefresh, module: loggedInUserType });
-                if (resp && resp.status === 'success') {
-                    const dataToCache = reqType === 'returnStatus'
-                        ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
-                        : (resp.data || []);
-                    tableCache[reqType] = dataToCache;
-                    renderFunction(dataToCache);
-                } else {
-                    showToast('Error', (resp && resp.message) || 'Failed to load table data.', 'error');
-                    // 🚀 FAILSAFE: Agar data fail ho jaye toh loading ghumta na rahe
-                    if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
-                }
-            } catch (err) {
-                console.error('Table load error:', err);
-                showToast('Error', 'Network error while loading data.', 'error');
-                // 🚀 FAILSAFE: Network error par loading roko
-                if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Network Error. Please click Refresh button.</td></tr>`;
-            }
-        }
-
-	async function refreshDataAndView() {
-    if (refreshRequestPromise) return refreshRequestPromise;
-    fetchVersion++;
-    const currentVer = fetchVersion;
-    const currentContext = activeTableContext;
-
-    refreshRequestPromise = (async () => {
+    const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
+    
+    // 🚀 Local Memory se table instantly dikhayein
+    let hasLocalData = false;
+    if (!forceRefresh) {
         try {
-            for (let key in tableCache) {
-                if (key !== 'ledgersList') {
-                    delete tableCache[key]; 
-                }
+            let savedData = localStorage.getItem("cms_table_" + reqType);
+            if (savedData) {
+                let parsedData = JSON.parse(savedData);
+                tableCache[reqType] = parsedData;
+                renderFunction(parsedData);
+                hasLocalData = true; 
             }
+        } catch(e) {}
+    }
 
-            let timeSinceWrite = Date.now() - lastWriteTime;
-            if (timeSinceWrite < 2500) {
-                await new Promise(resolve => setTimeout(resolve, 2500 - timeSinceWrite));
+    if (!hasLocalData && activeTbody) {
+        activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Data...</span></td></tr>`;
+    }
+
+    try {
+        const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: forceRefresh, module: loggedInUserType });
+        if (resp && resp.status === 'success') {
+            const dataToCache = reqType === 'returnStatus'
+                ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
+                : (resp.data || []);
+            
+            tableCache[reqType] = dataToCache;
+            try { localStorage.setItem("cms_table_" + reqType, JSON.stringify(dataToCache)); } catch(e) {}
+            
+            if (activeTableContext && activeTableContext.reqType === reqType) {
+                renderFunction(dataToCache);
             }
-
-            let tablePromise = Promise.resolve();
-            
-            if (currentContext) {
-                if (currentContext.reqType === 'ledgers') {
-                    // LEDGER MASTER ISOLATION
-                    document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Refreshing Ledger Master...</td></tr>";
-                    tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
-                } else {
-                    // Baaki sabhi regular tables normal tareeqe se refresh hongi
-                    tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
-                }
-            } 
-            
-            // 🚀 FIX: Ise if-else block ke bahar nikal diya, ab ye hamesha chalega aur KPI update honge
-            refreshCountsInBackground();
-
-            await tablePromise; 
-
-        } finally {
-            refreshRequestPromise = null;
+        } else if (!hasLocalData) {
+            showToast('Error', (resp && resp.message) || 'Failed to load table data.', 'error');
+            if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
         }
-    })();
-    return refreshRequestPromise;
+    } catch (err) {
+        console.error('Table load error:', err);
+        if (!hasLocalData) {
+            showToast('Error', 'Network error while loading data.', 'error');
+            if (activeTbody) activeTbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:var(--danger); font-weight:600;">Network Error. Please click Refresh button.</td></tr>`;
+        }
+    }
 }
 
-        function logoutSystem() {
+	async function refreshDataAndView() {
+        if (refreshRequestPromise) return refreshRequestPromise;
+        fetchVersion++;
+        const currentVer = fetchVersion;
+        const currentContext = activeTableContext;
+
+        refreshRequestPromise = (async () => {
+            try {
+                // PURANA CODE YAHAN CACHE DELETE KARTA THA AUR 2.5 SECONDS WAIT KARTA THA.
+                // MAINE WO HATA DIYA HAI. AB UI BLANK NAHI HOGA AUR INSTANT CHALEGA.
+                let tablePromise = Promise.resolve();
+                
+                if (currentContext) {
+                    if (currentContext.reqType === 'ledgers') {
+                        // LEDGER MASTER ISOLATION
+                        tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
+                    } else {
+                        // Background me silently naya data layega bina Loading Screen dikhaye
+                        tablePromise = safeFetch({ action: 'syncData', reqType: currentContext.reqType, forceRefresh: true, module: loggedInUserType })
+                            .then(resp => {
+                                if (resp && resp.status === 'success') {
+                                    const dataToCache = currentContext.reqType === 'returnStatus'
+                                        ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
+                                        : (resp.data || []);
+                                    tableCache[currentContext.reqType] = dataToCache;
+                                    if (currentVer === fetchVersion) currentContext.renderFn(dataToCache);
+                                }
+                            }).catch(err => console.warn('Background refresh delayed', err));
+                    }
+                } 
+                
+                // Dashboard ke counts ko background me fast update karega
+                refreshCountsInBackground();
+                await tablePromise; 
+
+            } finally {
+                refreshRequestPromise = null;
+            }
+        })();
+        return refreshRequestPromise;
+    }
+
+	function logoutSystem() {
+            localStorage.removeItem("cms_user");
+            localStorage.removeItem("cms_role");
+            localStorage.removeItem("cms_type");
+            localStorage.removeItem("cms_perms");
+            
+            Object.keys(localStorage).forEach(key => {
+                if(key.startsWith("cms_table_") && key !== "cms_table_ledgers") {
+                    localStorage.removeItem(key);
+                }
+                if(key === "saved_dashboard_counts") {
+                    localStorage.removeItem(key);
+                }
+            });
+            
             document.getElementById('loginForm').reset();
             loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
             tableCache = {}; activeTableContext = null; cachedLedgers = []; ledgerRequestPromise = null; bgQueue = Promise.resolve(); fetchVersion++;
-            document.getElementById('dashboard-view').style.display = 'none'; document.getElementById('login-view').style.display = 'flex'; 
+            
+            document.getElementById('dashboard-view').style.display = 'none'; 
+            document.getElementById('login-view').style.display = 'flex'; 
         }
 
         function hideAllLists() {
@@ -2413,21 +2458,66 @@ function renderReturnProcessedTable(dataList, startDate, endDate) {
             if(document.getElementById('countClosedLedgers')) document.getElementById('countClosedLedgers').innerText = closed;
         }
 
-	async function showLedgerMasterList() {
-            hideAllLists();
-            document.getElementById('ledger-master-list-section').style.display = 'block';
-            
-            // 🚀 Isko wapas 'ledgers' set kiya taaki ye main system se alag rahe
-            activeTableContext = { reqType: 'ledgers', renderFn: renderLedgerMasterTable };
-            
-            if (cachedLedgers.length) {
-                renderLedgerMasterTable(cachedLedgers);
-                return;
+	async function fetchLedgers(forceRefresh = false) {
+    if (ledgerRequestPromise && !forceRefresh) return ledgerRequestPromise;
+
+    if (!forceRefresh) {
+        try {
+            let savedLedgers = localStorage.getItem("cms_table_ledgers");
+            if (savedLedgers) {
+                cachedLedgers = JSON.parse(savedLedgers);
+                tableCache['ledgersList'] = cachedLedgers;
+                updateLedgerCounts(cachedLedgers);
             }
-            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Loading Ledger Master...</td></tr>";
-            const data = await fetchLedgers(false);
-            renderLedgerMasterTable(data || []);
+        } catch(e) {}
+    }
+
+    ledgerRequestPromise = (async () => {
+        try {
+            const resp = await safeFetch({ action: 'syncData', reqType: 'ledgers', forceRefresh: !!forceRefresh });
+            if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                cachedLedgers = resp.data.map(l => {
+                    l.upperName = (l.ledgerName || "").toUpperCase();
+                    return l;
+                });
+                tableCache['ledgersList'] = cachedLedgers;
+                updateLedgerCounts(cachedLedgers);
+                try { localStorage.setItem("cms_table_ledgers", JSON.stringify(cachedLedgers)); } catch(e) {}
+            }
+            return cachedLedgers;
+        } catch (e) {
+            return cachedLedgers;
+        } finally {
+            ledgerRequestPromise = null;
         }
+    })();
+    return ledgerRequestPromise;
+}
+
+async function showLedgerMasterList() {
+    hideAllLists();
+    document.getElementById('ledger-master-list-section').style.display = 'block';
+    
+    // Ledger master ke liye active table context set karna
+    activeTableContext = { reqType: 'ledgers', renderFn: renderLedgerMasterTable };
+    
+    if (cachedLedgers && cachedLedgers.length > 0) {
+        renderLedgerMasterTable(cachedLedgers);
+        fetchLedgers(true).then(data => {
+            if (activeTableContext && activeTableContext.reqType === 'ledgers') {
+                renderLedgerMasterTable(data || []);
+            }
+        });
+        return;
+    }
+    
+    document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Loading Ledger Master...</td></tr>";
+    
+    const data = await fetchLedgers(false);
+    if (activeTableContext && activeTableContext.reqType === 'ledgers') {
+        renderLedgerMasterTable(data || []);
+    }
+}
 
         function renderLedgerMasterTable(dataList) {
             updateLedgerCounts(dataList); 
