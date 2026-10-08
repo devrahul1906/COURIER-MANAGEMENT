@@ -692,7 +692,7 @@
                 <div class="table-header">
                     <h2>Track Return Status</h2>
                     <div class="table-actions">
-                        <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="debouncedFilterTableGlobal('returnStatusSearchBox', 'returnStatusTableBody')">
+                        <input type="text" id="returnStatusSearchBox" class="search-box" placeholder="Search Dr. Name, Ledger, or ID..." onkeyup="debouncedFilterTable('returnStatusSearchBox')">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('returnStatusTable', 'Return_Status_Track.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -725,7 +725,7 @@
                     </div>
 
                     <div class="table-actions">
-                        <input type="text" id="ledgerSearchBox" class="search-box" placeholder="Search Ledger..." onkeyup="debouncedFilterTableGlobal('ledgerSearchBox', 'ledgerTableBody')">
+                        <input type="text" id="ledgerSearchBox" class="search-box" placeholder="Search Ledger..." onkeyup="debouncedFilterTable('ledgerSearchBox')">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('ledgerTable', 'Ledger_Master.csv')">Export CSV</button>
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
@@ -1439,7 +1439,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxX1IVeTMJlDsPfi3k0fwcthb09yN-zMVBApcjp7RIe9VvaLqIHKFaIOHcExXpPISKB/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwctIg_pSvYLKE9-4_hsC9QE1MQl3cQNwORbNsxxq-CH4usJ0n-v8UyDucO5VkyO9Kn/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1495,6 +1495,59 @@
             });
         }
 
+	// 🚀 NAYA OPTIMISTIC UI HELPER (Ab tab loading delay completely khatm)
+function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn) {
+    let itemsToMove = [];
+    if (tableCache[sourceReqType]) {
+        let keepItems = [];
+        tableCache[sourceReqType].forEach(item => {
+            if (filterFn(item)) itemsToMove.push(item);
+            else keepItems.push(item);
+        });
+        tableCache[sourceReqType] = keepItems;
+        if (activeTableContext && activeTableContext.reqType === sourceReqType) {
+            activeTableContext.renderFn(keepItems);
+        }
+    }
+    if (targetReqType && tableCache[targetReqType]) {
+        itemsToMove.forEach(item => {
+            let transformed = transformFn ? transformFn(item) : item;
+            tableCache[targetReqType].unshift(transformed); 
+        });
+    }
+    refreshCountsInBackground();
+}
+
+	function updateReturnItemStatus(id, newStatus, additionalUpdates = {}) {
+    // Return Bills cache ko update karna
+    if (tableCache['returnBills']) {
+        let item = tableCache['returnBills'].find(r => r.id === id);
+        if (item) {
+            item.status = newStatus;
+            Object.assign(item, additionalUpdates);
+        }
+        if (activeTableContext && activeTableContext.reqType === 'returnBills') {
+            activeTableContext.renderFn(tableCache['returnBills']);
+        }
+    }
+    
+    // Return Status (Tracking) cache ko locally update karna bina delete kiye
+    if (tableCache['returnStatus']) {
+        let targetList = tableCache['returnStatus'].returnBills;
+        let itemToUpdate = targetList.find(r => r.id === id);
+        if (itemToUpdate) {
+            itemToUpdate.status = newStatus;
+            if (additionalUpdates.remark) itemToUpdate.remark = additionalUpdates.remark;
+        }
+        if (activeTableContext && activeTableContext.reqType === 'returnStatus') {
+            activeTableContext.renderFn(tableCache['returnStatus']);
+        }
+    }
+    
+    refreshCountsInBackground();
+}
+
+
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = "";
@@ -1526,13 +1579,8 @@
         }
 
         let filterTimer;
-        
-        // Dono search box type (specific aur global) ke liye ek hi debouncer call karega
-        function debouncedFilterTable(inputId, tbodyId, colIndex) {
-            clearTimeout(filterTimer);
-            filterTimer = setTimeout(() => applyJsonFilter(inputId), 300);
-        }
-        function debouncedFilterTableGlobal(inputId, tbodyId) {
+             
+        function debouncedFilterTable(inputId) {
             clearTimeout(filterTimer);
             filterTimer = setTimeout(() => applyJsonFilter(inputId), 300);
         }
@@ -1592,38 +1640,54 @@
         }
 
 	async function backgroundPreFetch(version) {
-            if (version !== fetchVersion) return;
-            
-            // 1. Sabse pehle Ledger load karein
-            if (!cachedLedgers.length && !tableCache['ledgersList']) {
-                enqueueBackgroundFetch({ action: 'syncData', reqType: 'ledgers' }, 'ledgersList', version);
-            }
-            
-            // 2. 🚀 ALL TABS SILENT PRE-LOADING (Instant Load Trick for EVERYTHING)
-            let tabsToPreload = [];
-            
-            // User ke access ke hisaab se tabs decide karein taki faaltu data load na ho
-            if (loggedInUserType === 'Dispatch Courier Management') {
-                tabsToPreload = ['pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed'];
-            } else if (loggedInUserType === 'Return Courier Management') {
-                tabsToPreload = ['returnBills', 'unplannedBills', 'returnStatus'];
-            } else {
-                // Admin ya 'All' access wale users ke liye saare tabs preload honge
-                tabsToPreload = [
-                    'pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed', 
-                    'returnBills', 'unplannedBills', 'returnStatus'
-                ];
-            }
-            
-            // Background Queue mein sabko daal dein
-            tabsToPreload.forEach(tab => {
-                if (!tableCache[tab]) {
-                    // Ye queue system (enqueueBackgroundFetch) in sabhi requests ko ek sath nahi balki 
-                    // ek ke baad ek bhejega taki server crash na ho aur data memory me save ho jaye.
-                    enqueueBackgroundFetch({ action: 'syncData', reqType: tab }, tab, version);
-                }
-            });
+    if (version !== fetchVersion) return;
+    
+    // 1. Sabse pehle Ledger load karein
+    if (!cachedLedgers.length && !tableCache['ledgersList']) {
+        try {
+            await fetchLedgers(false);
+        } catch(e) {
+            console.warn('Ledger prefetch failed:', e);
         }
+    }
+    
+    // 2. Tabs decide karein
+    let tabsToPreload = [];
+    if (loggedInUserType === 'Dispatch Courier Management') {
+        tabsToPreload = ['pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed'];
+    } else if (loggedInUserType === 'Return Courier Management') {
+        tabsToPreload = ['returnBills', 'unplannedBills', 'returnStatus'];
+    } else {
+        tabsToPreload = [
+            'pending', 'assigned', 'transit', 'delivered', 'dispatched', 'disputed', 
+            'returnBills', 'unplannedBills', 'returnStatus'
+        ];
+    }
+    
+    // 3. 🚀 FIX: Queue ki jagah For loop use kiya taaki calls ek-ke-baad-ek jayein
+    for (const tab of tabsToPreload) {
+        // Agar loading ke dauran user ne koi naya action perform kar diya, toh purani loading rok dega
+        if (version !== fetchVersion) break; 
+        
+        if (!tableCache[tab]) {
+            try {
+                const res = await safeFetch({ action: 'syncData', reqType: tab });
+                if (version !== fetchVersion) break; 
+                
+                if (res && res.status === 'success') {
+                    tableCache[tab] = (tab === 'returnStatus')
+                        ? { returnBills: res.returnBills || [], unplannedBills: res.unplannedBills || [] }
+                        : (res.data || []);
+                }
+                
+                // Har data load hone ke baad thoda rukega (Speed & Stability ke liye)
+                await new Promise(r => setTimeout(r, 800)); 
+            } catch (e) {
+                console.warn(`Background fetch delayed for ${tab}:`, e);
+            }
+        }
+    }
+}
 
         async function safeFetch(payload, retryCount = 1) {
             if (payload.action !== 'login' && payload.action !== 'syncData' && !payload.reqId) {
@@ -1678,73 +1742,82 @@
             setupAutocomplete('confUnpLedgerName', 'confUnpCity', 'confUnpState', null, 'confUnpLedgerCode', 'confUnpZone', 'confUnpBdmName', null);
         });
 
+	// Bahar global scope me rakha gaya common list closer
+function closeAllAutocompleteLists(elmnt) { 
+    var x = document.getElementsByClassName("autocomplete-items"); 
+    for (var i = 0; i < x.length; i++) { 
+        if (elmnt != x[i]) { 
+            x[i].parentNode.removeChild(x[i]); 
+        } 
+    } 
+}
+
+// Global click listener ek hi baar lagega
+document.addEventListener("click", function (e) { 
+    closeAllAutocompleteLists(e.target); 
+});
+
 function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zoneId, bdmNameId, statusId) {
     const inp = document.getElementById(inputId);
     if(!inp) return;
     
+    let debounceTimer;
+
     inp.addEventListener("input", function(e) {
-        let a, b, val = this.value; 
-        closeAllLists();
+        clearTimeout(debounceTimer);
+        let val = this.value; 
+        closeAllAutocompleteLists();
         if (!val) { return false; }
         
-        a = document.createElement("DIV"); 
-        a.setAttribute("id", this.id + "autocomplete-list"); 
-        a.setAttribute("class", "autocomplete-items"); 
-        this.parentNode.appendChild(a); 
-        this.parentNode.style.position = "relative";
-        
-        let matchCount = 0;
-        let searchTerms = val.toUpperCase().split(" ").filter(t => t.trim() !== "");
-
-        for (let i = 0; i < cachedLedgers.length; i++) {
-            // Use pre-calculated uppercase name for speed
-            let currentLedgerName = cachedLedgers[i].upperName || cachedLedgers[i].ledgerName.toUpperCase();
+        // 250ms ka delay fast typing handle karne ke liye
+        debounceTimer = setTimeout(() => {
+            let a = document.createElement("DIV"); 
+            a.setAttribute("id", this.id + "autocomplete-list"); 
+            a.setAttribute("class", "autocomplete-items"); 
+            inp.parentNode.appendChild(a); 
+            inp.parentNode.style.position = "relative";
             
-            let isMatch = searchTerms.every(term => currentLedgerName.includes(term));
+            let matchCount = 0;
+            let searchTerms = val.toUpperCase().split(" ").filter(t => t.trim() !== "");
 
-            if (isMatch) {
-                if(matchCount > 20) break; 
-                let currentLedger = cachedLedgers[i]; 
-                b = document.createElement("DIV"); 
-                
-                b.innerHTML = `<strong>${currentLedger.ledgerName}</strong>`;
-                if(currentLedger.city) {
-                    b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
-                }
-                b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
-                
-                b.addEventListener("click", function(e) {
-                    inp.value = this.getElementsByTagName("input")[0].value;
+            for (let i = 0; i < cachedLedgers.length; i++) {
+                let currentLedgerName = cachedLedgers[i].upperName || cachedLedgers[i].ledgerName.toUpperCase();
+                let isMatch = searchTerms.every(term => currentLedgerName.includes(term));
+
+                if (isMatch) {
+                    if(matchCount > 20) break; 
+                    let currentLedger = cachedLedgers[i]; 
+                    let b = document.createElement("DIV"); 
                     
-                    if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
-                    if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
-                    if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
-                    if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
-                    if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
-                    if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
-                    
-                    if(statusId && document.getElementById(statusId)) {
-                        let statusInput = document.getElementById(statusId);
-                        statusInput.value = currentLedger.status || "Current Ledger";
-                        statusInput.style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
+                    b.innerHTML = `<strong>${currentLedger.ledgerName}</strong>`;
+                    if(currentLedger.city) {
+                        b.innerHTML += ` <span style="color:#64748b; font-size:11px;">(${currentLedger.city})</span>`;
                     }
-                    closeAllLists();
-                });
-                a.appendChild(b); 
-                matchCount++;
+                    b.innerHTML += "<input type='hidden' value='" + currentLedger.ledgerName.replace(/'/g, "&#39;") + "'>";
+                    
+                    b.addEventListener("click", function(e) {
+                        inp.value = this.getElementsByTagName("input")[0].value;
+                        
+                        if(cityId && document.getElementById(cityId)) document.getElementById(cityId).value = currentLedger.city || "";
+                        if(stateId && document.getElementById(stateId)) document.getElementById(stateId).value = currentLedger.state || "";
+                        if(pinCodeId && document.getElementById(pinCodeId)) document.getElementById(pinCodeId).value = currentLedger.pinCode || "";
+                        if(ledgerCodeId && document.getElementById(ledgerCodeId)) document.getElementById(ledgerCodeId).value = currentLedger.ledgerCode || "";
+                        if(zoneId && document.getElementById(zoneId)) document.getElementById(zoneId).value = currentLedger.zone || "";
+                        if(bdmNameId && document.getElementById(bdmNameId)) document.getElementById(bdmNameId).value = currentLedger.bdmName || "";
+                        
+                        if(statusId && document.getElementById(statusId)) {
+                            let statusInput = document.getElementById(statusId);
+                            statusInput.value = currentLedger.status || "Current Ledger";
+                            statusInput.style.color = (currentLedger.status === 'Closed' || currentLedger.status === 'In Active') ? 'var(--danger)' : 'var(--success)';
+                        }
+                        closeAllAutocompleteLists();
+                    });
+                    a.appendChild(b); 
+                    matchCount++;
+                }
             }
-        }
+        }, 250);
     });
-    
-    function closeAllLists(elmnt) { 
-        var x = document.getElementsByClassName("autocomplete-items"); 
-        for (var i = 0; i < x.length; i++) { 
-            if (elmnt != x[i] && elmnt != inp) { 
-                x[i].parentNode.removeChild(x[i]); 
-            } 
-        } 
-    }
-    document.addEventListener("click", function (e) { closeAllLists(e.target); });
 }
 
         function checkIsToday(dateStr) {
@@ -2074,49 +2147,49 @@ async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false)
             }
         }
 
-async function refreshDataAndView() {
-            if (refreshRequestPromise) return refreshRequestPromise;
-            fetchVersion++;
-            const currentVer = fetchVersion;
-            const currentContext = activeTableContext;
+	async function refreshDataAndView() {
+    if (refreshRequestPromise) return refreshRequestPromise;
+    fetchVersion++;
+    const currentVer = fetchVersion;
+    const currentContext = activeTableContext;
 
-            refreshRequestPromise = (async () => {
-                try {
-                    for (let key in tableCache) {
-                        if (key !== 'ledgersList') {
-                            delete tableCache[key]; 
-                        }
-                    }
-
-                    let timeSinceWrite = Date.now() - lastWriteTime;
-                    if (timeSinceWrite < 2500) {
-                        await new Promise(resolve => setTimeout(resolve, 2500 - timeSinceWrite));
-                    }
-
-                    let tablePromise = Promise.resolve();
-                    
-                    if (currentContext) {
-                        if (currentContext.reqType === 'ledgers') {
-                            // 🚀 LEDGER MASTER ISOLATION: Ledger master apne independent function se refresh hoga
-                            document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Refreshing Ledger Master...</td></tr>";
-                            tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
-                        } else {
-                            // Baaki sabhi regular tables normal tareeqe se refresh hongi
-                            tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
-                        }
-                    } else {
-                        // Dashboard counters
-                        refreshCountsInBackground();
-                    }
-
-                    await tablePromise; 
-
-                } finally {
-                    refreshRequestPromise = null;
+    refreshRequestPromise = (async () => {
+        try {
+            for (let key in tableCache) {
+                if (key !== 'ledgersList') {
+                    delete tableCache[key]; 
                 }
-            })();
-            return refreshRequestPromise;
+            }
+
+            let timeSinceWrite = Date.now() - lastWriteTime;
+            if (timeSinceWrite < 2500) {
+                await new Promise(resolve => setTimeout(resolve, 2500 - timeSinceWrite));
+            }
+
+            let tablePromise = Promise.resolve();
+            
+            if (currentContext) {
+                if (currentContext.reqType === 'ledgers') {
+                    // LEDGER MASTER ISOLATION
+                    document.getElementById('ledgerTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center; padding:30px;'><span class='spinner' style='display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;'></span> Refreshing Ledger Master...</td></tr>";
+                    tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
+                } else {
+                    // Baaki sabhi regular tables normal tareeqe se refresh hongi
+                    tablePromise = loadAndRenderTable(currentContext.reqType, currentContext.renderFn, true);
+                }
+            } 
+            
+            // 🚀 FIX: Ise if-else block ke bahar nikal diya, ab ye hamesha chalega aur KPI update honge
+            refreshCountsInBackground();
+
+            await tablePromise; 
+
+        } finally {
+            refreshRequestPromise = null;
         }
+    })();
+    return refreshRequestPromise;
+}
 
         function logoutSystem() {
             document.getElementById('loginForm').reset();
@@ -2595,54 +2668,68 @@ function renderReturnProcessedTable(dataList, startDate, endDate) {
         function openAssignReturnCourierModal(returnId) { document.getElementById('assignReturnCourierForm').reset(); document.getElementById('assignReturnId').value = returnId; document.getElementById('assignReturnCourierModal').style.display = 'flex'; handleCourierChange(); }
         function closeAssignReturnCourierModal() { document.getElementById('assignReturnCourierModal').style.display = 'none'; }
 
-        function submitAssignReturnCourier(e) {
-            e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; 
-            
-            let partner = document.getElementById('retCourierPartner').value; 
-            if(partner === "Other") {
-                partner = document.getElementById('retCourierOther').value;
-            }
-            
-            const docket = document.getElementById('retDocketNo').value;
-            safeFetch({ action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", "Courier assigned successfully!"); closeAssignReturnCourierModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
+	function submitAssignReturnCourier(e) {
+    e.preventDefault(); const btn = document.getElementById('saveAssignReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    const returnId = document.getElementById('assignReturnId').value; const boxes = document.getElementById('assignRetBoxes').value; 
+    
+    let partner = document.getElementById('retCourierPartner').value; 
+    if(partner === "Other") partner = document.getElementById('retCourierOther').value;
+    const docket = document.getElementById('retDocketNo').value;
+    
+    safeFetch({ action: 'assignReturnCourier', returnId: returnId, partner: partner, docket: docket, boxes: boxes, actionBy: loggedInUser }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", "Courier assigned successfully!"); 
+            closeAssignReturnCourierModal(); 
+            // 🚀 FAST UI UPDATE: Instant tab refresh bina backend loading ke
+            updateReturnItemStatus(returnId, "Courier Assigned (Return)", { partner: partner, docket: docket, boxes: boxes });
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+}
 
         function openConfirmReturnPickupModal() { if(document.querySelectorAll('.return-pickup-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one return request.", "warning"); return; } document.getElementById('confirmReturnPickupModal').style.display = 'flex'; }
         function closeConfirmReturnPickupModal() { document.getElementById('confirmReturnPickupModal').style.display = 'none'; }
 
-        function processReturnPickup() {
-            const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
-            const btn = document.getElementById('confirmReturnPickupBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            safeFetch({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); closeConfirmReturnPickupModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-        }
+	function processReturnPickup() {
+    const checkboxes = document.querySelectorAll('.return-pickup-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { itemsToDispatch.push(cb.value); });
+    const btn = document.getElementById('confirmReturnPickupBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    
+    safeFetch({ action: 'confirmReturnPickup', items: itemsToDispatch, actionBy: loggedInUser }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", `${itemsToDispatch.length} return shipments picked up!`); 
+            closeConfirmReturnPickupModal(); 
+            // 🚀 FAST UI UPDATE
+            itemsToDispatch.forEach(id => {
+                updateReturnItemStatus(id, "In Transit (Return)");
+            });
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+}
 
         function openReceiveReturnModal(id, expectedBoxes) { document.getElementById('receiveReturnForm').reset(); document.getElementById('recvReturnId').value = id; document.getElementById('recvExpectedBoxes').value = expectedBoxes; document.getElementById('recvActualBoxes').max = expectedBoxes; document.getElementById('receiveReturnModal').style.display = 'flex'; }
         function closeReceiveReturnModal() { document.getElementById('receiveReturnModal').style.display = 'none'; }
 
-        async function submitReceiveReturn(e) {
-            e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
-            const file = document.getElementById('recvFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
-            if (file) { 
-                base64Data = await compressImage(file, 800, 800, 0.7); 
-                fileName = "RECV_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
-                mimeType = "image/jpeg"; 
-            }
-            safeFetch({ action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return receiving processed successfully!"); closeReceiveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
+	async function submitReceiveReturn(e) {
+    e.preventDefault(); const btn = document.getElementById('saveReceiveReturnBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    const id = document.getElementById('recvReturnId').value; const expected = parseInt(document.getElementById('recvExpectedBoxes').value, 10) || 0; const received = parseInt(document.getElementById('recvActualBoxes').value, 10) || 0;
+    const file = document.getElementById('recvFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
+    if (file) { 
+        base64Data = await compressImage(file, 800, 800, 0.7); fileName = "RECV_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; mimeType = "image/jpeg"; 
+    }
+    
+    safeFetch({ action: 'receiveReturn', returnId: id, expected: expected, received: received, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", "Return receiving processed successfully!"); 
+            closeReceiveReturnModal(); 
+            // 🚀 FAST UI UPDATE
+            let newStatus = (received < expected) ? "Return Received (Partial)" : "Return Received";
+            updateReturnItemStatus(id, newStatus, { rcvdBoxes: received });
+            refreshCountsInBackground(); // Backend se naye partial id ko sync karne ke liye
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+}
 
 function parseCustomDate(dStr) { 
     if (!dStr || dStr === '-') return new Date(NaN);
@@ -2681,18 +2768,24 @@ function calculateReturnTotalTime(startStr, endStr) {
         function openCNDetailsModal() { document.getElementById('cnDetailsForm').reset(); document.getElementById('cnDetailsModal').style.display = 'flex'; }
         function closeCNDetailsModal() { document.getElementById('cnDetailsModal').style.display = 'none'; }
 
-        function submitCNDetails(e) {
-            e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
-            const cnCreatedBy = document.getElementById('cnCreatedByInput').value.trim(); 
-            const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
-            
-            safeFetch({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, cnCreatedBy: cnCreatedBy, actionBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", "CN Details updated successfully!"); closeCNDetailsModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
+	function submitCNDetails(e) {
+    e.preventDefault(); const btn = document.getElementById('saveCNDetailsBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    const cnNo = document.getElementById('cnNoInput').value.trim(); const cnDate = document.getElementById('cnDateInput').value; const delayReason = document.getElementById('cnDelayReason').value;
+    const cnCreatedBy = document.getElementById('cnCreatedByInput').value.trim(); 
+    const checkboxes = document.querySelectorAll('.return-received-checkbox:checked'); const itemsToProcess = []; checkboxes.forEach(cb => { itemsToProcess.push(cb.value); });
+    
+    safeFetch({ action: 'fillCNDetails', items: itemsToProcess, cnNo: cnNo, cnDate: cnDate, delayReason: delayReason, cnCreatedBy: cnCreatedBy, actionBy: loggedInUser }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", "CN Details updated successfully!"); 
+            closeCNDetailsModal(); 
+            // 🚀 FAST UI UPDATE
+            itemsToProcess.forEach(id => {
+                updateReturnItemStatus(id, "Return Processed", { cnNo: cnNo, cnDate: cnDate });
+            });
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+}
 
         function handleResolveRetActionChange() {
             const actionSelect = document.getElementById('resolveRetAction').value; const dateGroup = document.getElementById('resolveRetDateGroup'); const dateInput = document.getElementById('resolveRetDate'); const dateLabel = document.getElementById('resolveRetDateLabel'); const appGroup = document.getElementById('resolveRetApprovedByGroup'); const appInput = document.getElementById('resolveRetApprovedBy');
@@ -2702,23 +2795,27 @@ function calculateReturnTotalTime(startStr, endStr) {
         function openResolveReturnModal(id) { document.getElementById('resolveReturnForm').reset(); document.getElementById('resolveRetId').value = id; document.getElementById('resolveRetIdDisplay').value = id; handleResolveRetActionChange(); document.getElementById('resolveReturnModal').style.display = 'flex'; }
         function closeResolveReturnModal() { document.getElementById('resolveReturnModal').style.display = 'none'; }
 
-        async function submitResolveReturnDispute(e) {
-            e.preventDefault(); const btn = document.getElementById('saveResolveRetBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
-            const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
-            let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
-            const file = document.getElementById('resolveRetFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
-            if (file) { 
-                base64Data = await compressImage(file, 800, 800, 0.7); 
-                fileName = "DISP_RES_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
-                mimeType = "image/jpeg"; 
-            }
-            safeFetch({ action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
-                if(data.status === 'success') { showToast("Success", "Return Dispute Resolved!"); closeResolveReturnModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
-        }
+	async function submitResolveReturnDispute(e) {
+    e.preventDefault(); const btn = document.getElementById('saveResolveRetBtn'); const originalHTML = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    const id = document.getElementById('resolveRetId').value; const actionStatus = document.getElementById('resolveRetAction').value; let remark = document.getElementById('resolveRetRemark').value;
+    const approvedBy = document.getElementById('resolveRetApprovedBy').value; if (approvedBy && document.getElementById('resolveRetApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
+    let actionDateStr = document.getElementById('resolveRetDate').value; if (actionDateStr && document.getElementById('resolveRetDateGroup').style.display !== 'none') { const d = new Date(actionDateStr); actionDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; remark += " | Date: " + actionDateStr; }
+    const file = document.getElementById('resolveRetFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
+    if (file) { 
+        base64Data = await compressImage(file, 800, 800, 0.7); fileName = "DISP_RES_" + id + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; mimeType = "image/jpeg"; 
+    }
+    
+    safeFetch({ action: 'resolveReturnDispute', returnId: id, resolutionStatus: actionStatus, remark: remark, actionBy: loggedInUser, fileBase64: base64Data, fileName: fileName, mimeType: mimeType }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", "Return Dispute Resolved!"); 
+            closeResolveReturnModal(); 
+            // 🚀 FAST UI UPDATE
+            let finalStatus = actionStatus === "Received at Origin" ? "Return Received (SHORT)" : "Closed (Claim Settled)";
+            updateReturnItemStatus(id, finalStatus, { remark: remark });
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = originalHTML; btn.disabled = false; });
+}
 
         function openDateRangeModal(tabName) { targetTabForDateRange = tabName; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('dateRangeModal').style.display = 'flex'; }
         function closeDateRangeModal() { document.getElementById('dateRangeModal').style.display = 'none'; }
@@ -2769,27 +2866,42 @@ function isDateInRange(dateStr, start, end) {
         function closeConfirmBulkModal() { document.getElementById('confirmBulkModal').style.display = 'none'; pendingBulkAssignments = []; }
         function executeBulkAssignment() { if(pendingBulkAssignments.length === 0) return; submitBulkAssignment(pendingBulkAssignments); }
 
-        function submitBulkAssignment(assignments) {
-            const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            safeFetch({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", `${data.processed} invoices verified and assigned!`); closeConfirmBulkModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
-        }
+	function submitBulkAssignment(assignments) {
+    const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
+    safeFetch({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }).then(data => {
+        if(data.status === 'success') {
+            showToast("Success", `${data.processed} invoices assigned!`);
+            closeConfirmBulkModal();
+            const assignedInvs = assignments.map(a => a.invoiceNo);
+            moveItemsAndRefresh('pending', 'assigned',
+                (item) => assignedInvs.includes(item.invoiceNo),
+                (item) => {
+                    let matched = assignments.find(a => a.invoiceNo === item.invoiceNo);
+                    return { invoiceNo: item.invoiceNo, partner: matched.partner, docket: matched.docketNo, city: matched.city, drName: matched.drName, ledgerName: matched.ledgerName, pinCode: matched.pinCode, actionTime: "Just Now", status: "Assigned" };
+                }
+            );
+        } else showToast("Error", data.message, "error");
+    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
+}
 
         function openConfirmDispatchModal() { if(document.querySelectorAll('.dispatch-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return; } document.getElementById('confirmDispatchModal').style.display = 'flex'; }
         function closeConfirmDispatchModal() { document.getElementById('confirmDispatchModal').style.display = 'none'; }
 
-        function processPhysicalDispatch() {
-            const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
-            const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
-            safeFetch({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", `${itemsToDispatch.length} shipments physically dispatched!`); closeConfirmDispatchModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-        }
+	function processPhysicalDispatch() {
+    const checkboxes = document.querySelectorAll('.dispatch-checkbox:checked'); const itemsToDispatch = []; checkboxes.forEach(cb => { const parts = cb.value.split('|'); itemsToDispatch.push({ invoiceNo: parts[0], docketNo: parts[1] }); });
+    const btn = document.getElementById('confirmDispatchBtn'); const originalText = btn.innerHTML; btn.innerHTML = "Processing..."; btn.disabled = true;
+    safeFetch({ action: 'physicalDispatch', items: itemsToDispatch, dispatchedBy: loggedInUser }).then(data => {
+        if(data.status === 'success') {
+            showToast("Success", `${itemsToDispatch.length} shipments dispatched!`);
+            closeConfirmDispatchModal();
+            // 🚀 FAST UI UPDATE: Instant move bina loading ke
+            moveItemsAndRefresh('assigned', 'transit',
+                (item) => itemsToDispatch.some(i => i.invoiceNo === item.invoiceNo && i.docketNo === (item.docket || item.docketNo)),
+                (item) => { item.status = "In Transit"; item.actionTime = "Just Now"; return item; }
+            );
+        } else showToast("Error", data.message, "error");
+    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+}
 
         function openForgotPasswordModal() { document.getElementById('forgotPasswordModal').style.display = 'flex'; }
         function closeForgotPasswordModal() { document.getElementById('forgotPasswordModal').style.display = 'none'; }
@@ -2813,59 +2925,58 @@ function isDateInRange(dateStr, start, end) {
             if (actionSelect === "Received at Origin" || actionSelect === "Received to Party" || actionSelect === "Delivered to client") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'none'; appInput.required = false; } else if (actionSelect === "Claim Settled / Closed" || actionSelect === "Return to Origin") { dateGroup.style.display = 'block'; dateInput.required = true; appGroup.style.display = 'block'; appInput.required = true; } else { dateGroup.style.display = 'none'; dateInput.required = false; appGroup.style.display = 'none'; appInput.required = false; }
         }
 
-        async function submitPodUpload(e) {
-            e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
-            const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value; 
-            let base64Data = ""; let fileName = ""; let mimeType = ""; const file = document.getElementById('podFile').files[0]; 
-            if (file && file.type.startsWith('image/')) { 
-                base64Data = await compressImage(file, 800, 800, 0.7); 
-                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + ".jpg"; 
-                mimeType = "image/jpeg"; 
-            } else if (file) {
-                base64Data = await getBase64(file);
-                fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + "_" + file.name;
-                mimeType = file.type;
-            }
-            safeFetch({ action: 'uploadPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: uploadType, remarks: remarkInput }).then(data => {
-                if(data.status === 'success') { showToast("Updated", `Status (${uploadType}) Updated Successfully!`); closePodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
-        }
+	async function submitPodUpload(e) {
+    e.preventDefault(); const btn = document.getElementById('savePodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
+    const uploadType = document.getElementById('uploadType').value; const invoiceNo = document.getElementById('podInvoiceNo').value; const oldDocketNo = document.getElementById('podOldDocketNo').value; const remarkInput = document.getElementById('podRemark').value;
+    let base64Data = "", fileName = "", mimeType = ""; const file = document.getElementById('podFile').files[0];
+    if (file && file.type.startsWith('image/')) { base64Data = await compressImage(file, 800, 800, 0.7); fileName = invoiceNo + "_" + uploadType.replace(" ", "_") + ".jpg"; mimeType = "image/jpeg"; }
+    else if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_" + file.name; mimeType = file.type; }
+    safeFetch({ action: 'uploadPOD', invoiceNo, oldDocketNo, fileName, mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType, remarks: remarkInput }).then(data => {
+        if(data.status === 'success') {
+            showToast("Updated", `Status Updated!`); closePodModal();
+            let targetTab = uploadType === "Delivered" ? 'delivered' : 'disputed';
+            moveItemsAndRefresh('transit', targetTab,
+                (item) => item.invoiceNo === invoiceNo && item.docket === oldDocketNo,
+                (item) => { item.status = uploadType; item.remark = remarkInput; item.actionTime = "Just Now"; return item; }
+            );
+        } else showToast("Error", data.message, "error");
+    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
+}
 
-        async function submitFinalPodUpload(e) {
-            e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
-            const actionType = document.getElementById('finalActionType').value; const invoiceNo = document.getElementById('finalPodInvoiceNo').value; const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
-            const expBoxes = document.getElementById('finalExpectedBoxes').value; const recBoxes = document.getElementById('finalReceivedBoxes').value; const rem = document.getElementById('finalPodRemark').value;
-            const file = document.getElementById('finalPodFile').files[0]; 
-            let base64Data = ""; let fileName = ""; let mimeType = "";
-            if (file && file.type.startsWith('image/')) { 
-                base64Data = await compressImage(file, 800, 800, 0.7); 
-                fileName = invoiceNo + "_POD_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg"; 
-                mimeType = "image/jpeg"; 
-            } else if (file) {
-                base64Data = await getBase64(file); 
-                fileName = invoiceNo + "_POD_" + file.name; 
-                mimeType = file.type; 
-            }
-            safeFetch({ action: 'uploadFinalPOD', invoiceNo: invoiceNo, oldDocketNo: oldDocketNo, fileName: fileName, mimeType: mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem }).then(data => {
-                if(data.status === 'success') { showToast("Success", `Status Updated Successfully!`); closeFinalPodModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
-        }
+	async function submitFinalPodUpload(e) {
+    e.preventDefault(); const btn = document.getElementById('saveFinalPodBtn'); btn.innerHTML = "Updating..."; btn.disabled = true;
+    const actionType = document.getElementById('finalActionType').value; const invoiceNo = document.getElementById('finalPodInvoiceNo').value; const oldDocketNo = document.getElementById('finalPodOldDocketNo').value;
+    const expBoxes = document.getElementById('finalExpectedBoxes').value; const recBoxes = document.getElementById('finalReceivedBoxes').value; const rem = document.getElementById('finalPodRemark').value;
+    const file = document.getElementById('finalPodFile').files[0]; let base64Data = "", fileName = "", mimeType = "";
+    if (file && file.type.startsWith('image/')) { base64Data = await compressImage(file, 800, 800, 0.7); fileName = invoiceNo + "_POD.jpg"; mimeType = "image/jpeg"; }
+    else if (file) { base64Data = await getBase64(file); fileName = invoiceNo + "_POD_" + file.name; mimeType = file.type; }
+    safeFetch({ action: 'uploadFinalPOD', invoiceNo, oldDocketNo, fileName, mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem }).then(data => {
+        if(data.status === 'success') {
+            showToast("Success", `Status Updated Successfully!`); closeFinalPodModal();
+            let targetTab = actionType === "Short Delivered" ? 'disputed' : 'dispatched';
+            moveItemsAndRefresh('delivered', targetTab,
+                (item) => item.invoiceNo === invoiceNo && item.docket === oldDocketNo,
+                (item) => { item.status = actionType; item.actionTime = "Just Now"; return item; }
+            );
+        } else showToast("Error", data.message, "error");
+    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
+}
 
-        async function submitResolveDispute(e) {
-            e.preventDefault(); const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-            const invoiceNo = document.getElementById('resolveInvNo').value; const docketNo = document.getElementById('resolveDocket').value; const actionStatus = document.getElementById('resolveAction').value; let remark = document.getElementById('resolveFinalRemark').value;
-            const approvedBy = document.getElementById('resolveApprovedBy').value; if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
-            let receiveDateStr = document.getElementById('resolveReceiveDate').value; if(receiveDateStr) { const d = new Date(receiveDateStr); receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
-            safeFetch({ action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser }).then(data => {
-                if(data.status === 'success') { showToast("Success", "Case Resolved Successfully!"); closeResolveModal(); refreshDataAndView(); } else { showToast("Error", data.message, "error"); }
-            }).catch(err => {
-                showToast("Error", err.message || "Request failed", "error");
-            }).finally(() => { btn.innerHTML = "Close Case"; btn.disabled = false; });
-        }
+async function submitResolveDispute(e) {
+    e.preventDefault(); const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
+    const invoiceNo = document.getElementById('resolveInvNo').value; const docketNo = document.getElementById('resolveDocket').value; const actionStatus = document.getElementById('resolveAction').value; let remark = document.getElementById('resolveFinalRemark').value;
+    const approvedBy = document.getElementById('resolveApprovedBy').value; if (approvedBy && document.getElementById('resolveApprovedByGroup').style.display !== 'none') { remark += " | " + approvedBy; }
+    let receiveDateStr = document.getElementById('resolveReceiveDate').value; if(receiveDateStr) { const d = new Date(receiveDateStr); receiveDateStr = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
+    safeFetch({ action: 'resolveDispute', invoiceNo: invoiceNo, docketNo: docketNo, resolutionStatus: actionStatus, resolutionRemark: remark, receiveDate: receiveDateStr, resolvedBy: loggedInUser }).then(data => {
+        if(data.status === 'success') { 
+            showToast("Success", "Case Resolved Successfully!"); 
+            closeResolveModal(); 
+            // 🚀 FAST UI UPDATE
+            removeItemsFromCacheAndRefresh('disputed', (item) => !(item.invoiceNo === invoiceNo && item.docket === docketNo), ['delivered', 'dispatched']);
+        } else { showToast("Error", data.message, "error"); }
+    }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
+    .finally(() => { btn.innerHTML = "Close Case"; btn.disabled = false; });
+}
 
         function updateDateTime() {
             const now = new Date(); const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`; document.getElementById('dashCompactTime').innerText = timeStr;
