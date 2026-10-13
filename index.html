@@ -276,10 +276,14 @@
                     <option value="Return Courier Management">Return Management Only</option>
                 </select>
 
-                <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1; margin-right: 5px;" title="Refresh Latest Data">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-                    Refresh
-                </button>
+		<!-- Refresh Button & Last Sync Time Container -->
+<div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px;">
+    <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1;" title="Refresh Latest Data">
+        <svg id="syncIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+        <span id="syncText">Refresh</span>
+    </button>
+    <span id="lastSyncTimeLabel" style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">Last Sync: Pending...</span>
+</div>
                 
                 <div class="user-profile">
                     <div class="avatar" id="avatarInitial">U</div>
@@ -1907,6 +1911,26 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
             if (document.getElementById('unplannedReturnCount')) document.getElementById('unplannedReturnCount').innerText = c.unplanned;
         }
 
+	// 🚀 NAYA FUNCTION: Last Sync Time show aur update karne ke liye
+function updateLastSyncTime() {
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    let seconds = String(now.getSeconds()).padStart(2, '0');
+    let ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; 
+    const timeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+    
+    const el = document.getElementById('lastSyncTimeLabel');
+    if (el) {
+        el.innerText = "Last Sync: " + timeStr;
+        // Update hone par halka sa green highlight effect aayega
+        el.style.color = "var(--success)";
+        setTimeout(() => el.style.color = "var(--text-muted)", 2000);
+    }
+}
+
         function handleModuleSwitch() {
             const newVal = document.getElementById('adminModuleSwitcher').value;
             loggedInUserType = newVal;
@@ -2100,13 +2124,20 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     }
                     return null;
                 })
-                .finally(() => {
-                    countsRequestPromise = null;
-                    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
-                });
+		.finally(() => {
+                countsRequestPromise = null;
+                
+                // Ye line pehle se aapke code me hogi
+                if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+                
+                // 🚀 BAS YE EK NAYI LINE YAHAN ADD KARNI HAI 👇
+                if (typeof updateLastSyncTime === 'function') {
+                    updateLastSyncTime(); 
+                }
+            });
 
-            return countsRequestPromise;
-        }
+        return countsRequestPromise;
+    }
 
         function refreshCountsInBackground() {
             if (!loggedInUser || freshCountsRequestPromise) return freshCountsRequestPromise || Promise.resolve();
@@ -2180,22 +2211,32 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
 
 	async function refreshDataAndView() {
         if (refreshRequestPromise) return refreshRequestPromise;
+        
+        // --- NAYA UI UPDATE LOGIC START (Spinner Chalu Karo) ---
+        const btn = document.getElementById('syncBtn');
+        const icon = document.getElementById('syncIcon');
+        const text = document.getElementById('syncText');
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            btn.style.cursor = "not-allowed";
+            if(icon) icon.style.animation = "spin 1s linear infinite"; // Rotate karna shuru
+            if(text) text.innerText = "Refreshing...";
+        }
+        // -------------------------------------------------------
+
         fetchVersion++;
         const currentVer = fetchVersion;
         const currentContext = activeTableContext;
 
         refreshRequestPromise = (async () => {
             try {
-                // PURANA CODE YAHAN CACHE DELETE KARTA THA AUR 2.5 SECONDS WAIT KARTA THA.
-                // MAINE WO HATA DIYA HAI. AB UI BLANK NAHI HOGA AUR INSTANT CHALEGA.
                 let tablePromise = Promise.resolve();
                 
                 if (currentContext) {
                     if (currentContext.reqType === 'ledgers') {
-                        // LEDGER MASTER ISOLATION
                         tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
                     } else {
-                        // Background me silently naya data layega bina Loading Screen dikhaye
                         tablePromise = safeFetch({ action: 'syncData', reqType: currentContext.reqType, forceRefresh: true, module: loggedInUserType })
                             .then(resp => {
                                 if (resp && resp.status === 'success') {
@@ -2209,12 +2250,25 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
                     }
                 } 
                 
-                // Dashboard ke counts ko background me fast update karega
-                refreshCountsInBackground();
-                await tablePromise; 
+                // Dashboard counts update
+                let countsPromise = refreshCountsInBackground();
+                
+                // Dono background process khatm hone ka wait karein
+                await Promise.all([tablePromise, countsPromise]); 
 
             } finally {
                 refreshRequestPromise = null;
+                
+                // --- RESTORE UI AND UPDATE TIME START (Spinner Band Karo) ---
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                    btn.style.cursor = "pointer";
+                    if(icon) icon.style.animation = "none"; // Rotate karna band
+                    if(text) text.innerText = "Refresh";
+                }
+                updateLastSyncTime(); // Last sync time label ko naye time par set karein
+                // -------------------------------------------------------------
             }
         })();
         return refreshRequestPromise;
