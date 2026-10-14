@@ -362,6 +362,16 @@
                             <div class="kpi-header"><span class="kpi-title">Dispatched Bills</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div></div>
                             <div class="kpi-value" id="dispatchCount">0</div><div class="kpi-desc">Completed / Exceptions</div>
                         </div>
+			<div class="kpi-card" id="card-dispatch-status" style="background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;" onclick="showDispatchStatusList()" data-tab-name="Search Entry">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Track Status</span>
+                                <div class="kpi-icon" style="background: rgba(22, 163, 74, 0.15); color: #16a34a;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value" style="font-size: 24px;">Search Entry</div>
+                            <div class="kpi-desc">Track status from Pending to Delivered</div>
+                        </div>
                     </div>
                 </div>
 
@@ -560,7 +570,7 @@
                 </div>
             </div>
 
-            <div id="dispatched-list-section" class="table-wrapper">
+	<div id="dispatched-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Dispatched Bills (Completed / Exceptions)</h2>
                     <div class="table-actions">
@@ -578,6 +588,27 @@
                             </tr>
                         </thead>
                         <tbody id="dispatchedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="dispatch-status-list-section" class="table-wrapper">
+                <div class="table-header">
+                    <h2>Track Dispatch Status</h2>
+                    <div class="table-actions">
+                        <input type="text" id="dispatchStatusSearchBox" class="search-box" placeholder="Search Invoice No, Dr. Name, Ledger, Docket..." onkeyup="debouncedFilterTable('dispatchStatusSearchBox')">
+                        <button class="btn-outline btn-export" onclick="exportTableToCSV('dispatchStatusTable', 'Dispatch_Status_Track.csv')">Export CSV</button>
+                        <button class="btn-outline" onclick="showDashboardCards()">Back</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="dispatchStatusTable" style="min-width: 1150px;">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dispatchStatusTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -1464,7 +1495,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsToSqDr1Jd2PBvQmcWoJWYmcp_tlahLiWQt9-vKy4PfRG9x3PDnJBqRfzmfDNPYm-/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwz4G9CklEUb_6vGJUTsG396oJRpbL496-xTyQIyu7PlemcXYEb879SweteQ3neYrky/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1541,6 +1572,9 @@ function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn
             tableCache[targetReqType].unshift(transformed); 
         });
     }
+	delete tableCache['dispatchStatus'];
+    localStorage.removeItem("cms_table_dispatchStatus");
+
     refreshCountsInBackground();
 }
 	function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
@@ -2257,6 +2291,8 @@ function updateLastSyncTime() {
                 if (currentContext) {
                     if (currentContext.reqType === 'ledgers') {
                         tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
+                    } else if (currentContext.reqType === 'dispatchStatus') {
+                        tablePromise = showDispatchStatusList(true);
                     } else {
                         tablePromise = safeFetch({ action: 'syncData', reqType: currentContext.reqType, forceRefresh: true, module: loggedInUserType })
                             .then(resp => {
@@ -2501,6 +2537,146 @@ function updateLastSyncTime() {
             if(disputedReturns.length === 0) { document.getElementById('returnDisputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed returns found.</td></tr>"; return; }
             let html = []; disputedReturns.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.id}</b></td><td><b>${item.drName}</b></td><td>${item.ledgerName}</td><td>${item.boxes}</td><td>${item.city}</td><td>${item.partner || '-'}</td><td>${item.docket || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td style="color:#c2410c;">${item.recvDate || '-'}</td><td style="font-size: 13px; color: var(--text-muted); max-width: 200px;">${item.remark || '-'}</td><td><button class="action-btn btn-primary" onclick="openResolveReturnModal('${item.id}')">Resolve</button></td></tr>`); });
             renderLargeHtml('returnDisputedTableBody', html);
+        }
+
+	async function showDispatchStatusList(forceRefresh = false) {
+            hideAllLists();
+            document.getElementById('dispatch-status-list-section').style.display = 'block';
+            activeTableContext = { reqType: 'dispatchStatus', renderFn: renderDispatchStatusTable };
+
+            if (!forceRefresh && tableCache['dispatchStatus']) {
+                renderDispatchStatusTable(tableCache['dispatchStatus']);
+                return;
+            }
+
+            const tbody = document.getElementById('dispatchStatusTableBody');
+            let hasLocalData = false;
+
+            if (!forceRefresh) {
+                try {
+                    let saved = localStorage.getItem("cms_table_dispatchStatus");
+                    if (saved) {
+                        tableCache['dispatchStatus'] = JSON.parse(saved);
+                        renderDispatchStatusTable(tableCache['dispatchStatus']);
+                        hasLocalData = true;
+                    }
+                } catch (e) {}
+            }
+
+            if (!hasLocalData && tbody) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Dispatch Status...</span></td></tr>`;
+            }
+
+            try {
+                const types = ['delivered', 'disputed', 'transit', 'assigned', 'pending'];
+                const results = await Promise.all(types.map(t => {
+                    if (!forceRefresh && tableCache[t]) return Promise.resolve({ status: 'success', data: tableCache[t] });
+                    return safeFetch({ action: 'syncData', reqType: t, forceRefresh: forceRefresh, module: loggedInUserType });
+                }));
+
+                const [delRes, dispExRes, tranRes, asgnRes, pendRes] = results.map(r => (r && r.status === 'success') ? (r.data || []) : []);
+                
+                types.forEach((t, idx) => {
+                    if (results[idx] && results[idx].status === 'success') tableCache[t] = results[idx].data || [];
+                });
+
+                let combined = [];
+                let seenKeys = new Set();
+                let processedInvs = new Set();
+
+		// 1. Delivered (POD / Action Pending)
+                delRes.forEach(item => {
+                    let k = item.invoiceNo + "_" + (item.docket || "");
+                    processedInvs.add(item.invoiceNo);
+                    if (!seenKeys.has(k)) {
+                        seenKeys.add(k);
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "Delivered (POD / Action Pending)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
+                    }
+                });
+
+                // 2. Disputed / Exceptions (Pending Resolution)
+                dispExRes.forEach(item => {
+                    let k = item.invoiceNo + "_" + (item.docket || "");
+                    processedInvs.add(item.invoiceNo);
+                    if (!seenKeys.has(k)) {
+                        seenKeys.add(k);
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: item.status ? (item.status + " (Pending Resolution)") : "Disputed (Pending Resolution)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
+                    }
+                });
+
+                // 3. In Transit (Delivery Pending)
+                tranRes.forEach(item => {
+                    let k = item.invoiceNo + "_" + (item.docket || "");
+                    processedInvs.add(item.invoiceNo);
+                    if (!seenKeys.has(k)) {
+                        seenKeys.add(k);
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "In Transit (Delivery Pending)", actionTime: item.actionTime || '-', remark: '-' });
+                    }
+                });
+
+                // 4. Courier Assigned (Awaiting Physical Dispatch)
+                asgnRes.forEach(item => {
+                    let k = item.invoiceNo + "_" + (item.docket || "");
+                    processedInvs.add(item.invoiceNo);
+                    if (!seenKeys.has(k)) {
+                        seenKeys.add(k);
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "Courier Assigned (Awaiting Physical Dispatch)", actionTime: item.actionTime || '-', remark: '-' });
+                    }
+                });
+
+                // 5. Total Pending (Action Required)
+                pendRes.forEach(item => {
+                    if (item.invoiceNo && !processedInvs.has(item.invoiceNo)) {
+                        processedInvs.add(item.invoiceNo);
+                        combined.push({ invoiceNo: item.invoiceNo, drName: '-', ledgerName: '-', city: '-', partner: '-', docket: '-', status: "Pending (Action Required)", actionTime: item.scanTime || '-', remark: '-' });
+                    }
+                });
+
+                tableCache['dispatchStatus'] = combined;
+                try { localStorage.setItem("cms_table_dispatchStatus", JSON.stringify(combined)); } catch (e) {}
+
+                if (activeTableContext && activeTableContext.reqType === 'dispatchStatus') {
+                    renderDispatchStatusTable(combined);
+                }
+            } catch (err) {
+                console.error(err);
+                if (!hasLocalData && tbody) {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
+                }
+            }
+        }
+
+        function renderDispatchStatusTable(dataList) {
+            if (!dataList || dataList.length === 0) {
+                document.getElementById('dispatchStatusTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
+                return;
+            }
+            let html = [];
+            dataList.forEach((item, index) => {
+                let badgeClass = "bg-assigned";
+                let s = String(item.status || "").toLowerCase();
+                if (s.includes('pending')) badgeClass = "bg-pending";
+                else if (s.includes('transit')) badgeClass = "bg-transit";
+                else if (s.includes('delivered') || s.includes('dispatched') || s.includes('pod') || s.includes('otp')) badgeClass = "bg-delivered";
+                else if (s.includes('dispute') || s.includes('rto') || s.includes('misplaced') || s.includes('short') || s.includes('missing') || s.includes('closed')) badgeClass = "bg-rto";
+
+                let courierInfo = (item.partner && item.partner !== '-') 
+                    ? `<b>${item.partner}</b><div style="font-size:11px; color:#64748b;">${item.docket || '-'}</div>` 
+                    : '-';
+
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo || '-'}</b></td>
+                    <td><b>${item.drName || '-'}</b></td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${courierInfo}</td>
+                    <td><span class="badge ${badgeClass}">${item.status || '-'}</span></td>
+                    <td style="font-size:13px;">${item.actionTime || '-'}</td>
+                    <td style="font-size:12px; color:#64748b;">${item.remark || '-'}</td>
+                </tr>`);
+            });
+            renderLargeHtml('dispatchStatusTableBody', html);
         }
 
         function showReturnStatusList() {
