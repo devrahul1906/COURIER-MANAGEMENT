@@ -2868,9 +2868,19 @@ async function showLedgerMasterList() {
             renderLargeHtml('ledgerTableBody', html);
         }
 
-        function changeLedgerStatus(selectEl, ledgerName) {
+	function changeLedgerStatus(selectEl, ledgerName) {
             const newStatus = selectEl.value;
             const originalStatus = selectEl.dataset.original; 
+
+            // Check if the logged-in user is Admin or Master
+            const isAdmin = (loggedInUserRole || "").toLowerCase().includes("admin") || (loggedInUserRole || "").toLowerCase().includes("master");
+
+            // 🔒 LOCK: If ledger is already 'Closed', only Admin can change its status
+            if (originalStatus === 'Closed' && !isAdmin) {
+                showToast("Access Denied", "Status change for closed ledgers is restricted to Admin only!", "error");
+                selectEl.value = originalStatus; // Reset dropdown back to Closed
+                return;
+            }
 
             if (newStatus === 'Closed') {
                 document.getElementById('ledgerClosedForm').reset();
