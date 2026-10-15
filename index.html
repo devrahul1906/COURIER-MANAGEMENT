@@ -1495,7 +1495,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzRm9O96O1VwGR2GQGQZa5YoJU0Z8TfFcvxAR1CcLib3mtHQ10pOSw92lEWVtCFlMU/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyowIeAt8aHKt61mox7li1dh16vKW_TZxTqsGwP3p6Q5QcA-fvkd5kMf-A4gVWzqo_B/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2539,7 +2539,9 @@ function updateLastSyncTime() {
             renderLargeHtml('returnDisputedTableBody', html);
         }
 
-	async function showDispatchStatusList(forceRefresh = false) {
+	let archiveSearchCounter = 0;
+
+        async function showDispatchStatusList(forceRefresh = false) {
             hideAllLists();
             document.getElementById('dispatch-status-list-section').style.display = 'block';
             activeTableContext = { reqType: 'dispatchStatus', renderFn: renderDispatchStatusTable };
@@ -2564,10 +2566,11 @@ function updateLastSyncTime() {
             }
 
             if (!hasLocalData && tbody) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Dispatch Status...</span></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Active Dispatch Status...</span></td></tr>`;
             }
 
             try {
+                // 🚀 Sirf Active tabs load honge (Dispatched ke 20,000 bills load nahi honge)
                 const types = ['delivered', 'disputed', 'transit', 'assigned', 'pending'];
                 const results = await Promise.all(types.map(t => {
                     if (!forceRefresh && tableCache[t]) return Promise.resolve({ status: 'success', data: tableCache[t] });
@@ -2584,7 +2587,7 @@ function updateLastSyncTime() {
                 let seenKeys = new Set();
                 let processedInvs = new Set();
 
-		// 1. Delivered (POD / Action Pending)
+                // 1. Delivered (POD / Action Pending)
                 delRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
@@ -2646,16 +2649,42 @@ function updateLastSyncTime() {
             }
         }
 
-        function renderDispatchStatusTable(dataList) {
+        function renderDispatchStatusTable(dataList, isFromArchive = false) {
+            const tbody = document.getElementById('dispatchStatusTableBody');
+            const searchBox = document.getElementById('dispatchStatusSearchBox');
+            const searchVal = searchBox ? searchBox.value.trim() : "";
+
             if (!dataList || dataList.length === 0) {
-                document.getElementById('dispatchStatusTableBody').innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
+                // 🚀 SMART CHECK: Agar active list me nahi mila aur user ne kuch search kiya hai, toh Dispatched Archive me check karo
+                if (searchVal.length >= 3 && !isFromArchive) {
+                    const currentSearchId = ++archiveSearchCounter;
+                    tbody.innerHTML = `<tr><td colspan='9' style='text-align:center; padding: 25px;'><span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--primary); font-weight:600;">Not in active pipeline. Checking Completed / Dispatched Archive for "${safeStr(searchVal)}"...</span></td></tr>`;
+                    
+                    safeFetch({ action: 'syncData', reqType: 'searchArchive', query: searchVal })
+                        .then(res => {
+                            if (currentSearchId !== archiveSearchCounter) return;
+                            if (res && res.status === 'success' && res.data && res.data.length > 0) {
+                                renderDispatchStatusTable(res.data, true);
+                            } else {
+                                tbody.innerHTML = `<tr><td colspan='9' style='text-align:center; color:var(--text-muted); padding: 20px;'>No invoice found matching "<b>${safeStr(searchVal)}</b>" in Active Pipeline or Dispatched Archive.</td></tr>`;
+                            }
+                        })
+                        .catch(() => {
+                            if (currentSearchId !== archiveSearchCounter) return;
+                            tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
+                        });
+                    return;
+                }
+
+                tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
                 return;
             }
+
             let html = [];
             dataList.forEach((item, index) => {
                 let badgeClass = "bg-assigned";
                 let s = String(item.status || "").toLowerCase();
-                if (s.includes('pending')) badgeClass = "bg-pending";
+                if (s.includes('pending') && !s.includes('pod') && !s.includes('resolution') && !s.includes('delivery')) badgeClass = "bg-pending";
                 else if (s.includes('transit')) badgeClass = "bg-transit";
                 else if (s.includes('delivered') || s.includes('dispatched') || s.includes('pod') || s.includes('otp')) badgeClass = "bg-delivered";
                 else if (s.includes('dispute') || s.includes('rto') || s.includes('misplaced') || s.includes('short') || s.includes('missing') || s.includes('closed')) badgeClass = "bg-rto";
