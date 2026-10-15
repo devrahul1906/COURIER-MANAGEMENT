@@ -217,6 +217,77 @@
             font-size: 13px;
         }
         .autocomplete-items div:hover { background-color: #f1f5f9; }
+	/* 4 CSV / Features Grid Styles */
+.login-features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 650px;
+    margin-top: 25px;
+    position: relative;
+    z-index: 2;
+}
+.login-feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 5px;
+    position: relative;
+}
+/* Beech me vertical divider lines dene ke liye */
+.login-feature-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 15%;
+    height: 70%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+.feature-icon-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+    transition: 0.3s ease;
+}
+.login-feature-item:hover .feature-icon-circle {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+.feature-icon-circle svg {
+    width: 20px;
+    height: 20px;
+    stroke: #ffffff;
+    fill: none;
+    stroke-width: 2;
+}
+.feature-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+}
+.feature-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.2;
+}
+
+/* Responsive adjustment agar screen choti ho */
+@media (max-width: 900px) {
+    .login-features-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .login-feature-item:nth-child(2)::after { display: none; }
+}
     </style>
 </head>
 <body>
@@ -235,6 +306,41 @@
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" class="login-center-logo">
                 <h2>Courier Management System</h2>
                 <p class="tagline">Secure • Fast • Trackable</p>
+		<!-- Yaha se aapko 4 features paste karne hain -->
+    <div class="login-features-grid">
+        <div class="login-feature-item">
+            <div class="feature-icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="feature-title">Secure Access</div>
+            <div class="feature-desc">Your data, our priority</div>
+        </div>
+        
+        <div class="login-feature-item">
+            <div class="feature-icon-circle">
+                <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div class="feature-title">Fast Operations</div>
+            <div class="feature-desc">Save time, work better</div>
+        </div>
+        
+        <div class="login-feature-item">
+            <div class="feature-icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="feature-title">Track in Real-time</div>
+            <div class="feature-desc">Every parcel, every step</div>
+        </div>
+        
+        <div class="login-feature-item">
+            <div class="feature-icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="feature-title">Complete Visibility</div>
+            <div class="feature-desc">From dispatch to delivery</div>
+        </div>
+    </div>
+    <!-- Yahan par div khatm ho jayega -->
             </div>
         </div>
         <div class="login-right">
