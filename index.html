@@ -2863,35 +2863,44 @@ function updateLastSyncTime() {
 	function renderReturnStatusTable(dataObj) {
             let combinedList = [];
             
-            // Jo items 'Return Processed' ho chuke hain unki IDs nikal lein taaki wo list me na aayein
-            let processedIds = new Set(
-                (dataObj.returnBills || [])
-                    .filter(r => r.status === 'Return Processed')
-                    .map(r => r.id)
-            );
+            const searchBox = document.getElementById('returnStatusSearchBox');
+            const searchVal = searchBox ? searchBox.value.trim().toLowerCase() : "";
 
-            // 1. Unplanned Bills -> Unplanned Received (Confirmation Pending)
-            dataObj.unplannedBills.forEach(u => { 
-                if (processedIds.has(u.id)) return; 
+            // 🚀 NAYA FIX: Un sabhi Return IDs ki ek Set bana lein jo 'Return Processed' ho chuke hain
+            let processedIds = new Set();
+            (dataObj.returnBills || []).forEach(r => {
+                if (r.status === 'Return Processed' && r.id) {
+                    processedIds.add(String(r.id).trim());
+                }
+            });
+
+            // 1. Unplanned Bills -> Unplanned Received
+            (dataObj.unplannedBills || []).forEach(u => { 
+                // Agar ye unplanned return pehle hi process ho chuka hai aur user ne search nahi kiya, toh skip karo
+                let isProcessed = processedIds.has(String(u.id).trim());
+                if (isProcessed && !searchVal) return;
+
                 let st = u.status === 'Confirmed' ? 'Unplanned Received (BDM Confirmed)' : 'Unplanned Received (BDM Confirmation Pending)';
+                if (isProcessed) st = 'Return Processed (CN Generated)';
+
                 combinedList.push({ id: u.id, type: 'Unplanned', drName: u.drName, ledgerName: u.ledgerName, boxes: u.boxes, status: st, date: u.date, remark: '-' }); 
             });
 
-            // 2. Generated Return Bills -> Exact KPI Card Status Mapping
-            dataObj.returnBills.forEach(r => { 
-                // 🚀 FILTER: Agar status 'Return Processed' hai toh is list me mat dikhao
-                if (r.status === 'Return Processed') return;
+            // 2. Generated Return Bills
+            (dataObj.returnBills || []).forEach(r => { 
+                let isProcessed = (r.status === 'Return Processed');
+                
+                if (isProcessed && !searchVal) return; 
 
                 let latestDate = r.recvDate || r.dispatchDate || r.assignDate || r.date; 
                 let exactStatus = r.status;
                 
-                // Mapping raw status to exact dashboard card status titles
                 if (exactStatus === 'Expected Return') exactStatus = 'Awaiting Courier Assignment';
                 else if (exactStatus === 'Courier Assigned (Return)') exactStatus = 'Courier Assigned - Pending Pickup';
                 else if (exactStatus === 'In Transit (Return)') exactStatus = 'In Transit (Return)';
                 else if (exactStatus === 'Return Received') exactStatus = 'Return Received, Pending for CN';
                 else if (exactStatus === 'Return Received (Partial)' || exactStatus === 'Return Received (Excess)') exactStatus = 'Return Received (Partial/Excess)';
-                else if (exactStatus === 'Return Processed') exactStatus = 'Return Processed';
+                else if (exactStatus === 'Return Processed') exactStatus = `Return Processed (CN No: ${r.cnNo || '-'})`;
                 else if (exactStatus === 'Disputed (Return)') exactStatus = 'Dispute (Return)';
                 else if (exactStatus.includes('Closed') || exactStatus.includes('Settled')) exactStatus = 'Closed (Claim Settled)';
 
@@ -2908,7 +2917,6 @@ function updateLastSyncTime() {
                 let badgeClass = "bg-assigned"; 
                 let s = item.status.toLowerCase(); 
                 
-                // Naye status names ke hisaab se exact badge color matching
                 if(s.includes('dispute') || s.includes('partial') || s.includes('short') || s.includes('excess')) badgeClass = "bg-rto"; 
                 else if(s.includes('awaiting') || s.includes('confirmation pending')) badgeClass = "bg-pending"; 
                 else if(s.includes('courier assigned')) badgeClass = "bg-assigned"; 
@@ -2919,7 +2927,7 @@ function updateLastSyncTime() {
                     <td>${index + 1}</td>
                     <td><div style="font-size:11px; color:#64748b; font-weight:600; margin-bottom:2px;">${item.type}</div><b>${item.id || '-'}</b></td>
                     <td><b>${item.drName}</b></td>
-                    <td>${item.ledgerName}</td>
+                    <td><b>${item.ledgerName}</b></td>
                     <td>${item.boxes}</td>
                     <td><span class="badge ${badgeClass}">${item.status}</span></td>
                     <td style="font-size:13px;">${item.date || '-'}</td>
