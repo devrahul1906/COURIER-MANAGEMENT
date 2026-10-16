@@ -2758,13 +2758,13 @@ function updateLastSyncTime() {
             }
         }
 
-        function renderDispatchStatusTable(dataList, isFromArchive = false) {
+	function renderDispatchStatusTable(dataList, isFromArchive = false) {
             const tbody = document.getElementById('dispatchStatusTableBody');
             const searchBox = document.getElementById('dispatchStatusSearchBox');
             const searchVal = searchBox ? searchBox.value.trim() : "";
 
+            // Case 1: Agar Active pipeline me bilkul nahi mila, toh Dispatched Archive me dhoondho (Current Logic)
             if (!dataList || dataList.length === 0) {
-                // 🚀 SMART CHECK: Agar active list me nahi mila aur user ne kuch search kiya hai, toh Dispatched Archive me check karo
                 if (searchVal.length >= 3 && !isFromArchive) {
                     const currentSearchId = ++archiveSearchCounter;
                     tbody.innerHTML = `<tr><td colspan='9' style='text-align:center; padding: 25px;'><span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--primary); font-weight:600;">Not in active pipeline. Checking Completed / Dispatched Archive for "${safeStr(searchVal)}"...</span></td></tr>`;
@@ -2787,6 +2787,44 @@ function updateLastSyncTime() {
 
                 tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
                 return;
+            }
+
+            // Case 2: Agar user ne search kiya hai aur Active me entry mili hai (jaise A006859-SHORT),
+            // toh check karo ki kya is invoice ki koi line Dispatched Bills me bhi hai. Agar hai, toh sirf wahi line jod do.
+            if (searchVal.length >= 3 && !isFromArchive && dataList.length <= 10) {
+                const currentSearchId = ++archiveSearchCounter;
+                const cleanQuery = searchVal.replace(/-SHORT/i, "").trim();
+                
+                // Active results ke base invoice numbers nikal lein (e.g., "A006859-SHORT" -> "A006859")
+                const activeBaseInvoices = new Set(
+                    dataList.map(item => String(item.invoiceNo || "").replace(/-SHORT/i, "").trim().toUpperCase())
+                );
+
+                safeFetch({ action: 'syncData', reqType: 'searchArchive', query: cleanQuery })
+                    .then(res => {
+                        if (currentSearchId !== archiveSearchCounter) return;
+                        if (res && res.status === 'success' && res.data && res.data.length > 0) {
+                            let existingKeys = new Set(dataList.map(d => d.invoiceNo + "_" + d.docket + "_" + d.status));
+                            let mergedList = [...dataList];
+                            let addedAny = false;
+
+                            res.data.forEach(archItem => {
+                                let archBaseInv = String(archItem.invoiceNo || "").replace(/-SHORT/i, "").trim().toUpperCase();
+                                let k = archItem.invoiceNo + "_" + archItem.docket + "_" + archItem.status;
+                                
+                                // Sirf wahi line add hogi jo active invoice se match karti hai
+                                if (activeBaseInvoices.has(archBaseInv) && !existingKeys.has(k)) {
+                                    mergedList.push(archItem);
+                                    addedAny = true;
+                                }
+                            });
+
+                            if (addedAny) {
+                                renderDispatchStatusTable(mergedList, true);
+                            }
+                        }
+                    })
+                    .catch(err => console.warn("Archive check skipped:", err));
             }
 
             let html = [];
@@ -3110,10 +3148,11 @@ async function showLedgerMasterList() {
 
         // ========================== MODALS AND ACTION HANDLERS ========================
         
-        function handleFinalActionChange() {
+	function handleFinalActionChange() {
             var action = document.getElementById('finalActionType').value;
             var shortDeliveryGroup = document.getElementById('finalShortDeliveryGroup');
             var remarkGroup = document.getElementById('finalRemarkGroup');
+            var remarkInput = document.getElementById('finalPodRemark'); // Remark input select kiya
             var fileGroup = document.getElementById('finalFileGroup');
             var expectedInput = document.getElementById('finalExpectedBoxes');
             var receivedInput = document.getElementById('finalReceivedBoxes');
@@ -3123,6 +3162,8 @@ async function showLedgerMasterList() {
                 shortDeliveryGroup.style.display = "flex";
                 remarkGroup.style.display = "block";
                 fileGroup.style.display = "block";
+                remarkInput.placeholder = "Mention missing details/items..."; // Short Delivered ka watermark
+                remarkInput.required = true;
                 expectedInput.required = true;
                 receivedInput.required = true;
                 fileInput.required = true;
@@ -3130,6 +3171,8 @@ async function showLedgerMasterList() {
                 shortDeliveryGroup.style.display = "none";
                 remarkGroup.style.display = "block"; 
                 fileGroup.style.display = "none";
+                remarkInput.placeholder = "Enter receiver name / OTP confirmation details..."; // OTP Delivery ka naya watermark
+                remarkInput.required = true;
                 expectedInput.required = false;
                 receivedInput.required = false;
                 fileInput.required = false;
@@ -3137,6 +3180,7 @@ async function showLedgerMasterList() {
                 shortDeliveryGroup.style.display = "none";
                 remarkGroup.style.display = "none";
                 fileGroup.style.display = "block";
+                remarkInput.required = false;
                 expectedInput.required = false;
                 receivedInput.required = false;
                 fileInput.required = true;
