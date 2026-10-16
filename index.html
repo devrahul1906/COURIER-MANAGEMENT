@@ -1658,45 +1658,47 @@
             });
         }
 
-	// 🚀 NAYA OPTIMISTIC UI HELPER (Ab tab loading delay completely khatm)
-function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn) {
-    let itemsToMove = [];
+	function moveItemsAndRefresh(sourceReqType, targetReqType, filterFn, transformFn) {
     if (tableCache[sourceReqType]) {
         let keepItems = [];
         tableCache[sourceReqType].forEach(item => {
-            if (filterFn(item)) itemsToMove.push(item);
-            else keepItems.push(item);
+            if (!filterFn(item)) keepItems.push(item);
         });
         tableCache[sourceReqType] = keepItems;
+        try { localStorage.setItem("cms_table_" + sourceReqType, JSON.stringify(keepItems)); } catch(e) {}
         if (activeTableContext && activeTableContext.reqType === sourceReqType) {
             activeTableContext.renderFn(keepItems);
         }
     }
-    if (targetReqType && tableCache[targetReqType]) {
-        itemsToMove.forEach(item => {
-            let transformed = transformFn ? transformFn(item) : item;
-            tableCache[targetReqType].unshift(transformed); 
-        });
+    // Target tab me purane data ke upar jodne ke bajaye uska cache clear karein taaki fresh data aaye
+    if (targetReqType) {
+        delete tableCache[targetReqType];
+        localStorage.removeItem("cms_table_" + targetReqType);
     }
-	delete tableCache['dispatchStatus'];
+    delete tableCache['dispatchStatus'];
     localStorage.removeItem("cms_table_dispatchStatus");
 
     refreshCountsInBackground();
 }
-	function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
-        if (tableCache[reqType]) {
-            // Local table se item ko instantly hatao (0.1 second me)
-            tableCache[reqType] = tableCache[reqType].filter(filterFn);
-            if (activeTableContext && activeTableContext.reqType === reqType) {
-                activeTableContext.renderFn(tableCache[reqType]);
-            }
+
+function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
+    if (tableCache[reqType]) {
+        tableCache[reqType] = tableCache[reqType].filter(filterFn);
+        try { localStorage.setItem("cms_table_" + reqType, JSON.stringify(tableCache[reqType])); } catch(e) {}
+        if (activeTableContext && activeTableContext.reqType === reqType) {
+            activeTableContext.renderFn(tableCache[reqType]);
         }
-        // Sirf un tabs ka cache clear karein jahan item gaya hai
-        if (refreshTabs && refreshTabs.length > 0) {
-            refreshTabs.forEach(tab => { delete tableCache[tab]; });
-        }
-        refreshCountsInBackground();
     }
+    if (refreshTabs && refreshTabs.length > 0) {
+        refreshTabs.forEach(tab => { 
+            delete tableCache[tab]; 
+            localStorage.removeItem("cms_table_" + tab);
+        });
+    }
+    delete tableCache['dispatchStatus'];
+    localStorage.removeItem("cms_table_dispatchStatus");
+    refreshCountsInBackground();
+}
 
 	function updateReturnItemStatus(id, newStatus, additionalUpdates = {}) {
     // Return Bills cache ko update karna
@@ -2319,25 +2321,24 @@ function updateLastSyncTime() {
         }
 
 	async function loadAndRenderTable(reqType, renderFunction, forceRefresh = false) {
-    if (!forceRefresh && tableCache[reqType]) {
-        renderFunction(tableCache[reqType]);
-        return;
-    }
-
     const activeTbody = document.querySelector('.table-wrapper[style*="display: block"] tbody') || document.querySelector('.table-wrapper[style*="display:block"] tbody');
     
-    // 🚀 Local Memory se table instantly dikhayein
     let hasLocalData = false;
     if (!forceRefresh) {
-        try {
-            let savedData = localStorage.getItem("cms_table_" + reqType);
-            if (savedData) {
-                let parsedData = JSON.parse(savedData);
-                tableCache[reqType] = parsedData;
-                renderFunction(parsedData);
-                hasLocalData = true; 
-            }
-        } catch(e) {}
+        if (tableCache[reqType]) {
+            renderFunction(tableCache[reqType]);
+            hasLocalData = true;
+        } else {
+            try {
+                let savedData = localStorage.getItem("cms_table_" + reqType);
+                if (savedData) {
+                    let parsedData = JSON.parse(savedData);
+                    tableCache[reqType] = parsedData;
+                    renderFunction(parsedData);
+                    hasLocalData = true; 
+                }
+            } catch(e) {}
+        }
     }
 
     if (!hasLocalData && activeTbody) {
@@ -2345,6 +2346,7 @@ function updateLastSyncTime() {
     }
 
     try {
+        // Hamesha server se latest data sync karein taaki doosre user ke changes bhi dikhein
         const resp = await safeFetch({ action: 'syncData', reqType: reqType, forceRefresh: forceRefresh, module: loggedInUserType });
         if (resp && resp.status === 'success') {
             const dataToCache = reqType === 'returnStatus'
@@ -2371,71 +2373,72 @@ function updateLastSyncTime() {
 }
 
 	async function refreshDataAndView() {
-        if (refreshRequestPromise) return refreshRequestPromise;
-        
-        // --- NAYA UI UPDATE LOGIC START (Spinner Chalu Karo) ---
-        const btn = document.getElementById('syncBtn');
-        const icon = document.getElementById('syncIcon');
-        const text = document.getElementById('syncText');
-        if (btn) {
-            btn.disabled = true;
-            btn.style.opacity = "0.7";
-            btn.style.cursor = "not-allowed";
-            if(icon) icon.style.animation = "spin 1s linear infinite"; // Rotate karna shuru
-            if(text) text.innerText = "Refreshing...";
-        }
-        // -------------------------------------------------------
-
-        fetchVersion++;
-        const currentVer = fetchVersion;
-        const currentContext = activeTableContext;
-
-        refreshRequestPromise = (async () => {
-            try {
-                let tablePromise = Promise.resolve();
-                
-                if (currentContext) {
-                    if (currentContext.reqType === 'ledgers') {
-                        tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
-                    } else if (currentContext.reqType === 'dispatchStatus') {
-                        tablePromise = showDispatchStatusList(true);
-                    } else {
-                        tablePromise = safeFetch({ action: 'syncData', reqType: currentContext.reqType, forceRefresh: true, module: loggedInUserType })
-                            .then(resp => {
-                                if (resp && resp.status === 'success') {
-                                    const dataToCache = currentContext.reqType === 'returnStatus'
-                                        ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
-                                        : (resp.data || []);
-                                    tableCache[currentContext.reqType] = dataToCache;
-                                    if (currentVer === fetchVersion) currentContext.renderFn(dataToCache);
-                                }
-                            }).catch(err => console.warn('Background refresh delayed', err));
-                    }
-                } 
-                
-                // Dashboard counts update
-                let countsPromise = refreshCountsInBackground();
-                
-                // Dono background process khatm hone ka wait karein
-                await Promise.all([tablePromise, countsPromise]); 
-
-            } finally {
-                refreshRequestPromise = null;
-                
-                // --- RESTORE UI AND UPDATE TIME START (Spinner Band Karo) ---
-                if (btn) {
-                    btn.disabled = false;
-                    btn.style.opacity = "1";
-                    btn.style.cursor = "pointer";
-                    if(icon) icon.style.animation = "none"; // Rotate karna band
-                    if(text) text.innerText = "Refresh";
-                }
-                updateLastSyncTime(); // Last sync time label ko naye time par set karein
-                // -------------------------------------------------------------
-            }
-        })();
-        return refreshRequestPromise;
+    if (refreshRequestPromise) return refreshRequestPromise;
+    
+    const btn = document.getElementById('syncBtn');
+    const icon = document.getElementById('syncIcon');
+    const text = document.getElementById('syncText');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        btn.style.cursor = "not-allowed";
+        if(icon) icon.style.animation = "spin 1s linear infinite";
+        if(text) text.innerText = "Refreshing...";
     }
+
+    fetchVersion++;
+    const currentVer = fetchVersion;
+    const currentContext = activeTableContext;
+
+    // 🚀 FIX: Refresh dabate hi sabhi tabs ka purana memory aur localStorage cache clear karein
+    tableCache = {};
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("cms_table_") && key !== "cms_table_ledgers") {
+            localStorage.removeItem(key);
+        }
+    });
+
+    refreshRequestPromise = (async () => {
+        try {
+            let tablePromise = Promise.resolve();
+            
+            if (currentContext) {
+                if (currentContext.reqType === 'ledgers') {
+                    tablePromise = fetchLedgers(true).then(data => { if (currentVer === fetchVersion) currentContext.renderFn(data); });
+                } else if (currentContext.reqType === 'dispatchStatus') {
+                    tablePromise = showDispatchStatusList(true);
+                } else {
+                    tablePromise = safeFetch({ action: 'syncData', reqType: currentContext.reqType, forceRefresh: true, module: loggedInUserType })
+                        .then(resp => {
+                            if (resp && resp.status === 'success') {
+                                const dataToCache = currentContext.reqType === 'returnStatus'
+                                    ? { returnBills: resp.returnBills || [], unplannedBills: resp.unplannedBills || [] }
+                                    : (resp.data || []);
+                                tableCache[currentContext.reqType] = dataToCache;
+                                try { localStorage.setItem("cms_table_" + currentContext.reqType, JSON.stringify(dataToCache)); } catch(e) {}
+                                if (currentVer === fetchVersion) currentContext.renderFn(dataToCache);
+                            }
+                        }).catch(err => console.warn('Background refresh delayed', err));
+                }
+            } 
+            
+            let countsPromise = refreshCountsInBackground();
+            await Promise.all([tablePromise, countsPromise]); 
+
+        } finally {
+            refreshRequestPromise = null;
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.cursor = "pointer";
+                if(icon) icon.style.animation = "none";
+                if(text) text.innerText = "Refresh";
+            }
+            updateLastSyncTime();
+        }
+    })();
+    return refreshRequestPromise;
+}
 
 	function logoutSystem() {
             localStorage.removeItem("cms_user");
