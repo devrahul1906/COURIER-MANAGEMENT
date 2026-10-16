@@ -1461,6 +1461,24 @@
         </div>
     </div>
 
+	<!-- Session Conflict Modal -->
+    <div id="sessionConflictModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 420px; text-align: center; padding: 10px;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; background: none;">
+                <h3 style="color: var(--warning); font-size: 18px;">Active Session Detected</h3>
+            </div>
+            <div class="modal-body" style="padding: 10px 20px 20px 20px;">
+                <p id="conflictMessage" style="color: var(--text-main); font-size: 15px; line-height: 1.5; margin-bottom: 20px;">
+                    This User ID is currently logged in on another device or browser. Would you like to terminate the existing session and log in here?
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" class="btn-outline" onclick="closeConflictModal()" style="padding: 10px 20px;">Cancel</button>
+                    <button type="button" id="confirmForceLoginBtn" class="action-btn btn-primary" onclick="proceedForceLogin()" style="padding: 10px 20px; background: var(--warning);">Yes, Log In Here</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="uploadPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -1601,7 +1619,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyowIeAt8aHKt61mox7li1dh16vKW_TZxTqsGwP3p6Q5QcA-fvkd5kMf-A4gVWzqo_B/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwokL47u9RPTqcDL-TaXW2vX3wdMOgCQkNtknNw1R_RGUo1G69U0o8xFRiOM8VzoWh8/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2135,7 +2153,9 @@ function updateLastSyncTime() {
             });
         }
 
-	async function handleLogin(event) {
+	let pendingLoginData = null;
+
+        async function handleLogin(event, force = false) {
             if (event) event.preventDefault();
             const btn = document.getElementById('loginBtn');
             const spinner = document.getElementById('loginSpinner');
@@ -2143,21 +2163,34 @@ function updateLastSyncTime() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
 
-            // UI ko turant block karein taaki double click na ho
             btn.disabled = true;
             spinner.style.display = 'inline-block';
             errorDiv.style.display = 'none';
             document.getElementById('loginText').innerText = 'Authenticating...';
 
             try {
-                // Sirf 1-2 second me backend se login verify karega
-                const data = await safeFetch({ action: 'login', username: user, password: pass });
+                // Yahan force parameter backend ko bheja ja raha hai
+                const data = await safeFetch({ action: 'login', username: user, password: pass, forceLogin: force });
+
+                // Agar server kahe ki session pehle se active hai
+                if (data.status === 'session_conflict') {
+                    pendingLoginData = { user, pass }; 
+                    document.getElementById('conflictMessage').innerText = data.message || "This User ID is currently active in another session. Do you want to proceed?";
+                    document.getElementById('sessionConflictModal').style.display = 'flex';
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    document.getElementById('loginText').innerText = 'Sign In';
+                    return;
+                }
 
                 if (data.status === 'success') {
                     const allowed = data.allowedType ? data.allowedType.trim() : 'All';
                     if (allowed === 'RESTRICTED') {
                         errorDiv.innerText = 'Access Denied: Your account is restricted.';
                         errorDiv.style.display = 'block';
+                        btn.disabled = false;
+                        spinner.style.display = 'none';
+                        document.getElementById('loginText').innerText = 'Sign In';
                         return;
                     }
 
@@ -2175,7 +2208,10 @@ function updateLastSyncTime() {
                         moduleSwitcher.style.display = 'none';
                     }
                     
-                    // NAYA: Successful login ke baad user detail memory me save karein
+                    if (data.sessionId) {
+                        localStorage.setItem("cms_session", data.sessionId);
+                    }
+                    
                     localStorage.setItem("cms_user", loggedInUser);
                     localStorage.setItem("cms_role", loggedInUserRole);
                     localStorage.setItem("cms_type", loggedInUserType);
@@ -2186,24 +2222,11 @@ function updateLastSyncTime() {
                     document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
                     document.getElementById('welcomeGreeting').innerText = 'Welcome, ' + loggedInUser;
 
-                    const welcomeDesc = document.getElementById('welcomeDesc');
-                    if (welcomeDesc) {
-                        if (loggedInUserType === 'Dispatch Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Dispatch operations.';
-                        } else if (loggedInUserType === 'Return Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Return operations.';
-                        } else {
-                            welcomeDesc.innerText = 'Here is your combined overview for Dispatch and Return operations.';
-                        }
-                    }
-
-                    // 🚀 FIX: Turant login screen hata kar dashboard dikhayein (0 seconds wait!)
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('dashboard-view').style.display = 'flex';
                     showDashboardCards();
                     showToast('Login Successful', 'Dashboard is opening...', 'success');
 
-                    // 🚀 FIX: Spinner ko turant band karein, user ko wait nahi karwana hai
                     btn.disabled = false;
                     spinner.style.display = 'none';
                     document.getElementById('loginText').innerText = 'Sign In';
@@ -2211,9 +2234,7 @@ function updateLastSyncTime() {
                     fetchVersion++;
                     const loginVersion = fetchVersion;
                     
-                    // 🚀 THE MAGIC: setTimeout lagakar browser ko UI render karne ka time diya.
-                    // Data ab chupchap background me aayega, login screen par nahi atkega!
-			setTimeout(() => {
+                    setTimeout(() => {
                         syncData(true, false).then(() => {
                             if (loginVersion === fetchVersion && loggedInUser) {
                                 fetchLedgers(false);
@@ -2224,22 +2245,32 @@ function updateLastSyncTime() {
                 } else {
                     errorDiv.innerText = data.message || 'Invalid credentials.';
                     errorDiv.style.display = 'block';
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    document.getElementById('loginText').innerText = 'Sign In';
                 }
 
             } catch (error) {
                 errorDiv.innerText = 'Connection Error: ' + error.message;
                 errorDiv.style.display = 'block';
-            } finally {
-                // Kisi error ki wajah se atke na, isliye safe fallback
                 btn.disabled = false;
                 spinner.style.display = 'none';
                 document.getElementById('loginText').innerText = 'Sign In';
             }
         }
+	function closeConflictModal() {
+            document.getElementById('sessionConflictModal').style.display = 'none';
+            pendingLoginData = null;
+        }
 
-        let countsRequestPromise = null;
-        let freshCountsRequestPromise = null;
-        let refreshRequestPromise = null;
+        function proceedForceLogin() {
+            document.getElementById('sessionConflictModal').style.display = 'none';
+            if (pendingLoginData) {
+                document.getElementById('username').value = pendingLoginData.user;
+                document.getElementById('password').value = pendingLoginData.pass;
+                handleLogin(null, true); // Force login true bhej kar dobara login chalayega
+            }
+        }
 
 	function syncData(isInitialLoad = false, forceRefresh = false) {
             if (!loggedInUser) return Promise.resolve();
@@ -3583,6 +3614,22 @@ async function submitResolveDispute(e) {
             const now = new Date(); const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`; document.getElementById('dashCompactTime').innerText = timeStr;
         }
         updateDateTime(); setInterval(updateDateTime, 1000);
+
+	// 🚀 Background Session Heartbeat Check (Har 60 seconds me bina speed slow kiye check karega)
+setInterval(() => {
+    if (!loggedInUser) return;
+    const currentSession = localStorage.getItem("cms_session");
+    if (!currentSession) return;
+
+    safeFetch({ action: 'checkSession', username: loggedInUser, sessionId: currentSession })
+        .then(res => {
+            if (res && res.status === 'invalid') {
+                showToast("Session Expired", "Your account was logged in from another device.", "error");
+                logoutSystem();
+            }
+        }).catch(err => console.warn("Session check skipped:", err));
+}, 60000);
+
     </script>
 </body>
 </html>
