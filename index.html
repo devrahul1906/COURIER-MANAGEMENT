@@ -1692,7 +1692,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxTzwkIcugYGazRH40IzJdiXZky3JeItEB9P3mQEEGBQGv72CGzTFCU8kNTzqSakhSn/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzH-IcdjoGTNweUnB-g-2WI-lMS_aot_mZYIpPvqkb3MFwlpki8hTMRc5IG_aNx3hXl/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1920,9 +1920,10 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                 payload.reqId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
 
-            if (payload.action !== 'login' && loggedInUser && currentSessionToken) {
+		if (payload.action !== 'login' && loggedInUser && currentSessionToken) {
                 payload.sessionUsername = loggedInUser;
                 payload.sessionToken = currentSessionToken;
+                payload.sessionRole = loggedInUserRole; // 🚀 NAYA: Admin role batane ke liye
             }
 
             const noCacheUrl = WEB_APP_URL + '?t=' + Date.now();
@@ -2534,6 +2535,16 @@ function updateLastSyncTime() {
                 let userRoleStr = (loggedInUserRole || "").trim().toLowerCase();
                 if (userRoleStr === 'admin') {
                     maintContainer.style.display = 'flex';
+                    // Server se current maintenance status check karein taaki switch hamesha sync rahe
+                    safeFetch({ action: 'checkMaintenanceStatus' }, 0).then(res => {
+                        if (res && res.status === 'success') {
+                            const toggle = document.getElementById('maintenanceToggle');
+                            const slider = document.getElementById('maintenanceSlider');
+                            const isMaint = (res.maintenance === "true");
+                            if (toggle) toggle.checked = isMaint;
+                            if (slider) slider.style.backgroundColor = isMaint ? "var(--danger)" : "#cbd5e1";
+                        }
+                    }).catch(() => {});
                 } else {
                     maintContainer.style.display = 'none';
                 }
