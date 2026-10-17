@@ -2165,17 +2165,47 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             document.getElementById('sessionExpiredModal').style.display = 'none';
         }
 
-        // 🚀 Har 30 second me background me check karega (0% Speed Impact)
+	// 🚀 SMART LIVE BACKGROUND SYNC (Speed Compromise ke bina User B ke liye)
         function startSessionHeartbeat() {
             stopSessionHeartbeat();
             sessionHeartbeatTimer = setInterval(async () => {
                 if (!loggedInUser || !currentSessionToken) return;
                 try {
-                    await safeFetch({ action: 'checkSession' }, 0);
+                    // 1. Session Validated (Fast RAM Check)
+                    const sessionRes = await safeFetch({ action: 'checkSession' }, 0);
+                    if (sessionRes && sessionRes.status === 'session_expired') return;
+
+                    // 2. Background Count Checker (Ye check karega ki koi doosra user kuch update kiya hai kya)
+                    const countRes = await safeFetch({ action: 'syncData', reqType: 'countsFresh', module: loggedInUserType }, 0);
+                    if (countRes && countRes.status === 'success' && countRes.counts) {
+                        let localSaved = localStorage.getItem("saved_dashboard_counts");
+                        if (localSaved) {
+                            let oldCounts = JSON.parse(localSaved);
+                            let newCounts = countRes.counts;
+                            
+                            // Agar server ke counts aur local counts me koi bhi farq hai, toh auto-refreshing trigger karo
+                            let hasChanges = Object.keys(newCounts).some(key => newCounts[key] !== oldCounts[key]);
+                            if (hasChanges) {
+                                updateDashboardCounts(newCounts);
+                                
+                                // Agar User B kisi table par hai, toh uska bhi cache clear karke data fresh kar lo taaki live table update ho jaye
+                                if (activeTableContext && activeTableContext.reqType) {
+                                    let activeReq = activeTableContext.reqType;
+                                    delete tableCache[activeReq];
+                                    localStorage.removeItem("cms_table_" + activeReq);
+                                    loadAndRenderTable(activeReq, activeTableContext.renderFn, true);
+                                }
+                                
+                                showToast("Live Update", "Dashboard synchronized with latest changes.", "info");
+                            }
+                        } else {
+                            updateDashboardCounts(countRes.counts);
+                        }
+                    }
                 } catch (e) {
-                    // Network glitch hone par ignore karega taaki kaam na ruke
+                    // Network glitch hone par ignore karega taaki user ka kaam bilkul na ruke
                 }
-            }, 30000); // 30,000 ms = 30 Seconds
+            }, 25000); // Har 25 seconds me chupchap background me check karega
         }
 
         function stopSessionHeartbeat() {
