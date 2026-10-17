@@ -604,10 +604,10 @@
                 </div>
                 <div class="table-responsive">
                     <table id="assignedTable" style="min-width: 1000px;">
-                        <thead><tr>
-                            <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
-                            <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Assign Time</th><th>Status</th>
-                        </tr></thead>
+			<thead><tr>
+    <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
+    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Assign Time</th><th>Status</th>
+</tr></thead>
                         <tbody id="assignedTableBody"></tbody>
                     </table>
                 </div>
@@ -627,7 +627,7 @@
                 </div>
                 <div class="table-responsive">
                     <table id="podTable" style="min-width: 1000px;">
-                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody id="podTableBody"></tbody>
                     </table>
                 </div>
@@ -647,7 +647,7 @@
                         <thead>
                             <tr>
                                 <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Delivery Time</th><th>Status</th><th>Action</th>
+                                <th>Courier Partner</th><th>Boxes</th><th>Delivery Time</th><th>Status</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="deliveredTableBody"></tbody>
@@ -1645,7 +1645,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxMzDLx-xdlmfWerjdLgt0sz1qJMqLU-P6Ew7RySJ2UmeVWrdezR7CnkAxlozsxoxdP/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxqq3E8y0pG3qT-qikyFDNZvnjgjUmTYkVP_P7gBjMx7Znl7y6y5YAG4EcmJq2oVIhz/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2632,24 +2632,54 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'assigned', renderFn: renderAssignedTable }; loadAndRenderTable('assigned', activeTableContext.renderFn);
         }
-        function renderAssignedTable(dataList) {
-            if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-assigned">Assigned</span></td></tr>`); }); 
+	function renderAssignedTable(dataList) {
+            if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+            let html = []; 
+            dataList.forEach((item, index) => { 
+                html.push(`<tr>
+                    <td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+                    <td>${item.partner}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td><span class="badge bg-assigned">Assigned</span></td>
+                </tr>`); 
+            }); 
             renderLargeHtml('assignedTableBody', html);
         }
-
         function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
 
         function showPodList() {
             hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'transit', renderFn: renderPodTable }; loadAndRenderTable('transit', activeTableContext.renderFn);
         }
-        function renderPodTable(dataList) {
-            if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.partner}</td><td>${item.docket || '-'}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-transit">In Transit</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td></tr>`); }); 
+	function renderPodTable(dataList) {
+            if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            let html = []; 
+            dataList.forEach((item, index) => { 
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+                    <td>${item.partner}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td><span class="badge bg-transit">In Transit</span></td>
+                    <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td>
+                </tr>`); 
+            }); 
             renderLargeHtml('podTableBody', html);
         }
-
         function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
             hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
@@ -2657,11 +2687,26 @@ function updateLastSyncTime() {
         }
 	function renderDeliveredTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.boxes || '')}')">Update Action</button></div></td></tr>`); }); 
+            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
+            let html = []; 
+            dataList.forEach((item, index) => { 
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td>${item.partner}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td><span class="badge bg-delivered">Delivered</span></td>
+                    <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.boxes || '')}')">Update Action</button></div></td>
+                </tr>`); 
+            }); 
             renderLargeHtml('deliveredTableBody', html);
         }
-
         function showDisputedList() {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
             hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; 
