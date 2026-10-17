@@ -1500,7 +1500,7 @@
         </div>
     </div>
 
-    <div id="finalPodModal" class="modal-overlay">
+	<div id="finalPodModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
                 <h3>Update Final Status</h3>
@@ -1512,6 +1512,12 @@
                     <div class="form-group">
                         <label>Invoice Number</label>
                         <input type="text" id="finalPodInvoiceNo" readonly style="background-color: #f1f5f9; font-weight: bold;">
+                    </div>
+
+                    <!-- 🚀 NAYA: Full Delivery POD aur OTP Delivery ke liye Invoice No aur Select Action ke beech Boxes show karega -->
+                    <div class="form-group" id="finalTopBoxesGroup">
+                        <label>Total Boxes</label>
+                        <input type="text" id="finalTopBoxesDisplay" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary);">
                     </div>
                     
                     <div class="form-group">
@@ -1526,7 +1532,7 @@
                     <div id="finalShortDeliveryGroup" style="display: none; gap: 15px; margin-bottom: 22px;">
                         <div style="flex: 1;">
                             <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Total Boxes</label>
-                            <input type="number" id="finalExpectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px;">
+                            <input type="number" id="finalExpectedBoxes" min="1" placeholder="e.g. 4" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; background-color: #f8fafc; font-weight: bold;">
                         </div>
                         <div style="flex: 1;">
                             <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Received Boxes</label>
@@ -1639,7 +1645,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJ7dgwn5Gbz0vPlna7Sdyz22DoHn11n1FiioNijKaCFhfAJRdUrPusHQMf7D8YuHFl/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxMzDLx-xdlmfWerjdLgt0sz1qJMqLU-P6Ew7RySJ2UmeVWrdezR7CnkAxlozsxoxdP/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2649,10 +2655,10 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'delivered', renderFn: (data) => renderDeliveredTable(data, startDate, endDate) }; loadAndRenderTable('delivered', activeTableContext.renderFn);
         }
-        function renderDeliveredTable(dataList, startDate, endDate) {
+	function renderDeliveredTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
             if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Action</button></div></td></tr>`); }); 
+            let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-delivered">Delivered</span></td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.boxes || '')}')">Update Action</button></div></td></tr>`); }); 
             renderLargeHtml('deliveredTableBody', html);
         }
 
@@ -3289,35 +3295,43 @@ async function showLedgerMasterList() {
 
         // ========================== MODALS AND ACTION HANDLERS ========================
         
-	function handleFinalActionChange() {
+	let currentModalBoxes = ""; // 🚀 Uploaded boxes store karne ke liye
+
+        function handleFinalActionChange() {
             var action = document.getElementById('finalActionType').value;
+            var topBoxesGroup = document.getElementById('finalTopBoxesGroup');
             var shortDeliveryGroup = document.getElementById('finalShortDeliveryGroup');
             var remarkGroup = document.getElementById('finalRemarkGroup');
-            var remarkInput = document.getElementById('finalPodRemark'); // Remark input select kiya
+            var remarkInput = document.getElementById('finalPodRemark');
             var fileGroup = document.getElementById('finalFileGroup');
             var expectedInput = document.getElementById('finalExpectedBoxes');
             var receivedInput = document.getElementById('finalReceivedBoxes');
             var fileInput = document.getElementById('finalPodFile');
             
             if (action === "Short Delivered") {
+                if (topBoxesGroup) topBoxesGroup.style.display = "none"; // Upar wala box hide hoga
                 shortDeliveryGroup.style.display = "flex";
+                expectedInput.value = currentModalBoxes; // 🚀 Niche Total Boxes me auto-fill hoga
                 remarkGroup.style.display = "block";
                 fileGroup.style.display = "block";
-                remarkInput.placeholder = "Mention missing details/items..."; // Short Delivered ka watermark
+                remarkInput.placeholder = "Mention missing details/items...";
                 remarkInput.required = true;
                 expectedInput.required = true;
                 receivedInput.required = true;
                 fileInput.required = true;
             } else if (action === "OTP based delivery - No POD Required") {
+                if (topBoxesGroup) topBoxesGroup.style.display = "block"; // 🚀 Invoice No aur Select Action ke beech me dikhega
                 shortDeliveryGroup.style.display = "none";
                 remarkGroup.style.display = "block"; 
                 fileGroup.style.display = "none";
-                remarkInput.placeholder = "Enter receiver name / OTP confirmation details..."; // OTP Delivery ka naya watermark
+                remarkInput.placeholder = "Enter receiver name / OTP confirmation details...";
                 remarkInput.required = true;
                 expectedInput.required = false;
                 receivedInput.required = false;
                 fileInput.required = false;
             } else { 
+                // Upload Full Delivery POD
+                if (topBoxesGroup) topBoxesGroup.style.display = "block"; // 🚀 Invoice No aur Select Action ke beech me dikhega
                 shortDeliveryGroup.style.display = "none";
                 remarkGroup.style.display = "none";
                 fileGroup.style.display = "block";
@@ -3570,26 +3584,64 @@ function isDateInRange(dateStr, start, end) {
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
-        function processBulkUpload() {
-            const fileInput = document.getElementById('bulkExcelFile'); if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
-            const file = fileInput.files[0]; const reader = new FileReader();
+	function processBulkUpload() {
+            const fileInput = document.getElementById('bulkExcelFile'); 
+            if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
+            const file = fileInput.files[0]; 
+            const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); const firstSheet = workbook.Sheets[workbook.SheetNames[0]]; const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
+                const data = new Uint8Array(e.target.result); 
+                const workbook = XLSX.read(data, {type: 'array'}); 
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]]; 
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
                 if (jsonData.length === 0) { showToast("Error", "Excel file is empty.", "error"); return; }
                 const groupedData = {};
                 for (let row of jsonData) {
-                    const rowUpper = {}; for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
-                    const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
+                    const rowUpper = {}; 
+                    for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
+                    const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); 
+                    const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
+                    
+                    // 🚀 Read "No of Boxes" (fallback to Dimension if old sheet is used)
+                    const rawBoxes = String(rowUpper["NO OF BOXES"] || rowUpper["NO. OF BOXES"] || rowUpper["BOXES"] || rowUpper["TOTAL BOXES"] || rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || "").trim();
+
                     if (invNo) {
                         const isPending = tableCache['pending'] ? tableCache['pending'].find(b => String(b.invoiceNo).trim() === invNo) : true; 
                         if (isPending) {
                             const uniqueKey = invNo + "_" + excelDocket;
-                            if (!groupedData[uniqueKey]) { groupedData[uniqueKey] = { invoiceNo: invNo, partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", weight: String(rowUpper["WEIGHT"] || ""), size: String(rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || ""), origin: "Meerut", city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", drName: rowUpper["DR NAME"] || "", ledgerName: rowUpper["LEDGER NAME"] || "", pinCode: String(rowUpper["PIN CODE"] || ""), docketNo: excelDocket }; } else { if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; if(rowUpper["DIMENSION"]) groupedData[uniqueKey].size += " | " + rowUpper["DIMENSION"]; }
+                            if (!groupedData[uniqueKey]) { 
+                                groupedData[uniqueKey] = { 
+                                    invoiceNo: invNo, 
+                                    partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", 
+                                    weight: String(rowUpper["WEIGHT"] || ""), 
+                                    size: rawBoxes, // Column D me No of Boxes save hoga
+                                    origin: "Meerut", 
+                                    city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", 
+                                    drName: rowUpper["DR NAME"] || "", 
+                                    ledgerName: rowUpper["LEDGER NAME"] || "", 
+                                    pinCode: String(rowUpper["PIN CODE"] || ""), 
+                                    docketNo: excelDocket 
+                                }; 
+                            } else { 
+                                if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; 
+                                if(rawBoxes) {
+                                    // Agar dono numbers hain toh unhe add kar do, warna join kar do
+                                    let existingNum = Number(groupedData[uniqueKey].size);
+                                    let newNum = Number(rawBoxes);
+                                    if (!isNaN(existingNum) && !isNaN(newNum) && groupedData[uniqueKey].size !== "") {
+                                        groupedData[uniqueKey].size = String(existingNum + newNum);
+                                    } else {
+                                        groupedData[uniqueKey].size = groupedData[uniqueKey].size ? (groupedData[uniqueKey].size + " | " + rawBoxes) : rawBoxes;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                const assignments = Object.values(groupedData); if(assignments.length === 0) { showToast("Error", "No matching pending invoices found.", "error"); return; }
-                pendingBulkAssignments = assignments; populateConfirmBulkModal(assignments);
+                const assignments = Object.values(groupedData); 
+                if(assignments.length === 0) { showToast("Error", "No matching pending invoices found.", "error"); return; }
+                pendingBulkAssignments = assignments; 
+                populateConfirmBulkModal(assignments);
             };
             reader.readAsArrayBuffer(file);
         }
@@ -3643,8 +3695,24 @@ function isDateInRange(dateStr, start, end) {
         function openPodModal(inv, docket) { document.getElementById('podInvoiceNo').value = inv; document.getElementById('podOldDocketNo').value = docket || ''; document.getElementById('uploadPodModal').style.display = 'flex'; handleUploadTypeChange(); }
         function closePodModal() { document.getElementById('uploadPodModal').style.display = 'none'; document.getElementById('podForm').reset(); }
         
-        function openFinalPodModal(inv, docket) { document.getElementById('finalPodInvoiceNo').value = inv; document.getElementById('finalPodOldDocketNo').value = docket || ''; document.getElementById('finalActionType').value = 'Full Delivery POD'; handleFinalActionChange(); document.getElementById('finalPodModal').style.display = 'flex'; }
-        function closeFinalPodModal() { document.getElementById('finalPodModal').style.display = 'none'; document.getElementById('finalPodForm').reset(); }
+	function openFinalPodModal(inv, docket, boxes = '') { 
+            currentModalBoxes = (boxes && boxes !== '-' && boxes !== 'undefined') ? String(boxes).trim() : '';
+            document.getElementById('finalPodInvoiceNo').value = inv; 
+            document.getElementById('finalPodOldDocketNo').value = docket || ''; 
+            if (document.getElementById('finalTopBoxesDisplay')) {
+                document.getElementById('finalTopBoxesDisplay').value = currentModalBoxes || 'N/A';
+            }
+            document.getElementById('finalExpectedBoxes').value = currentModalBoxes;
+            document.getElementById('finalActionType').value = 'Full Delivery POD'; 
+            handleFinalActionChange(); 
+            document.getElementById('finalPodModal').style.display = 'flex'; 
+        }
+
+        function closeFinalPodModal() { 
+            document.getElementById('finalPodModal').style.display = 'none'; 
+            document.getElementById('finalPodForm').reset(); 
+            currentModalBoxes = "";
+        }
 
         function openResolveModal(inv, docket, status) {
             document.getElementById('resolveInvNo').value = inv; document.getElementById('resolveDocket').value = docket || ''; document.getElementById('resolveInvDisplay').value = inv;
