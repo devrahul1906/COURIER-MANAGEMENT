@@ -2165,7 +2165,7 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             document.getElementById('sessionExpiredModal').style.display = 'none';
         }
 
-	// 🚀 SMART LIVE BACKGROUND SYNC (Speed Compromise ke bina User B ke liye)
+	// 🚀 SMART LIVE BACKGROUND SYNC (Without any annoying popups/toasts for User B)
         function startSessionHeartbeat() {
             stopSessionHeartbeat();
             sessionHeartbeatTimer = setInterval(async () => {
@@ -2175,7 +2175,7 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                     const sessionRes = await safeFetch({ action: 'checkSession' }, 0);
                     if (sessionRes && sessionRes.status === 'session_expired') return;
 
-                    // 2. Background Count Checker (Ye check karega ki koi doosra user kuch update kiya hai kya)
+                    // 2. Background Count Checker
                     const countRes = await safeFetch({ action: 'syncData', reqType: 'countsFresh', module: loggedInUserType }, 0);
                     if (countRes && countRes.status === 'success' && countRes.counts) {
                         let localSaved = localStorage.getItem("saved_dashboard_counts");
@@ -2183,12 +2183,11 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                             let oldCounts = JSON.parse(localSaved);
                             let newCounts = countRes.counts;
                             
-                            // Agar server ke counts aur local counts me koi bhi farq hai, toh auto-refreshing trigger karo
                             let hasChanges = Object.keys(newCounts).some(key => newCounts[key] !== oldCounts[key]);
                             if (hasChanges) {
                                 updateDashboardCounts(newCounts);
                                 
-                                // Agar User B kisi table par hai, toh uska bhi cache clear karke data fresh kar lo taaki live table update ho jaye
+                                // Agar User B kisi table par hai, toh background me table data refresh kar lo
                                 if (activeTableContext && activeTableContext.reqType) {
                                     let activeReq = activeTableContext.reqType;
                                     delete tableCache[activeReq];
@@ -2196,16 +2195,16 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                                     loadAndRenderTable(activeReq, activeTableContext.renderFn, true);
                                 }
                                 
-                                showToast("Live Update", "Dashboard synchronized with latest changes.", "info");
+                                // ❌ Yahan se showToast wali line hata di gayi hai taaki koi popup ya notification na aaye!
                             }
                         } else {
                             updateDashboardCounts(countRes.counts);
                         }
                     }
                 } catch (e) {
-                    // Network glitch hone par ignore karega taaki user ka kaam bilkul na ruke
+                    // Network glitch hone par ignore karega
                 }
-            }, 25000); // Har 25 seconds me chupchap background me check karega
+            }, 25000); // Har 25 seconds me chupchap background me update karega
         }
 
         function stopSessionHeartbeat() {
