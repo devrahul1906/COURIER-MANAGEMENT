@@ -1597,14 +1597,54 @@
         </div>
     </div>
 
+	<!-- 🚀 1. User B: Active Session Confirmation Modal -->
+    <div id="alreadyLoggedInModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-header" style="background: #fffbeb; border-bottom-color: #fde68a;">
+                <h3 style="color: #b45309; display: flex; align-items: center; gap: 8px;">
+                    ⚠️ Active Session Detected
+                </h3>
+                <button type="button" class="close-btn" onclick="closeAlreadyLoggedInModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <p id="alreadyLoggedInText" style="color: var(--text-main); font-size: 15px; margin: 0 0 25px 0; line-height: 1.6; font-weight: 500;">
+                    This User ID is currently active on another device. Do you want to terminate the other session and log in here?
+                </p>
+                <div style="display: flex; justify-content: center; gap: 12px;">
+                    <button type="button" class="btn-outline" onclick="closeAlreadyLoggedInModal()" style="padding: 10px 20px;">Cancel</button>
+                    <button type="button" id="forceLoginBtn" class="action-btn btn-warning" onclick="confirmForceLogin()" style="padding: 10px 20px; background: var(--primary);">Yes, Log In Here</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 2. User A: Session Terminated Notification Modal -->
+    <div id="sessionExpiredModal" class="modal-overlay" style="z-index: 10001;">
+        <div class="modal-box" style="max-width: 420px;">
+            <div class="modal-header" style="background: #fef2f2; border-bottom-color: #fecaca;">
+                <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px;">
+                    🔒 Session Terminated
+                </h3>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <p id="sessionExpiredText" style="color: var(--text-main); font-size: 15px; margin: 0 0 25px 0; line-height: 1.6; font-weight: 600;">
+                    Your session has been terminated because this User ID was logged into from another device.
+                </p>
+                <button type="button" class="action-btn" onclick="closeSessionExpiredModal()" style="padding: 10px 30px; background: var(--danger); font-size: 14px;">OK, Got It</button>
+            </div>
+        </div>
+    </div>
+
 <script>
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxDOOiNQGBLleHY7ttehM7KS284O7P7-PPW8ouK4gTPdrhLPmZOURvHbPMJp13HfX8g/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJ7dgwn5Gbz0vPlna7Sdyz22DoHn11n1FiioNijKaCFhfAJRdUrPusHQMf7D8YuHFl/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
+	let currentSessionToken = ""; // 🚀 NAYA: Session Token store karne ke liye
+        let sessionHeartbeatTimer = null; // 🚀 NAYA: 30-sec Live Timer ke liye
         let loggedInUserRole = ""; 
         let loggedInUserType = "All"; 
         let loggedInUserPermissions = "All"; 
@@ -1821,13 +1861,21 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             return bgQueue;
         }
 
-        async function safeFetch(payload, retryCount = 1) {
-            if (payload.action !== 'login' && payload.action !== 'syncData' && !payload.reqId) {
+	async function safeFetch(payload, retryCount = 1) {
+            const readOnlyActions = ['login', 'syncData', 'checkSession', 'logout'];
+            if (!readOnlyActions.includes(payload.action) && !payload.reqId) {
                 payload.reqId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
+
+            // 🚀 NAYA: Har request me active user aur sessionToken attach karein
+            if (payload.action !== 'login' && loggedInUser && currentSessionToken) {
+                payload.sessionUsername = loggedInUser;
+                payload.sessionToken = currentSessionToken;
+            }
+
             const noCacheUrl = WEB_APP_URL + '?t=' + Date.now();
             let controller = new AbortController();
-            const timeoutLimit = (payload.action === 'login' || payload.action === 'syncData') ? 50000 : 120000;
+            const timeoutLimit = readOnlyActions.includes(payload.action) ? 50000 : 120000;
             let timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
             
             try {
@@ -1844,7 +1892,14 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                 const text = await response.text();
                 try {
                     const resObj = JSON.parse(text);
-                    const isWriteAction = payload.action !== 'login' && payload.action !== 'syncData';
+                    
+                    // 🚀 NAYA: Agar kisi dusre user ne same ID se login kar liya hai, toh turant logout aur popup dikhao
+                    if (resObj && resObj.status === 'session_expired') {
+                        handleForceLogoutPopup(resObj.message);
+                        return resObj;
+                    }
+
+                    const isWriteAction = !readOnlyActions.includes(payload.action);
                     if (isWriteAction && resObj.status === 'success') {
                         lastWriteTime = Date.now();
                     }
@@ -1886,8 +1941,10 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
 
 	function checkAutoLogin() {
             const savedUser = localStorage.getItem("cms_user");
-            if (savedUser) {
+            const savedToken = localStorage.getItem("cms_token");
+            if (savedUser && savedToken) {
                 loggedInUser = savedUser;
+                currentSessionToken = savedToken;
                 loggedInUserRole = localStorage.getItem("cms_role") || "Standard";
                 loggedInUserType = localStorage.getItem("cms_type") || "All";
                 loggedInUserPermissions = localStorage.getItem("cms_perms") || "All";
@@ -1910,6 +1967,9 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                 document.getElementById('dashboard-view').style.display = 'flex';
                 showDashboardCards();
                 
+                // 🚀 30-Sec Live Session Check chalu karein
+                startSessionHeartbeat();
+
                 fetchVersion++;
                 const loginVersion = fetchVersion;
                 
@@ -1918,6 +1978,204 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                         fetchLedgers(false);
                     }
                 });              
+            }
+        }
+
+        async function handleLogin(event, isForceLogin = false) {
+            if (event) event.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+            const errorDiv = document.getElementById('loginError');
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+            document.getElementById('loginText').innerText = isForceLogin ? 'Taking Over Session...' : 'Authenticating...';
+
+            try {
+                const data = await safeFetch({ 
+                    action: 'login', 
+                    username: user, 
+                    password: pass, 
+                    forceLogin: isForceLogin 
+                });
+
+		// 🚀 CASE 1: If User ID is already logged in on another device
+                if (data.status === 'already_logged_in') {
+                    document.getElementById('alreadyLoggedInText').innerText = data.message || `User ID '${user}' is currently active on another device. Do you want to terminate the other session and log in here?`;
+                    document.getElementById('alreadyLoggedInModal').style.display = 'flex';
+                    return;
+                }
+
+                // 🚀 CASE 2: Login Successful
+                if (data.status === 'success') {
+                    closeAlreadyLoggedInModal();
+                    const allowed = data.allowedType ? data.allowedType.trim() : 'All';
+                    if (allowed === 'RESTRICTED') {
+                        errorDiv.innerText = 'Access Denied: Your account is restricted.';
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+
+                    loggedInUser = user;
+                    currentSessionToken = data.sessionToken || "";
+                    loggedInUserRole = data.role || 'Standard';
+                    loggedInUserType = allowed; 
+                    loggedInUserPermissions = data.permissions || 'All';
+
+                    const moduleSwitcher = document.getElementById('adminModuleSwitcher');
+                    if (loggedInUserRole.toLowerCase().includes('admin') || loggedInUserRole.toLowerCase().includes('master') || allowed === "All") {
+                        moduleSwitcher.style.display = 'inline-block';
+                        moduleSwitcher.value = 'All';
+                        loggedInUserType = 'All'; 
+                    } else {
+                        moduleSwitcher.style.display = 'none';
+                    }
+                    
+                    localStorage.setItem("cms_user", loggedInUser);
+                    localStorage.setItem("cms_token", currentSessionToken);
+                    localStorage.setItem("cms_role", loggedInUserRole);
+                    localStorage.setItem("cms_type", loggedInUserType);
+                    localStorage.setItem("cms_perms", loggedInUserPermissions);
+                    
+                    document.getElementById('userNameDisplay').innerText = loggedInUser;
+                    document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
+                    document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
+                    document.getElementById('welcomeGreeting').innerText = 'Welcome, ' + loggedInUser;
+
+                    const welcomeDesc = document.getElementById('welcomeDesc');
+                    if (welcomeDesc) {
+                        if (loggedInUserType === 'Dispatch Courier Management') {
+                            welcomeDesc.innerText = 'Here is your overview for Dispatch operations.';
+                        } else if (loggedInUserType === 'Return Courier Management') {
+                            welcomeDesc.innerText = 'Here is your overview for Return operations.';
+                        } else {
+                            welcomeDesc.innerText = 'Here is your combined overview for Dispatch and Return operations.';
+                        }
+                    }
+
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('dashboard-view').style.display = 'flex';
+                    showDashboardCards();
+                    showToast('Login Successful', 'Dashboard is opening...', 'success');
+
+                    // 🚀 30-Sec Live Session Check start karein
+                    startSessionHeartbeat();
+
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    document.getElementById('loginText').innerText = 'Sign In';
+
+                    fetchVersion++;
+                    const loginVersion = fetchVersion;
+                    
+                    setTimeout(() => {
+                        syncData(true, false).then(() => {
+                            if (loginVersion === fetchVersion && loggedInUser) {
+                                fetchLedgers(false);
+                            }
+                        });
+                    }, 100);
+
+                } else {
+                    errorDiv.innerText = data.message || 'Invalid credentials.';
+                    errorDiv.style.display = 'block';
+                }
+
+            } catch (error) {
+                errorDiv.innerText = 'Connection Error: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                document.getElementById('loginText').innerText = 'Sign In';
+            }
+        }
+
+        function logoutSystem(isForced = false) {
+            stopSessionHeartbeat();
+
+            const userToClear = loggedInUser;
+            const tokenToClear = currentSessionToken;
+
+            // Agar user khud Logout button daba raha hai, toh server se session free kar dein
+            if (!isForced && userToClear) {
+                fetch(WEB_APP_URL + '?t=' + Date.now(), {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'logout', sessionUsername: userToClear, sessionToken: tokenToClear })
+                }).catch(() => {});
+            }
+
+            localStorage.removeItem("cms_user");
+            localStorage.removeItem("cms_token");
+            localStorage.removeItem("cms_role");
+            localStorage.removeItem("cms_type");
+            localStorage.removeItem("cms_perms");
+            
+            Object.keys(localStorage).forEach(key => {
+                if(key.startsWith("cms_table_") && key !== "cms_table_ledgers") {
+                    localStorage.removeItem(key);
+                }
+                if(key === "saved_dashboard_counts") {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            document.getElementById('loginForm').reset();
+            loggedInUser = ""; currentSessionToken = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
+            tableCache = {}; activeTableContext = null; cachedLedgers = []; ledgerRequestPromise = null; fetchVersion++;
+            
+            document.getElementById('dashboard-view').style.display = 'none'; 
+            document.getElementById('login-view').style.display = 'flex'; 
+        }
+	
+	// 🚀 User B jab Popup me "Yes, Login Here" par click karega
+        function confirmForceLogin() {
+            closeAlreadyLoggedInModal();
+            handleLogin(null, true); 
+        }
+
+        function closeAlreadyLoggedInModal() {
+            document.getElementById('alreadyLoggedInModal').style.display = 'none';
+        }
+
+	// 🚀 User A ko Force Logout karke English Popup dikhane ka function
+        function handleForceLogoutPopup(message) {
+            if (!loggedInUser) return; 
+            const activeUserId = loggedInUser;
+            
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            logoutSystem(true);
+
+            document.getElementById('sessionExpiredText').innerText = message || `Your session for User ID '${activeUserId}' has been terminated because this account was logged into from another device.`;
+            document.getElementById('sessionExpiredModal').style.display = 'flex';
+        }
+
+        function closeSessionExpiredModal() {
+            document.getElementById('sessionExpiredModal').style.display = 'none';
+        }
+
+        // 🚀 Har 30 second me background me check karega (0% Speed Impact)
+        function startSessionHeartbeat() {
+            stopSessionHeartbeat();
+            sessionHeartbeatTimer = setInterval(async () => {
+                if (!loggedInUser || !currentSessionToken) return;
+                try {
+                    await safeFetch({ action: 'checkSession' }, 0);
+                } catch (e) {
+                    // Network glitch hone par ignore karega taaki kaam na ruke
+                }
+            }, 30000); // 30,000 ms = 30 Seconds
+        }
+
+        function stopSessionHeartbeat() {
+            if (sessionHeartbeatTimer) {
+                clearInterval(sessionHeartbeatTimer);
+                sessionHeartbeatTimer = null;
             }
         }
 
@@ -2135,108 +2393,6 @@ function updateLastSyncTime() {
             });
         }
 
-	async function handleLogin(event) {
-            if (event) event.preventDefault();
-            const btn = document.getElementById('loginBtn');
-            const spinner = document.getElementById('loginSpinner');
-            const errorDiv = document.getElementById('loginError');
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value;
-
-            // UI ko turant block karein taaki double click na ho
-            btn.disabled = true;
-            spinner.style.display = 'inline-block';
-            errorDiv.style.display = 'none';
-            document.getElementById('loginText').innerText = 'Authenticating...';
-
-            try {
-                // Sirf 1-2 second me backend se login verify karega
-                const data = await safeFetch({ action: 'login', username: user, password: pass });
-
-                if (data.status === 'success') {
-                    const allowed = data.allowedType ? data.allowedType.trim() : 'All';
-                    if (allowed === 'RESTRICTED') {
-                        errorDiv.innerText = 'Access Denied: Your account is restricted.';
-                        errorDiv.style.display = 'block';
-                        return;
-                    }
-
-                    loggedInUser = user;
-                    loggedInUserRole = data.role || 'Standard';
-                    loggedInUserType = allowed; 
-                    loggedInUserPermissions = data.permissions || 'All';
-
-                    const moduleSwitcher = document.getElementById('adminModuleSwitcher');
-                    if (loggedInUserRole.toLowerCase().includes('admin') || loggedInUserRole.toLowerCase().includes('master') || allowed === "All") {
-                        moduleSwitcher.style.display = 'inline-block';
-                        moduleSwitcher.value = 'All';
-                        loggedInUserType = 'All'; 
-                    } else {
-                        moduleSwitcher.style.display = 'none';
-                    }
-                    
-                    // NAYA: Successful login ke baad user detail memory me save karein
-                    localStorage.setItem("cms_user", loggedInUser);
-                    localStorage.setItem("cms_role", loggedInUserRole);
-                    localStorage.setItem("cms_type", loggedInUserType);
-                    localStorage.setItem("cms_perms", loggedInUserPermissions);
-                    
-                    document.getElementById('userNameDisplay').innerText = loggedInUser;
-                    document.getElementById('avatarInitial').innerText = loggedInUser.charAt(0).toUpperCase();
-                    document.getElementById('userRoleDisplay').innerText = loggedInUserRole;
-                    document.getElementById('welcomeGreeting').innerText = 'Welcome, ' + loggedInUser;
-
-                    const welcomeDesc = document.getElementById('welcomeDesc');
-                    if (welcomeDesc) {
-                        if (loggedInUserType === 'Dispatch Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Dispatch operations.';
-                        } else if (loggedInUserType === 'Return Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Return operations.';
-                        } else {
-                            welcomeDesc.innerText = 'Here is your combined overview for Dispatch and Return operations.';
-                        }
-                    }
-
-                    // 🚀 FIX: Turant login screen hata kar dashboard dikhayein (0 seconds wait!)
-                    document.getElementById('login-view').style.display = 'none';
-                    document.getElementById('dashboard-view').style.display = 'flex';
-                    showDashboardCards();
-                    showToast('Login Successful', 'Dashboard is opening...', 'success');
-
-                    // 🚀 FIX: Spinner ko turant band karein, user ko wait nahi karwana hai
-                    btn.disabled = false;
-                    spinner.style.display = 'none';
-                    document.getElementById('loginText').innerText = 'Sign In';
-
-                    fetchVersion++;
-                    const loginVersion = fetchVersion;
-                    
-                    // 🚀 THE MAGIC: setTimeout lagakar browser ko UI render karne ka time diya.
-                    // Data ab chupchap background me aayega, login screen par nahi atkega!
-			setTimeout(() => {
-                        syncData(true, false).then(() => {
-                            if (loginVersion === fetchVersion && loggedInUser) {
-                                fetchLedgers(false);
-                            }
-                        });
-                    }, 100);
-
-                } else {
-                    errorDiv.innerText = data.message || 'Invalid credentials.';
-                    errorDiv.style.display = 'block';
-                }
-
-            } catch (error) {
-                errorDiv.innerText = 'Connection Error: ' + error.message;
-                errorDiv.style.display = 'block';
-            } finally {
-                // Kisi error ki wajah se atke na, isliye safe fallback
-                btn.disabled = false;
-                spinner.style.display = 'none';
-                document.getElementById('loginText').innerText = 'Sign In';
-            }
-        }
-
         let countsRequestPromise = null;
         let freshCountsRequestPromise = null;
         let refreshRequestPromise = null;
@@ -2439,29 +2595,6 @@ function updateLastSyncTime() {
     })();
     return refreshRequestPromise;
 }
-
-	function logoutSystem() {
-            localStorage.removeItem("cms_user");
-            localStorage.removeItem("cms_role");
-            localStorage.removeItem("cms_type");
-            localStorage.removeItem("cms_perms");
-            
-            Object.keys(localStorage).forEach(key => {
-                if(key.startsWith("cms_table_") && key !== "cms_table_ledgers") {
-                    localStorage.removeItem(key);
-                }
-                if(key === "saved_dashboard_counts") {
-                    localStorage.removeItem(key);
-                }
-            });
-            
-            document.getElementById('loginForm').reset();
-            loggedInUser = ""; loggedInUserRole = ""; loggedInUserType = "All"; loggedInUserPermissions = "All";
-            tableCache = {}; activeTableContext = null; cachedLedgers = []; ledgerRequestPromise = null; bgQueue = Promise.resolve(); fetchVersion++;
-            
-            document.getElementById('dashboard-view').style.display = 'none'; 
-            document.getElementById('login-view').style.display = 'flex'; 
-        }
 
         function hideAllLists() {
             document.getElementById('dashboard-unified-cards').style.display = 'none';
