@@ -404,6 +404,15 @@
                 </select>
 
 		<!-- Refresh Button & Last Sync Time Container -->
+<!-- 🚀 Maintenance Mode Toggle Switch (Visible strictly for ADMIN role) -->
+<div id="maintenanceSwitchContainer" style="display: none; align-items: center; gap: 8px; margin-right: 15px; background: #fffbeb; padding: 4px 10px; border-radius: 8px; border: 1px solid #fde68a;">
+    <span style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase;">Maintenance</span>
+    <label style="position: relative; display: inline-block; width: 34px; height: 18px; margin-bottom: 0; cursor: pointer;">
+        <input type="checkbox" id="maintenanceToggle" onchange="toggleSystemMaintenance(this)" style="opacity: 0; width: 0; height: 0;">
+        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 18px;" id="maintenanceSlider"></span>
+    </label>
+</div>
+
 <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px;">
     <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1;" title="Refresh Latest Data">
         <svg id="syncIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
@@ -1624,6 +1633,44 @@
         </div>
     </div>
 
+    <!-- 🚀 2. User A & Maintenance: Session Terminated / Maintenance Notification Modal -->
+    <div id="sessionExpiredModal" class="modal-overlay" style="z-index: 10001;">
+        <div class="modal-box" style="max-width: 420px;">
+            <div class="modal-header" style="background: #fef2f2; border-bottom-color: #fecaca;">
+                <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px;">
+                    🔒 System Notice
+                </h3>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <p id="sessionExpiredText" style="color: var(--text-main); font-size: 15px; margin: 0 0 25px 0; line-height: 1.6; font-weight: 600;">
+                    Your session has been terminated because this User ID was logged into from another device.
+                </p>
+                <button type="button" class="action-btn" onclick="closeSessionExpiredModal()" style="padding: 10px 30px; background: var(--danger); font-size: 14px;">OK, Got It</button>
+            </div>
+        </div>
+    </div>
+
+	<!-- 🚀 1. User B: Active Session Confirmation Modal -->
+    <div id="alreadyLoggedInModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-header" style="background: #fffbeb; border-bottom-color: #fde68a;">
+                <h3 style="color: #b45309; display: flex; align-items: center; gap: 8px;">
+                    ⚠️ Active Session Detected
+                </h3>
+                <button type="button" class="close-btn" onclick="closeAlreadyLoggedInModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <p id="alreadyLoggedInText" style="color: var(--text-main); font-size: 15px; margin: 0 0 25px 0; line-height: 1.6; font-weight: 500;">
+                    This User ID is currently active on another device. Do you want to terminate the other session and log in here?
+                </p>
+                <div style="display: flex; justify-content: center; gap: 12px;">
+                    <button type="button" class="btn-outline" onclick="closeAlreadyLoggedInModal()" style="padding: 10px 20px;">Cancel</button>
+                    <button type="button" id="forceLoginBtn" class="action-btn btn-warning" onclick="confirmForceLogin()" style="padding: 10px 20px; background: var(--primary);">Yes, Log In Here</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 🚀 2. User A: Session Terminated Notification Modal -->
     <div id="sessionExpiredModal" class="modal-overlay" style="z-index: 10001;">
         <div class="modal-box" style="max-width: 420px;">
@@ -1645,7 +1692,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxqq3E8y0pG3qT-qikyFDNZvnjgjUmTYkVP_P7gBjMx7Znl7y6y5YAG4EcmJq2oVIhz/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwg-XaRr0bpz-LkzXPaVdQ2y-eiDatGtc38pO3DcChWagdE5k9iONoUeVW2nNU1HxvU/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -1868,12 +1915,11 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
         }
 
 	async function safeFetch(payload, retryCount = 1) {
-            const readOnlyActions = ['login', 'syncData', 'checkSession', 'logout'];
+            const readOnlyActions = ['login', 'syncData', 'checkSession', 'logout', 'toggleMaintenance'];
             if (!readOnlyActions.includes(payload.action) && !payload.reqId) {
                 payload.reqId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
 
-            // 🚀 NAYA: Har request me active user aur sessionToken attach karein
             if (payload.action !== 'login' && loggedInUser && currentSessionToken) {
                 payload.sessionUsername = loggedInUser;
                 payload.sessionToken = currentSessionToken;
@@ -1899,9 +1945,13 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                 try {
                     const resObj = JSON.parse(text);
                     
-                    // 🚀 NAYA: Agar kisi dusre user ne same ID se login kar liya hai, toh turant logout aur popup dikhao
                     if (resObj && resObj.status === 'session_expired') {
                         handleForceLogoutPopup(resObj.message);
+                        return resObj;
+                    }
+
+                    if (resObj && resObj.status === 'maintenance_mode') {
+                        handleMaintenancePopup(resObj.message);
                         return resObj;
                     }
 
@@ -1973,7 +2023,6 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                 document.getElementById('dashboard-view').style.display = 'flex';
                 showDashboardCards();
                 
-                // 🚀 30-Sec Live Session Check chalu karein
                 startSessionHeartbeat();
 
                 fetchVersion++;
@@ -1987,7 +2036,7 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             }
         }
 
-        async function handleLogin(event, isForceLogin = false) {
+	async function handleLogin(event, isForceLogin = false) {
             if (event) event.preventDefault();
             const btn = document.getElementById('loginBtn');
             const spinner = document.getElementById('loginSpinner');
@@ -2008,14 +2057,12 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                     forceLogin: isForceLogin 
                 });
 
-		// 🚀 CASE 1: If User ID is already logged in on another device
                 if (data.status === 'already_logged_in') {
                     document.getElementById('alreadyLoggedInText').innerText = data.message || `User ID '${user}' is currently active on another device. Do you want to terminate the other session and log in here?`;
                     document.getElementById('alreadyLoggedInModal').style.display = 'flex';
                     return;
                 }
 
-                // 🚀 CASE 2: Login Successful
                 if (data.status === 'success') {
                     closeAlreadyLoggedInModal();
                     const allowed = data.allowedType ? data.allowedType.trim() : 'All';
@@ -2067,7 +2114,6 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                     showDashboardCards();
                     showToast('Login Successful', 'Dashboard is opening...', 'success');
 
-                    // 🚀 30-Sec Live Session Check start karein
                     startSessionHeartbeat();
 
                     btn.disabled = false;
@@ -2100,13 +2146,12 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             }
         }
 
-        function logoutSystem(isForced = false) {
+	function logoutSystem(isForced = false) {
             stopSessionHeartbeat();
 
             const userToClear = loggedInUser;
             const tokenToClear = currentSessionToken;
 
-            // Agar user khud Logout button daba raha hai, toh server se session free kar dein
             if (!isForced && userToClear) {
                 fetch(WEB_APP_URL + '?t=' + Date.now(), {
                     method: 'POST',
@@ -2139,6 +2184,63 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             document.getElementById('login-view').style.display = 'flex'; 
         }
 	
+	// 🚀 Admin jab toggle switch on/off karega
+        async function toggleSystemMaintenance(checkboxEl) {
+            const newState = checkboxEl.checked ? "true" : "false";
+            const slider = document.getElementById('maintenanceSlider');
+            
+            try {
+                const res = await safeFetch({ action: 'toggleMaintenance', state: newState }, 0);
+                if (res && res.status === 'success') {
+                    if (checkboxEl.checked) {
+                        slider.style.backgroundColor = "var(--danger)";
+                        showToast("Maintenance Enabled", "System is now under maintenance mode. Other users will be logged out.", "warning");
+                    } else {
+                        slider.style.backgroundColor = "#cbd5e1";
+                        showToast("Maintenance Disabled", "System is back to normal operations.", "success");
+                    }
+                } else {
+                    checkboxEl.checked = !checkboxEl.checked;
+                    showToast("Error", "Failed to change maintenance state.", "error");
+                }
+            } catch (e) {
+                checkboxEl.checked = !checkboxEl.checked;
+                showToast("Error", "Network error while toggling maintenance.", "error");
+            }
+        }
+
+        function confirmForceLogin() {
+            closeAlreadyLoggedInModal();
+            handleLogin(null, true); 
+        }
+
+        function closeAlreadyLoggedInModal() {
+            document.getElementById('alreadyLoggedInModal').style.display = 'none';
+        }
+
+        function handleForceLogoutPopup(message) {
+            if (!loggedInUser) return; 
+            const activeUserId = loggedInUser;
+            
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            logoutSystem(true);
+
+            document.getElementById('sessionExpiredText').innerText = message || `Your session for User ID '${activeUserId}' has been terminated because this account was logged into from another device.`;
+            document.getElementById('sessionExpiredModal').style.display = 'flex';
+        }
+
+        function handleMaintenancePopup(message) {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            logoutSystem(true);
+
+            document.getElementById('sessionExpiredText').innerText = message || "System Maintenance: We are currently undergoing scheduled maintenance to improve your experience. We will be back shortly with a brand-new avatar!";
+            document.getElementById('sessionExpiredModal').style.display = 'flex';
+        }
+
+        function closeSessionExpiredModal() {
+            document.getElementById('sessionExpiredModal').style.display = 'none';
+        }
+
 	// 🚀 User B jab Popup me "Yes, Login Here" par click karega
         function confirmForceLogin() {
             closeAlreadyLoggedInModal();
@@ -2165,17 +2267,14 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
             document.getElementById('sessionExpiredModal').style.display = 'none';
         }
 
-	// 🚀 SMART LIVE BACKGROUND SYNC (Without any annoying popups/toasts for User B)
-        function startSessionHeartbeat() {
+	function startSessionHeartbeat() {
             stopSessionHeartbeat();
             sessionHeartbeatTimer = setInterval(async () => {
                 if (!loggedInUser || !currentSessionToken) return;
                 try {
-                    // 1. Session Validated (Fast RAM Check)
                     const sessionRes = await safeFetch({ action: 'checkSession' }, 0);
                     if (sessionRes && sessionRes.status === 'session_expired') return;
 
-                    // 2. Background Count Checker
                     const countRes = await safeFetch({ action: 'syncData', reqType: 'countsFresh', module: loggedInUserType }, 0);
                     if (countRes && countRes.status === 'success' && countRes.counts) {
                         let localSaved = localStorage.getItem("saved_dashboard_counts");
@@ -2187,24 +2286,26 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                             if (hasChanges) {
                                 updateDashboardCounts(newCounts);
                                 
-                                // Agar User B kisi table par hai, toh background me table data refresh kar lo
                                 if (activeTableContext && activeTableContext.reqType) {
                                     let activeReq = activeTableContext.reqType;
                                     delete tableCache[activeReq];
                                     localStorage.removeItem("cms_table_" + activeReq);
                                     loadAndRenderTable(activeReq, activeTableContext.renderFn, true);
                                 }
-                                
-                                // ❌ Yahan se showToast wali line hata di gayi hai taaki koi popup ya notification na aaye!
                             }
                         } else {
                             updateDashboardCounts(countRes.counts);
                         }
                     }
-                } catch (e) {
-                    // Network glitch hone par ignore karega
-                }
-            }, 25000); // Har 25 seconds me chupchap background me update karega
+                } catch (e) {}
+            }, 25000); // Har 25 seconds me silent check
+        }
+
+        function stopSessionHeartbeat() {
+            if (sessionHeartbeatTimer) {
+                clearInterval(sessionHeartbeatTimer);
+                sessionHeartbeatTimer = null;
+            }
         }
 
         function stopSessionHeartbeat() {
@@ -2395,7 +2496,7 @@ function updateLastSyncTime() {
             refreshDataAndView();
         }
 
-        function applyAccessControl() {
+	function applyAccessControl() {
             const dispatchSection = document.getElementById('dispatch-management-section');
             const returnSection = document.getElementById('return-management-section');
             const allCards = document.querySelectorAll('.kpi-card');
@@ -2426,6 +2527,17 @@ function updateLastSyncTime() {
                     } 
                 }
             });
+
+            // 🚀 Show/Hide Maintenance Switch (Strictly for ADMIN role only)
+            const maintContainer = document.getElementById('maintenanceSwitchContainer');
+            if (maintContainer) {
+                let userRoleStr = (loggedInUserRole || "").trim().toLowerCase();
+                if (userRoleStr === 'admin') {
+                    maintContainer.style.display = 'flex';
+                } else {
+                    maintContainer.style.display = 'none';
+                }
+            }
         }
 
         let countsRequestPromise = null;
