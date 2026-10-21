@@ -635,7 +635,7 @@
                             <span style="color: var(--primary);">Total: <b id="countTotalTransit">0</b></span>
                             <span style="color: #c2410c;">Normal: <b id="countNormalTransit">0</b></span>
                             <span style="color: var(--danger);">Delayed: <b id="countDelayedTransit">0</b></span>
-                            <span style="color: #d97706;">Hold at Hub: <b id="countHoldTransit">0</b></span>
+                            <span style="color: #d97706;">Hold at Nearest Hub: <b id="countHoldTransit">0</b></span>
                             <span style="color: var(--success);">Out for Delivery: <b id="countOfdTransit">0</b></span>
                         </div>
                     </div>
@@ -685,10 +685,10 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="disputedTable" style="min-width: 1000px;">
+			<table id="disputedTable" style="min-width: 1050px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th><th>Courier Partner</th><th>Boxes</th><th>Action Time</th><th>Status</th><th>Remark</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="disputedTableBody"></tbody>
@@ -706,11 +706,11 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="dispatchedTable" style="min-width: 1750px;">
+			<table id="dispatchedTable" style="min-width: 1800px;">
                         <thead>
                             <tr>
                                 <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
+                                <th>Courier Partner</th><th>Boxes</th><th>Assign Time</th><th>Dispatch Time</th><th>Delivered Time</th><th>Total Time</th><th>Final POD / Close Time</th><th>Final Status</th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchedTableBody"></tbody>
@@ -728,10 +728,10 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="dispatchStatusTable" style="min-width: 1150px;">
+			<table id="dispatchStatusTable" style="min-width: 1200px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchStatusTableBody"></tbody>
@@ -1703,7 +1703,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDBLDtjdwmqsUtrmBmOTtT-bmJU-Me0PRRA7eYVi4nOB93qhx_JqrSJ_Rzxi2mb7UI/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZmswv-2SBtzdkV3TYetHO4OUijng5-eZs82POeyuYketeSfiZLT2MfcMS1yl9WeBH/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2831,7 +2831,7 @@ function updateLastSyncTime() {
             dataList.forEach(item => {
                 let st = item.transitStatus || "Normal - In Transit";
                 if (st === "Delayed") delayed++;
-                else if (st === "Hold at Hub") hold++;
+                else if (st === "Hold at Nearest Hub" || st === "Hold at Hub") hold++;
                 else if (st === "Out for Delivery") ofd++;
                 else normal++;
             });
@@ -2848,11 +2848,12 @@ function updateLastSyncTime() {
 
             if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
             
-            let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Hub", "Out for Delivery"];
+            let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Nearest Hub", "Out for Delivery"];
             let html = []; 
             
             dataList.forEach((item, index) => { 
                 let currentSt = item.transitStatus || "Normal - In Transit";
+                if (currentSt === "Hold at Hub") currentSt = "Hold at Nearest Hub";
                 if (!statusOptions.includes(currentSt)) currentSt = "Normal - In Transit";
                 let color = getTransitStatusColor(currentSt);
 
@@ -2881,11 +2882,10 @@ function updateLastSyncTime() {
 
         function getTransitStatusColor(statusVal) {
             if (statusVal === 'Delayed') return 'var(--danger)';
-            if (statusVal === 'Hold at Hub') return '#d97706';
+            if (statusVal === 'Hold at Nearest Hub' || statusVal === 'Hold at Hub') return '#d97706';
             if (statusVal === 'Out for Delivery') return 'var(--success)';
             return '#c2410c';
         }
-
         function changeTransitStatus(selectEl, invoiceNo, docketNo) {
             const newStatus = selectEl.value;
             const originalStatus = selectEl.dataset.original;
@@ -2956,9 +2956,26 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('disputed-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'disputed', renderFn: renderDisputedTable }; loadAndRenderTable('disputed', activeTableContext.renderFn);
         }
-        function renderDisputedTable(dataList) {
-            if(dataList.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
-            let html = []; dataList.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b style="color:#dc2626;">${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#c2410c;">${item.actionTime || '-'}</td><td><span class="badge bg-rto">${item.status}</span></td><td>${item.remark || '-'}</td><td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td></tr>`); }); 
+	function renderDisputedTable(dataList) {
+            if(dataList.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='13' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+            let html = []; 
+            dataList.forEach((item, index) => { 
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b style="color:#dc2626;">${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td>${item.partner}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td><span class="badge bg-rto">${item.status}</span></td>
+                    <td>${item.remark || '-'}</td>
+                    <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-primary" onclick="openResolveModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.status)}')">Resolve</button></div></td>
+                </tr>`); 
+            }); 
             renderLargeHtml('disputedTableBody', html);
         }
 
@@ -2967,18 +2984,36 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('dispatched-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'dispatched', renderFn: (data) => renderDispatchedTable(data, startDate, endDate) }; loadAndRenderTable('dispatched', activeTableContext.renderFn);
         }
+
         function renderDispatchedTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='15' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
-            let html = []; listToDisplay.forEach((item, index) => { 
+            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='16' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+            let html = []; 
+            listToDisplay.forEach((item, index) => { 
                 let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; 
                 let finalDeliveredTime = item.deliveredTime && item.deliveredTime !== '-' ? item.deliveredTime : item.actionTime;
                 let totalTimeStr = calculateTotalTime(item.assignTime, finalDeliveredTime); 
-                html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.drName || '-'}</td><td>${item.ledgerName || '-'}</td><td>${item.city || '-'}</td><td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td><td>${item.docket || '-'}</td><td>${item.partner}</td><td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td><td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td><td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td><td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td><td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td><td>${sTag}</td><td>${item.remark || '-'}</td></tr>`); 
+                html.push(`<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.invoiceNo}</b></td>
+                    <td>${item.drName || '-'}</td>
+                    <td>${item.ledgerName || '-'}</td>
+                    <td>${item.city || '-'}</td>
+                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+                    <td>${item.docket || '-'}</td>
+                    <td>${item.partner}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+                    <td style="color:#1d4ed8; font-size: 13px;">${item.assignTime || '-'}</td>
+                    <td style="color:#c2410c; font-size: 13px;">${item.dispatchTime || '-'}</td>
+                    <td style="color:#15803d; font-size: 13px;">${item.deliveredTime || '-'}</td>
+                    <td style="font-weight:700; font-size: 13px;">${totalTimeStr}</td>
+                    <td style="color:#475569; font-size: 13px; font-weight: 700;">${item.actionTime || '-'}</td>
+                    <td>${sTag}</td>
+                    <td>${item.remark || '-'}</td>
+                </tr>`); 
             }); 
             renderLargeHtml('dispatchedTableBody', html);
         }
-
         function showUnplannedList() {
             hideAllLists(); document.getElementById('unplanned-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'unplannedBills', renderFn: renderUnplannedTable }; loadAndRenderTable('unplannedBills', activeTableContext.renderFn);
@@ -3078,7 +3113,7 @@ function updateLastSyncTime() {
 
 	let archiveSearchCounter = 0;
 
-        async function showDispatchStatusList(forceRefresh = false) {
+	async function showDispatchStatusList(forceRefresh = false) {
             hideAllLists();
             document.getElementById('dispatch-status-list-section').style.display = 'block';
             activeTableContext = { reqType: 'dispatchStatus', renderFn: renderDispatchStatusTable };
@@ -3103,11 +3138,10 @@ function updateLastSyncTime() {
             }
 
             if (!hasLocalData && tbody) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Active Dispatch Status...</span></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Active Dispatch Status...</span></td></tr>`;
             }
 
             try {
-                // 🚀 Sirf Active tabs load honge (Dispatched ke 20,000 bills load nahi honge)
                 const types = ['delivered', 'disputed', 'transit', 'assigned', 'pending'];
                 const results = await Promise.all(types.map(t => {
                     if (!forceRefresh && tableCache[t]) return Promise.resolve({ status: 'success', data: tableCache[t] });
@@ -3130,7 +3164,7 @@ function updateLastSyncTime() {
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "Delivered (POD / Action Pending)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', boxes: item.boxes || '-', status: "Delivered (POD / Action Pending)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
                     }
                 });
 
@@ -3140,21 +3174,21 @@ function updateLastSyncTime() {
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: item.status ? (item.status + " (Pending Resolution)") : "Disputed (Pending Resolution)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', boxes: item.boxes || '-', status: item.status ? (item.status + " (Pending Resolution)") : "Disputed (Pending Resolution)", actionTime: item.actionTime || '-', remark: item.remark || '-' });
                     }
                 });
 
-		// 3. In Transit (Delivery Pending & Custom Statuses)
+                // 3. In Transit (Normal - In Transit & Custom Statuses)
                 tranRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        // 🚀 In Transit tab wala custom status yahan fetch ho jayega
-                        let customTransitSt = item.transitStatus || "In Transit (Delivery Pending)";
-                        let finalStatusDisplay = (customTransitSt === "Normal - In Transit" || customTransitSt === "In Transit") 
-                            ? "In Transit (Delivery Pending)" 
-                            : customTransitSt; // Jaise 'Delayed', 'Hold at Hub', 'Out for Delivery'
+                        let customTransitSt = item.transitStatus || "Normal - In Transit";
+                        if (customTransitSt === "Hold at Hub") customTransitSt = "Hold at Nearest Hub";
+                        let finalStatusDisplay = (customTransitSt === "Normal - In Transit" || customTransitSt === "In Transit" || customTransitSt === "In Transit (Delivery Pending)") 
+                            ? "Normal - In Transit" 
+                            : customTransitSt;
 
                         combined.push({ 
                             invoiceNo: item.invoiceNo, 
@@ -3163,19 +3197,21 @@ function updateLastSyncTime() {
                             city: item.city || '-', 
                             partner: item.partner || '-', 
                             docket: item.docket || '-', 
+                            boxes: item.boxes || '-',
                             status: finalStatusDisplay, 
                             actionTime: item.actionTime || '-', 
                             remark: '-' 
                         });
                     }
                 });
+
                 // 4. Courier Assigned (Awaiting Physical Dispatch)
                 asgnRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "Courier Assigned (Awaiting Physical Dispatch)", actionTime: item.actionTime || '-', remark: '-' });
+                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', boxes: item.boxes || '-', status: "Courier Assigned (Awaiting Physical Dispatch)", actionTime: item.actionTime || '-', remark: '-' });
                     }
                 });
 
@@ -3183,7 +3219,7 @@ function updateLastSyncTime() {
                 pendRes.forEach(item => {
                     if (item.invoiceNo && !processedInvs.has(item.invoiceNo)) {
                         processedInvs.add(item.invoiceNo);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: '-', ledgerName: '-', city: '-', partner: '-', docket: '-', status: "Pending (Action Required)", actionTime: item.scanTime || '-', remark: '-' });
+                        combined.push({ invoiceNo: item.invoiceNo, drName: '-', ledgerName: '-', city: '-', partner: '-', docket: '-', boxes: '-', status: "Pending (Action Required)", actionTime: item.scanTime || '-', remark: '-' });
                     }
                 });
 
@@ -3196,21 +3232,20 @@ function updateLastSyncTime() {
             } catch (err) {
                 console.error(err);
                 if (!hasLocalData && tbody) {
-                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
                 }
             }
         }
 
-	function renderDispatchStatusTable(dataList, isFromArchive = false) {
+        function renderDispatchStatusTable(dataList, isFromArchive = false) {
             const tbody = document.getElementById('dispatchStatusTableBody');
             const searchBox = document.getElementById('dispatchStatusSearchBox');
             const searchVal = searchBox ? searchBox.value.trim() : "";
 
-            // Case 1: Agar Active pipeline me bilkul nahi mila, toh Dispatched Archive me dhoondho (Current Logic)
             if (!dataList || dataList.length === 0) {
                 if (searchVal.length >= 3 && !isFromArchive) {
                     const currentSearchId = ++archiveSearchCounter;
-                    tbody.innerHTML = `<tr><td colspan='9' style='text-align:center; padding: 25px;'><span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--primary); font-weight:600;">Not in active pipeline. Checking Completed / Dispatched Archive for "${safeStr(searchVal)}"...</span></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan='10' style='text-align:center; padding: 25px;'><span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--primary); font-weight:600;">Not in active pipeline. Checking Completed / Dispatched Archive for "${safeStr(searchVal)}"...</span></td></tr>`;
                     
                     safeFetch({ action: 'syncData', reqType: 'searchArchive', query: searchVal })
                         .then(res => {
@@ -3218,27 +3253,24 @@ function updateLastSyncTime() {
                             if (res && res.status === 'success' && res.data && res.data.length > 0) {
                                 renderDispatchStatusTable(res.data, true);
                             } else {
-                                tbody.innerHTML = `<tr><td colspan='9' style='text-align:center; color:var(--text-muted); padding: 20px;'>No invoice found matching "<b>${safeStr(searchVal)}</b>" in Active Pipeline or Dispatched Archive.</td></tr>`;
+                                tbody.innerHTML = `<tr><td colspan='10' style='text-align:center; color:var(--text-muted); padding: 20px;'>No invoice found matching "<b>${safeStr(searchVal)}</b>" in Active Pipeline or Dispatched Archive.</td></tr>`;
                             }
                         })
                         .catch(() => {
                             if (currentSearchId !== archiveSearchCounter) return;
-                            tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
+                            tbody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No invoices found to track.</td></tr>";
                         });
                     return;
                 }
 
-                tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No invoices found to track.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No invoices found to track.</td></tr>";
                 return;
             }
 
-            // Case 2: Agar user ne search kiya hai aur Active me entry mili hai (jaise A006859-SHORT),
-            // toh check karo ki kya is invoice ki koi line Dispatched Bills me bhi hai. Agar hai, toh sirf wahi line jod do.
             if (searchVal.length >= 3 && !isFromArchive && dataList.length <= 10) {
                 const currentSearchId = ++archiveSearchCounter;
                 const cleanQuery = searchVal.replace(/-SHORT/i, "").trim();
                 
-                // Active results ke base invoice numbers nikal lein (e.g., "A006859-SHORT" -> "A006859")
                 const activeBaseInvoices = new Set(
                     dataList.map(item => String(item.invoiceNo || "").replace(/-SHORT/i, "").trim().toUpperCase())
                 );
@@ -3255,7 +3287,6 @@ function updateLastSyncTime() {
                                 let archBaseInv = String(archItem.invoiceNo || "").replace(/-SHORT/i, "").trim().toUpperCase();
                                 let k = archItem.invoiceNo + "_" + archItem.docket + "_" + archItem.status;
                                 
-                                // Sirf wahi line add hogi jo active invoice se match karti hai
                                 if (activeBaseInvoices.has(archBaseInv) && !existingKeys.has(k)) {
                                     mergedList.push(archItem);
                                     addedAny = true;
@@ -3277,7 +3308,7 @@ function updateLastSyncTime() {
                 if (s.includes('pending') && !s.includes('pod') && !s.includes('resolution') && !s.includes('delivery')) badgeClass = "bg-pending";
                 else if (s.includes('transit')) badgeClass = "bg-transit";
                 else if (s.includes('delivered') || s.includes('dispatched') || s.includes('pod') || s.includes('otp')) badgeClass = "bg-delivered";
-                else if (s.includes('dispute') || s.includes('rto') || s.includes('misplaced') || s.includes('short') || s.includes('missing') || s.includes('closed')) badgeClass = "bg-rto";
+                else if (s.includes('delayed') || s.includes('dispute') || s.includes('rto') || s.includes('misplaced') || s.includes('short') || s.includes('missing') || s.includes('closed')) badgeClass = "bg-rto";
 
                 let courierInfo = (item.partner && item.partner !== '-') 
                     ? `<b>${item.partner}</b><div style="font-size:11px; color:#64748b;">${item.docket || '-'}</div>` 
@@ -3290,6 +3321,7 @@ function updateLastSyncTime() {
                     <td>${item.ledgerName || '-'}</td>
                     <td>${item.city || '-'}</td>
                     <td>${courierInfo}</td>
+                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
                     <td><span class="badge ${badgeClass}">${item.status || '-'}</span></td>
                     <td style="font-size:13px;">${item.actionTime || '-'}</td>
                     <td style="font-size:12px; color:#64748b;">${item.remark || '-'}</td>
@@ -3297,7 +3329,6 @@ function updateLastSyncTime() {
             });
             renderLargeHtml('dispatchStatusTableBody', html);
         }
-
         function showReturnStatusList() {
             hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'returnStatus', renderFn: renderReturnStatusTable }; loadAndRenderTable('returnStatus', activeTableContext.renderFn);
@@ -4059,6 +4090,10 @@ function isDateInRange(dateStr, start, end) {
     safeFetch({ action: 'uploadFinalPOD', invoiceNo, oldDocketNo, fileName, mimeType, fileBase64: base64Data, uploadedBy: loggedInUser, uploadType: actionType, expectedBoxes: expBoxes, receivedBoxes: recBoxes, remarks: rem }).then(data => {
         if(data.status === 'success') {
             showToast("Success", `Status Updated Successfully!`); closeFinalPodModal();
+            delete tableCache['dispatched'];
+            localStorage.removeItem("cms_table_dispatched");
+            delete tableCache['disputed'];
+            localStorage.removeItem("cms_table_disputed");
             let targetTab = actionType === "Short Delivered" ? 'disputed' : 'dispatched';
             moveItemsAndRefresh('delivered', targetTab,
                 (item) => item.invoiceNo === invoiceNo && item.docket === oldDocketNo,
@@ -4067,7 +4102,6 @@ function isDateInRange(dateStr, start, end) {
         } else showToast("Error", data.message, "error");
     }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Update Status"; btn.disabled = false; });
 }
-
 async function submitResolveDispute(e) {
     e.preventDefault(); const btn = document.getElementById('saveResolveBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
     const invoiceNo = document.getElementById('resolveInvNo').value; const docketNo = document.getElementById('resolveDocket').value; const actionStatus = document.getElementById('resolveAction').value; let remark = document.getElementById('resolveFinalRemark').value;
