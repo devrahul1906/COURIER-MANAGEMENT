@@ -2449,11 +2449,44 @@ function setupAutocomplete(inputId, cityId, stateId, pinCodeId, ledgerCodeId, zo
 
         function isStandardUser() { return (loggedInUserRole || "").toLowerCase().indexOf("standard") !== -1; }
 
-        function exportTableToCSV(tableId, filename) {
-            let csv = []; let rows = document.querySelectorAll(`#${tableId} tr`);
-            for (let i = 0; i < rows.length; i++) { if(rows[i].style.display === "none") continue; let row = [], cols = rows[i].querySelectorAll("td, th"); for (let j = 0; j < cols.length; j++) { if (cols[j].innerText === 'Action' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]') || cols[j].querySelector('select')) continue; row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"'); } csv.push(row.join(",")); }
-            let csvFile = new Blob([csv.join("\n")], {type: "text/csv"}); let downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
-        }
+	// ✅ NAYA CODE (Ise lagayein):
+function exportTableToCSV(tableId, filename) {
+    // Agar table me 50 se zyada rows hain (chunk rendering), toh export se pehle bachi hui rows load karein
+    let tbody = document.querySelector(`#${tableId} tbody`);
+    if (tbody && tbody._fullHtmlArray && tbody.children.length < tbody._fullHtmlArray.length) {
+        let remaining = tbody._fullHtmlArray.slice(tbody.children.length).join("");
+        tbody.insertAdjacentHTML('beforeend', remaining);
+    }
+
+    let csv = []; 
+    let rows = document.querySelectorAll(`#${tableId} tr`);
+    
+    for (let i = 0; i < rows.length; i++) { 
+        if (rows[i].style.display === "none") continue; 
+        let row = [], cols = rows[i].querySelectorAll("td, th"); 
+        
+        for (let j = 0; j < cols.length; j++) { 
+            // Action column, buttons aur checkboxes ko skip karein (lekin select dropdown ko nahi)
+            if (cols[j].innerText.trim() === 'Action' || cols[j].innerText.trim() === 'Select' || cols[j].querySelector('button') || cols[j].querySelector('input[type="checkbox"]')) continue; 
+            
+            // Agar cell ke andar dropdown (<select>) hai, toh uski selected value lein
+            let selectEl = cols[j].querySelector('select');
+            let cellText = selectEl ? selectEl.value : cols[j].innerText;
+            
+            row.push('"' + String(cellText || "").trim().replace(/"/g, '""') + '"'); 
+        } 
+        csv.push(row.join(",")); 
+    }
+    
+    let csvFile = new Blob([csv.join("\n")], {type: "text/csv"}); 
+    let downloadLink = document.createElement("a"); 
+    downloadLink.download = filename; 
+    downloadLink.href = window.URL.createObjectURL(csvFile); 
+    downloadLink.style.display = "none"; 
+    document.body.appendChild(downloadLink); 
+    downloadLink.click(); 
+    document.body.removeChild(downloadLink);
+}
 
         function togglePassword() { const pwd = document.getElementById("password"); pwd.type = pwd.type === "password" ? "text" : "password"; }
         
