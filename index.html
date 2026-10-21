@@ -3144,16 +3144,31 @@ function updateLastSyncTime() {
                     }
                 });
 
-                // 3. In Transit (Delivery Pending)
+		// 3. In Transit (Delivery Pending & Custom Statuses)
                 tranRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', status: "In Transit (Delivery Pending)", actionTime: item.actionTime || '-', remark: '-' });
+                        // 🚀 In Transit tab wala custom status yahan fetch ho jayega
+                        let customTransitSt = item.transitStatus || "In Transit (Delivery Pending)";
+                        let finalStatusDisplay = (customTransitSt === "Normal - In Transit" || customTransitSt === "In Transit") 
+                            ? "In Transit (Delivery Pending)" 
+                            : customTransitSt; // Jaise 'Delayed', 'Hold at Hub', 'Out for Delivery'
+
+                        combined.push({ 
+                            invoiceNo: item.invoiceNo, 
+                            drName: item.drName || '-', 
+                            ledgerName: item.ledgerName || '-', 
+                            city: item.city || '-', 
+                            partner: item.partner || '-', 
+                            docket: item.docket || '-', 
+                            status: finalStatusDisplay, 
+                            actionTime: item.actionTime || '-', 
+                            remark: '-' 
+                        });
                     }
                 });
-
                 // 4. Courier Assigned (Awaiting Physical Dispatch)
                 asgnRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
