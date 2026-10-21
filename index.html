@@ -625,9 +625,21 @@
                 </div>
             </div>
 
-            <div id="pod-list-section" class="table-wrapper">
-                <div class="table-header">
-                    <h2>In Transit Invoices</h2>
+	<div id="pod-list-section" class="table-wrapper">
+                <div class="table-header" style="flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <h2 style="margin: 0;">In Transit Invoices</h2>
+                        
+                        <!-- 🚀 LIVE TRANSIT STATS PILL (Same as Ledger Master) -->
+                        <div id="transitStats" style="display: flex; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--border);">
+                            <span style="color: var(--primary);">Total: <b id="countTotalTransit">0</b></span>
+                            <span style="color: #c2410c;">Normal: <b id="countNormalTransit">0</b></span>
+                            <span style="color: var(--danger);">Delayed: <b id="countDelayedTransit">0</b></span>
+                            <span style="color: #d97706;">Hold at Hub: <b id="countHoldTransit">0</b></span>
+                            <span style="color: var(--success);">Out for Delivery: <b id="countOfdTransit">0</b></span>
+                        </div>
+                    </div>
+
                     <div class="table-actions">
                         <input type="text" id="transitSearchBox" class="search-box" placeholder="Search Invoice No..." onkeyup="debouncedFilterTable('transitSearchBox', 'podTableBody', 1)">
                         <button class="btn-outline btn-export" onclick="exportTableToCSV('podTable', 'Transit_Invoices.csv')">Export CSV</button>
@@ -641,7 +653,6 @@
                     </table>
                 </div>
             </div>
-
             <div id="delivered-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Delivered Bills</h2>
@@ -1692,7 +1703,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzH-IcdjoGTNweUnB-g-2WI-lMS_aot_mZYIpPvqkb3MFwlpki8hTMRc5IG_aNx3hXl/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDBLDtjdwmqsUtrmBmOTtT-bmJU-Me0PRRA7eYVi4nOB93qhx_JqrSJ_Rzxi2mb7UI/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2811,10 +2822,40 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('pod-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'transit', renderFn: renderPodTable }; loadAndRenderTable('transit', activeTableContext.renderFn);
         }
-	function renderPodTable(dataList) {
+	// 🚀 In Transit Invoices ke upar counts calculate aur update karne ka function
+        function updateTransitCounts(dataList) {
+            if (!dataList) dataList = [];
+            let total = dataList.length;
+            let normal = 0, delayed = 0, hold = 0, ofd = 0;
+
+            dataList.forEach(item => {
+                let st = item.transitStatus || "Normal - In Transit";
+                if (st === "Delayed") delayed++;
+                else if (st === "Hold at Hub") hold++;
+                else if (st === "Out for Delivery") ofd++;
+                else normal++;
+            });
+
+            if (document.getElementById('countTotalTransit')) document.getElementById('countTotalTransit').innerText = total;
+            if (document.getElementById('countNormalTransit')) document.getElementById('countNormalTransit').innerText = normal;
+            if (document.getElementById('countDelayedTransit')) document.getElementById('countDelayedTransit').innerText = delayed;
+            if (document.getElementById('countHoldTransit')) document.getElementById('countHoldTransit').innerText = hold;
+            if (document.getElementById('countOfdTransit')) document.getElementById('countOfdTransit').innerText = ofd;
+        }
+
+        function renderPodTable(dataList) {
+            updateTransitCounts(dataList); // 🚀 Table load ya search filter hote hi counts update honge
+
             if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+            
+            let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Hub", "Out for Delivery"];
             let html = []; 
+            
             dataList.forEach((item, index) => { 
+                let currentSt = item.transitStatus || "Normal - In Transit";
+                if (!statusOptions.includes(currentSt)) currentSt = "Normal - In Transit";
+                let color = getTransitStatusColor(currentSt);
+
                 html.push(`<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.invoiceNo}</b></td>
@@ -2826,12 +2867,63 @@ function updateLastSyncTime() {
                     <td>${item.docket || '-'}</td>
                     <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
                     <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td><span class="badge bg-transit">In Transit</span></td>
+                    <td>
+                        <select id="transit_sel_${index}" data-original="${currentSt}" onchange="changeTransitStatus(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
+                        style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: ${color}; background: #fff; cursor: pointer; outline: none;">
+                            ${statusOptions.map(opt => `<option value="${opt}" ${currentSt === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </td>
                     <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td>
                 </tr>`); 
             }); 
             renderLargeHtml('podTableBody', html);
         }
+
+        function getTransitStatusColor(statusVal) {
+            if (statusVal === 'Delayed') return 'var(--danger)';
+            if (statusVal === 'Hold at Hub') return '#d97706';
+            if (statusVal === 'Out for Delivery') return 'var(--success)';
+            return '#c2410c';
+        }
+
+        function changeTransitStatus(selectEl, invoiceNo, docketNo) {
+            const newStatus = selectEl.value;
+            const originalStatus = selectEl.dataset.original;
+            
+            selectEl.disabled = true;
+            selectEl.style.color = getTransitStatusColor(newStatus);
+
+            safeFetch({
+                action: 'updateTransitStatus',
+                invoiceNo: invoiceNo,
+                docketNo: docketNo,
+                newStatus: newStatus
+            }).then(res => {
+                selectEl.disabled = false;
+                if (res && res.status === 'success') {
+                    showToast("Status Updated", `Invoice ${invoiceNo} marked as "${newStatus}".`, "success");
+                    selectEl.dataset.original = newStatus;
+                    
+                    if (tableCache['transit']) {
+                        let target = tableCache['transit'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                        if (target) target.transitStatus = newStatus;
+                        updateTransitCounts(tableCache['transit']); // 🚀 Dropdown change hote hi upar ke counts turant update honge!
+                        try { localStorage.setItem("cms_table_transit", JSON.stringify(tableCache['transit'])); } catch(e) {}
+                    }
+                    delete tableCache['dispatchStatus'];
+                    localStorage.removeItem("cms_table_dispatchStatus");
+                } else {
+                    showToast("Error", (res && res.message) || "Failed to update status", "error");
+                    selectEl.value = originalStatus;
+                    selectEl.style.color = getTransitStatusColor(originalStatus);
+                }
+            }).catch(err => {
+                selectEl.disabled = false;
+                showToast("Error", err.message || "Network error while updating.", "error");
+                selectEl.value = originalStatus;
+                selectEl.style.color = getTransitStatusColor(originalStatus);
+            });
+        }	
         function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
             hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
