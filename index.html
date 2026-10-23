@@ -288,6 +288,15 @@
     .login-features-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
     .login-feature-item:nth-child(2)::after { display: none; }
 }
+
+	/* Transit Calculator Modal Styles */
+.calc-tabs { display: flex; border-bottom: 1px solid var(--border); background: #f8fafc; }
+.calc-tab-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: 600; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+.calc-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #fff; }
+.calc-tab-btn:hover:not(.active) { background: #f1f5f9; color: var(--text-main); }
+.calc-result-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px; text-align: center; margin-top: 20px; display: none; }
+.calc-result-box.show { display: block; animation: slideDown 0.3s ease-out; }
+.pin-status-text { font-size: 11px; font-weight: 600; margin-top: 4px; min-height: 16px; }
     </style>
 </head>
 <body>
@@ -579,6 +588,17 @@
                             <div class="kpi-desc">View & Update Ledgers</div>
                         </div>
 
+			<!-- 🚀 TRANSIT TIME CALCULATOR KPI CARD -->
+<div class="kpi-card" id="card-transit-calc" style="background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1;" onclick="openTransitCalcModal()" data-tab-name="Transit Calculator">
+    <div class="kpi-header">
+        <span class="kpi-title">Transit Calculator</span>
+        <div class="kpi-icon" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+    </div>
+    <div class="kpi-value" style="font-size: 24px;">Calculator</div>
+    <div class="kpi-desc">Check Distance & Transit Time</div>
+</div>
                     </div>
                 </div>
             </div>
@@ -1223,6 +1243,76 @@
             </div>
         </div>
     </div>
+
+		<!-- 🚀 TRANSIT TIME CALCULATOR MODAL -->
+<div id="transitCalcModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Transit Time Calculator</h3>
+            <button type="button" class="close-btn" onclick="closeTransitCalcModal()">&times;</button>
+        </div>
+        
+        <div class="calc-tabs">
+            <button id="tabSingleBtn" onclick="switchTab('single')" class="calc-tab-btn active">Single Calculation</button>
+            <button id="tabBulkBtn" onclick="switchTab('bulk')" class="calc-tab-btn">Bulk Upload (.xlsx)</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- SINGLE TAB -->
+            <div id="tabSingle" style="display: block;">
+                <div class="two-col">
+                    <div class="form-group">
+                        <label>Origin PIN Code <span style="color: red;">*</span></label>
+                        <input type="text" id="originPin" inputmode="numeric" value="250001" placeholder="e.g. 250001" maxlength="6" oninput="handlePinInput(this, 'originLocation')">
+                        <div id="originLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Destination PIN Code <span style="color: red;">*</span></label>
+                        <input type="text" id="destPin" inputmode="numeric" placeholder="e.g. 400080" maxlength="6" oninput="handlePinInput(this, 'destLocation')">
+                        <div id="destLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="inline-error" style="text-align: center;"></div>
+
+                <button onclick="calculateSingleTime()" id="calcBtn" class="btn-login" style="margin-top: 10px;">
+                    <span id="btnSpinner" class="spinner" style="display: none;"></span>
+                    <span id="btnText">Calculate Transit Time</span>
+                </button>
+
+                <div id="resultCard" class="calc-result-box">
+                    <h4 style="font-size: 12px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; font-weight: 700;">Estimated Transit Time</h4>
+                    <div style="font-size: 32px; font-weight: 800; color: #1e3a8a; margin-bottom: 10px;" id="resultDays">--</div>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                        <span id="resultDistance" style="background: var(--primary); color: white; font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; display: none;"></span>
+                        <span id="routeDetails" style="font-size: 12px; color: #3b82f6; font-weight: 600;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BULK TAB -->
+            <div id="tabBulk" style="display: none; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                    Upload Excel (.xlsx) with <b>"Origin PIN"</b> and <b>"Destination PIN"</b> columns.
+                </p>
+                <button onclick="downloadTemplate()" class="btn-outline" style="margin: 0 auto 15px auto; color: var(--primary); border-color: var(--primary);">
+                    Download Format Template
+                </button>
+                
+                <div class="file-input-box" style="position: relative; cursor: pointer;">
+                    <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10;" onchange="handleFileUpload(event)">
+                    <svg class="icon-lg" style="color: #94a3b8; margin: 0 auto 10px auto; width: 36px; height: 36px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-main);">Click to browse or drag file here</div>
+                </div>
+
+                <div id="bulkError" class="inline-error" style="margin-top: 15px;"></div>
+		<div id="bulkStatus" style="display: none; margin-top: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; gap: 10px;">
+    <span id="bulkStatusText">Processing...</span>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
 
     <div id="confirmReturnPickupModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 450px;">
@@ -2617,10 +2707,10 @@ function updateLastSyncTime() {
                     updateDashboardCounts(JSON.parse(savedCounts));
                 } else {
                     document.querySelectorAll('.kpi-value').forEach(el => {
-                        if (el.innerText !== 'New Request' && el.innerText !== 'Surprise Entry' && el.innerText !== 'Search Entry' && el.innerText !== 'Manage') {
-                            el.innerText = '...';
-                            el.style.color = '';
-                        }
+			if (el.innerText !== 'New Request' && el.innerText !== 'Surprise Entry' && el.innerText !== 'Search Entry' && el.innerText !== 'Manage' && el.innerText !== 'Calculator') {
+    el.innerText = '...';
+    el.style.color = '';
+}
                     });
                 }
             }
@@ -4155,6 +4245,200 @@ async function submitResolveDispute(e) {
             const now = new Date(); const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`; document.getElementById('dashCompactTime').innerText = timeStr;
         }
         updateDateTime(); setInterval(updateDateTime, 1000);
+		
+		// =====================================================================
+// 🚀 TRANSIT TIME CALCULATOR LOGIC (Distance-Based Logistics Estimator)
+// =====================================================================
+
+function openTransitCalcModal() { 
+    document.getElementById('transitCalcModal').style.display = 'flex'; 
+    handlePinInput(document.getElementById('originPin'), 'originLocation');
+}
+function closeTransitCalcModal() { document.getElementById('transitCalcModal').style.display = 'none'; }
+
+const pinDataCache = {}; 
+const districtCache = {}; 
+
+const stateCoordinates = {
+    "andaman": { lat: 11.7401, lng: 92.6586 }, "andhra pradesh": { lat: 15.9129, lng: 79.7400 },
+    "arunachal": { lat: 28.2180, lng: 94.7278 }, "assam": { lat: 26.2006, lng: 92.9376 },
+    "bihar": { lat: 25.0961, lng: 85.3131 }, "chandigarh": { lat: 30.7333, lng: 76.7794 },
+    "chhattisgarh": { lat: 21.2787, lng: 81.8661 }, "dadra": { lat: 20.1809, lng: 73.0169 },
+    "daman": { lat: 20.1809, lng: 73.0169 }, "delhi": { lat: 28.7041, lng: 77.1025 },
+    "goa": { lat: 15.2993, lng: 74.1240 }, "gujarat": { lat: 22.2587, lng: 71.1924 },
+    "haryana": { lat: 29.0588, lng: 76.0856 }, "himachal": { lat: 31.1048, lng: 77.1665 },
+    "jammu": { lat: 33.7782, lng: 76.5762 }, "kashmir": { lat: 33.7782, lng: 76.5762 },
+    "jharkhand": { lat: 23.6102, lng: 85.2799 }, "karnataka": { lat: 15.3173, lng: 75.7139 },
+    "kerala": { lat: 10.8505, lng: 76.2711 }, "ladakh": { lat: 34.1526, lng: 77.5771 },
+    "lakshadweep": { lat: 10.5667, lng: 72.6417 }, "madhya pradesh": { lat: 22.9734, lng: 78.6569 },
+    "maharashtra": { lat: 19.7515, lng: 75.7139 }, "manipur": { lat: 24.6637, lng: 93.9063 },
+    "meghalaya": { lat: 25.4670, lng: 91.3662 }, "mizoram": { lat: 23.1645, lng: 92.9376 },
+    "nagaland": { lat: 26.1584, lng: 94.5624 }, "odisha": { lat: 20.9517, lng: 85.0985 },
+    "puducherry": { lat: 11.9416, lng: 79.8083 }, "punjab": { lat: 31.1471, lng: 75.3412 },
+    "rajasthan": { lat: 27.0238, lng: 74.2179 }, "sikkim": { lat: 27.5330, lng: 88.5122 },
+    "tamil nadu": { lat: 11.1271, lng: 78.6569 }, "telangana": { lat: 18.1124, lng: 79.0193 },
+    "tripura": { lat: 23.9408, lng: 91.9882 }, "uttar pradesh": { lat: 26.8467, lng: 80.9462 },
+    "uttarakhand": { lat: 30.0668, lng: 79.0193 }, "west bengal": { lat: 22.9868, lng: 87.8550 }
+};
+
+function calculateHaversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
+}
+
+function evaluateTransitLogic(distance) {
+    if (distance === null || isNaN(distance)) return { time: "Unknown", logic: "Invalid Location/PIN" };
+    if (distance <= 100) return { time: "1-2 days", logic: "Distance 0-100 km" };
+    if (distance <= 500) return { time: "2-3 days", logic: "Distance 101-500 km" };
+    if (distance <= 1000) return { time: "3-5 days", logic: "Distance 501-1000 km" };
+    return { time: "5-7 days", logic: "Distance > 1000 km" };
+}
+
+async function fetchPinDetails(pin) {
+    const cleanPin = String(pin).replace(/[^0-9]/g, '').trim();
+    if (cleanPin.length !== 6) return { district: "Invalid", state: "Invalid", lat: null, lng: null };
+    if (pinDataCache[cleanPin]) return pinDataCache[cleanPin];
+    let result = { district: "Unknown", state: "Unknown", lat: null, lng: null };
+
+    try {
+        const [postalRes, zippoRes] = await Promise.allSettled([
+            fetch(`https://api.postalpincode.in/pincode/${cleanPin}`).then(r => r.json()),
+            fetch(`https://api.zippopotam.us/IN/${cleanPin}`).then(r => r.json())
+        ]);
+        if (postalRes.status === 'fulfilled' && postalRes.value && postalRes.value[0].Status === 'Success') {
+            const po = postalRes.value[0].PostOffice[0];
+            result.district = po.District; result.state = po.State;
+        }
+        if (zippoRes.status === 'fulfilled' && zippoRes.value && zippoRes.value.places && zippoRes.value.places.length > 0) {
+            const place = zippoRes.value.places[0];
+            result.lat = parseFloat(place.latitude); result.lng = parseFloat(place.longitude);
+            if (result.district === "Unknown") result.district = place["place name"];
+            if (result.state === "Unknown") result.state = place.state;
+        }
+        if (!result.lat && result.district !== "Unknown" && result.state !== "Unknown") {
+            const distKey = `${result.district},${result.state}`.toLowerCase();
+            if (districtCache[distKey]) {
+                result.lat = districtCache[distKey].lat; result.lng = districtCache[distKey].lng;
+            } else {
+                await new Promise(r => setTimeout(r, 600)); 
+                try {
+                    const nomRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${result.district}, ${result.state}, India`)}`);
+                    const nomData = await nomRes.json();
+                    if (nomData && nomData.length > 0) {
+                        result.lat = parseFloat(nomData[0].lat); result.lng = parseFloat(nomData[0].lon);
+                        districtCache[distKey] = { lat: result.lat, lng: result.lng };
+                    }
+                } catch (e) { console.warn("Nominatim fallback failed", e); }
+            }
+        }
+        if (!result.lat && result.state !== "Unknown") {
+            const stateQuery = result.state.toLowerCase();
+            for (const [key, coords] of Object.entries(stateCoordinates)) {
+                if (stateQuery.includes(key)) { result.lat = coords.lat; result.lng = coords.lng; break; }
+            }
+        }
+    } catch (error) { console.error(`Error fetching data for ${cleanPin}:`, error); }
+    pinDataCache[cleanPin] = result; return result;
+}
+
+function switchTab(tab) {
+    document.getElementById('tabSingle').style.display = tab === 'single' ? 'block' : 'none';
+    document.getElementById('tabBulk').style.display = tab === 'bulk' ? 'block' : 'none';
+    document.getElementById('tabSingleBtn').className = tab === 'single' ? 'calc-tab-btn active' : 'calc-tab-btn';
+    document.getElementById('tabBulkBtn').className = tab === 'bulk' ? 'calc-tab-btn active' : 'calc-tab-btn';
+}
+
+async function handlePinInput(inputElement, locationElId) {
+    inputElement.value = inputElement.value.replace(/[^0-9]/g, '').slice(0, 6);
+    const displayEl = document.getElementById(locationElId);
+    
+    if (inputElement.value.length === 6) {
+        displayEl.innerHTML = `<span style="color: var(--primary);">Loading details...</span>`;
+        const data = await fetchPinDetails(inputElement.value);
+        if (data.district !== "Invalid" && data.district !== "Unknown") {
+            displayEl.innerHTML = `<span style="color: var(--success);">🟢 ${data.district}, ${data.state}</span>`;
+        } else if(data.lat !== null) {
+            displayEl.innerHTML = `<span style="color: var(--warning);">🟡 Location found (Coordinates only)</span>`;
+        } else {
+            displayEl.innerHTML = `<span style="color: var(--danger);">🔴 Pin not found.</span>`;
+        }
+    } else { displayEl.textContent = ""; }
+}
+
+async function calculateSingleTime() {
+    const origin = document.getElementById('originPin').value; const dest = document.getElementById('destPin').value;
+    const errorMsg = document.getElementById('errorMessage'); const resultCard = document.getElementById('resultCard');
+    const btnSpinner = document.getElementById('btnSpinner'); const btnText = document.getElementById('btnText');
+    const calcBtn = document.getElementById('calcBtn');
+
+    if(origin.length !== 6 || dest.length !== 6) { errorMsg.textContent = "Please enter valid 6-digit PIN codes."; errorMsg.style.display = 'block'; return; }
+    errorMsg.style.display = 'none'; resultCard.classList.remove('show'); btnSpinner.style.display = 'inline-block'; btnText.textContent = "Calculating..."; calcBtn.disabled = true;
+
+    const oDetails = await fetchPinDetails(origin); const dDetails = await fetchPinDetails(dest);
+    let distance = null;
+    if (oDetails.lat && dDetails.lat) { distance = calculateHaversine(oDetails.lat, oDetails.lng, dDetails.lat, dDetails.lng); }
+
+    const result = evaluateTransitLogic(distance);
+
+    btnSpinner.style.display = 'none'; btnText.textContent = "Calculate Transit Time"; calcBtn.disabled = false;
+    document.getElementById('resultDays').textContent = result.time; document.getElementById('routeDetails').textContent = `Logic: ${result.logic}`;
+    
+    const distLabel = document.getElementById('resultDistance');
+    if (distance !== null) { distLabel.textContent = `Est. Distance: ${Math.round(distance)} km`; distLabel.style.display = 'inline-block'; } else { distLabel.style.display = 'none'; }
+    resultCard.classList.add('show');
+}
+
+function downloadTemplate() {
+    const ws = XLSX.utils.json_to_sheet([{ "Origin PIN": "250001", "Destination PIN": "400080" }, { "Origin PIN": "250001", "Destination PIN": "700001" }]);
+    ws['!cols'] = [{ wch: 15 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template"); XLSX.writeFile(wb, "Transit_Template.xlsx");
+}
+
+async function handleFileUpload(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const bulkError = document.getElementById('bulkError'); const bulkStatus = document.getElementById('bulkStatus'); const bulkStatusText = document.getElementById('bulkStatusText');
+    
+    bulkError.style.display = 'none'; bulkStatus.style.display = 'flex'; bulkStatusText.textContent = "Reading Excel file...";
+    await new Promise(r => setTimeout(r, 50)); 
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0]; const json = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
+            if (json.length === 0) throw new Error("The uploaded file is empty.");
+
+            let processedData = [];
+            for (let i = 0; i < json.length; i++) {
+                const row = json[i];
+                if (i % 2 === 0) { bulkStatusText.innerHTML = `<span class="spinner"></span> Geocoding record ${i + 1} of ${json.length}...`; await new Promise(r => setTimeout(r, 0)); }
+                let destKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'destination pin');
+                let origKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'origin pin');
+                if (!destKey) throw new Error("Missing 'Destination PIN' column.");
+
+                const origin = row[origKey] ? String(row[origKey]).trim() : "250001"; const dest = String(row[destKey]).trim();
+                const oDetails = await fetchPinDetails(origin); const dDetails = await fetchPinDetails(dest);
+                let distance = null;
+                if (oDetails.lat && dDetails.lat) { distance = calculateHaversine(oDetails.lat, oDetails.lng, dDetails.lat, dDetails.lng); }
+
+                const result = evaluateTransitLogic(distance);
+                processedData.push({ "Origin PIN": origin, "Destination PIN": dest, "Estimated Transit Time": result.time, "Distance (km)": distance ? Math.round(distance) : "N/A", "District Name": dDetails.district !== "Unknown" ? dDetails.district : "", "State Name": dDetails.state !== "Unknown" ? dDetails.state : "", "Aerial Distance": result.logic });
+            }
+
+            const newWs = XLSX.utils.json_to_sheet(processedData);
+            newWs['!cols'] = [{wch: 12}, {wch: 15}, {wch: 22}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 25}];
+            const newWb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(newWb, newWs, "Calculated Results"); XLSX.writeFile(newWb, "Transit_Times_Calculated.xlsx");
+            bulkStatus.style.color = 'var(--success)'; bulkStatus.style.background = '#f0fdf4'; bulkStatus.style.borderColor = '#bbf7d0';
+            bulkStatusText.innerHTML = `✅ Successfully calculated ${processedData.length} records!`;
+        } catch (error) {
+            bulkStatus.style.display = 'none'; bulkError.textContent = error.message; bulkError.style.display = 'block';
+        }
+        event.target.value = ''; 
+    };
+    reader.readAsArrayBuffer(file);
+}
     </script>
 </body>
 </html>
