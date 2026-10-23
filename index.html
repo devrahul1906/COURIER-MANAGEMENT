@@ -155,8 +155,8 @@
         
         .table-responsive { width: 100%; overflow-x: auto; max-height: 60vh; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { position: sticky; top: 0; background: #f8fafc; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; padding: 14px 20px; border-bottom: 1px solid var(--border); white-space: nowrap; z-index: 10; }
-        td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+	th { position: sticky; top: 0; background: #f8fafc; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding: 12px 15px; border-bottom: 1px solid var(--border); white-space: nowrap; z-index: 10; letter-spacing: 0.5px; }
+td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; line-height: 1.4; }
         tbody tr { transition: background 0.2s; }
         tbody tr:nth-child(even) { background: #fafbfc; }
         tbody tr:hover { background: #f1f5f9; }
@@ -743,7 +743,7 @@
                 </div>
             </div>
 
-            <div id="dispatch-status-list-section" class="table-wrapper">
+		<div id="dispatch-status-list-section" class="table-wrapper">
                 <div class="table-header">
                     <h2>Track Dispatch Status</h2>
                     <div class="table-actions">
@@ -753,10 +753,12 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-			<table id="dispatchStatusTable" style="min-width: 1200px;">
+			<table id="dispatchStatusTable" style="min-width: 1600px;"> <!-- thodi width badha di hai -->
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th>
+                                <th>Tentative Del. Date</th> <!-- 🚀 NAYA COLUMN -->
+                                <th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="dispatchStatusTableBody"></tbody>
@@ -1803,7 +1805,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7nkihu6dAP0v4r-uipoQOiMdvTz8f3ndcgSzxXe8H7BaGQ370zCy-fNYSLmks866s/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyxcbql3o1e_MhvmqZh9JQDK0-J1lLRI1f-thQO6OuQkHYqhy8gLVhpy4Agco4aO5gw/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -3385,7 +3387,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                     }
                 });
 
-                // 3. In Transit (Normal - In Transit & Custom Statuses)
+		// 3. In Transit (Normal - In Transit & Custom Statuses)
                 tranRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
@@ -3407,6 +3409,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                             boxes: item.boxes || '-',
                             status: finalStatusDisplay, 
                             actionTime: item.actionTime || '-', 
+                            tentativeDate: item.tentativeDate || '-', // 🚀 NAYA: Fetching Tentative Date
                             remark: '-' 
                         });
                     }
@@ -3418,10 +3421,21 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                     processedInvs.add(item.invoiceNo);
                     if (!seenKeys.has(k)) {
                         seenKeys.add(k);
-                        combined.push({ invoiceNo: item.invoiceNo, drName: item.drName || '-', ledgerName: item.ledgerName || '-', city: item.city || '-', partner: item.partner || '-', docket: item.docket || '-', boxes: item.boxes || '-', status: "Courier Assigned (Awaiting Physical Dispatch)", actionTime: item.actionTime || '-', remark: '-' });
+                        combined.push({ 
+                            invoiceNo: item.invoiceNo, 
+                            drName: item.drName || '-', 
+                            ledgerName: item.ledgerName || '-', 
+                            city: item.city || '-', 
+                            partner: item.partner || '-', 
+                            docket: item.docket || '-', 
+                            boxes: item.boxes || '-', 
+                            status: "Courier Assigned (Awaiting Physical Dispatch)", 
+                            actionTime: item.actionTime || '-', 
+                            tentativeDate: item.tentativeDate || '-', // 🚀 NAYA: Fetching Tentative Date
+                            remark: '-' 
+                        });
                     }
                 });
-
                 // 5. Total Pending (Action Required)
                 pendRes.forEach(item => {
                     if (item.invoiceNo && !processedInvs.has(item.invoiceNo)) {
@@ -3508,7 +3522,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                     .catch(err => console.warn("Archive check skipped:", err));
             }
 
-            let html = [];
+	let html = [];
             dataList.forEach((item, index) => {
                 let badgeClass = "bg-assigned";
                 let s = String(item.status || "").toLowerCase();
@@ -3521,6 +3535,9 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                     ? `<b>${item.partner}</b><div style="font-size:11px; color:#64748b;">${item.docket || '-'}</div>` 
                     : '-';
 
+                // Naya tentative date dikhane ke liye
+                let tenDateDisplay = item.tentativeDate ? item.tentativeDate : '-';
+
                 html.push(`<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.invoiceNo || '-'}</b></td>
@@ -3531,10 +3548,12 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
                     <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
                     <td><span class="badge ${badgeClass}">${item.status || '-'}</span></td>
                     <td style="font-size:13px;">${item.actionTime || '-'}</td>
+                    <td style="color:#15803d; font-weight: 700; font-size:13px;">${tenDateDisplay}</td> <!-- 🚀 NAYA FIELD -->
                     <td style="font-size:12px; color:#64748b;">${item.remark || '-'}</td>
                 </tr>`);
             });
             renderLargeHtml('dispatchStatusTableBody', html);
+
         }
         function showReturnStatusList() {
             hideAllLists(); document.getElementById('return-status-list-section').style.display = 'block'; 
