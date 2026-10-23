@@ -589,7 +589,7 @@
                         </div>
 
 			<!-- 🚀 TRANSIT TIME CALCULATOR KPI CARD -->
-<div class="kpi-card" id="card-transit-calc" style="background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1;" onclick="openTransitCalcModal()" data-tab-name="Transit Calculator">
+<div class="kpi-card" id="card-transit-calc" style="background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1;" onclick="showTransitCalcSection()" data-tab-name="Transit Calculator">
     <div class="kpi-header">
         <span class="kpi-title">Transit Calculator</span>
         <div class="kpi-icon" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
@@ -1244,20 +1244,26 @@
         </div>
     </div>
 
-		<!-- 🚀 TRANSIT TIME CALCULATOR MODAL -->
-<div id="transitCalcModal" class="modal-overlay">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>Transit Time Calculator</h3>
-            <button type="button" class="close-btn" onclick="closeTransitCalcModal()">&times;</button>
+		<!-- 🚀 TRANSIT TIME CALCULATOR SECTION (Isolated like Ledger Master) -->
+<div id="transit-calc-section" class="table-wrapper" style="background: transparent; border: none; box-shadow: none;">
+    <div class="table-header" style="background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px;">
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+            Transit Time Calculator 
+            <span style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 20px; font-weight: 700;">100% ACCURACY MODE</span>
+        </h2>
+        <div class="table-actions">
+            <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
         </div>
-        
+    </div>
+    
+    <!-- Calculator UI Structure -->
+    <div style="max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
         <div class="calc-tabs">
             <button id="tabSingleBtn" onclick="switchTab('single')" class="calc-tab-btn active">Single Calculation</button>
             <button id="tabBulkBtn" onclick="switchTab('bulk')" class="calc-tab-btn">Bulk Upload (.xlsx)</button>
         </div>
 
-        <div class="modal-body">
+        <div style="padding: 30px;">
             <!-- SINGLE TAB -->
             <div id="tabSingle" style="display: block;">
                 <div class="two-col">
@@ -1306,9 +1312,9 @@
                 </div>
 
                 <div id="bulkError" class="inline-error" style="margin-top: 15px;"></div>
-		<div id="bulkStatus" style="display: none; margin-top: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; gap: 10px;">
-    <span id="bulkStatusText">Processing...</span>
-</div>
+                <div id="bulkStatus" style="display: none; margin-top: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; gap: 10px;">
+                    <span id="bulkStatusText">Processing...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -4247,14 +4253,14 @@ async function submitResolveDispute(e) {
         updateDateTime(); setInterval(updateDateTime, 1000);
 		
 		// =====================================================================
-// 🚀 TRANSIT TIME CALCULATOR LOGIC (Distance-Based Logistics Estimator)
+// 🚀 TRANSIT TIME CALCULATOR LOGIC (ISOLATED FULL-PAGE SECTION)
 // =====================================================================
 
-function openTransitCalcModal() { 
-    document.getElementById('transitCalcModal').style.display = 'flex'; 
+function showTransitCalcSection() {
+    hideAllLists(); // Baaki sab hide ho jayega
+    document.getElementById('transit-calc-section').style.display = 'block';
     handlePinInput(document.getElementById('originPin'), 'originLocation');
 }
-function closeTransitCalcModal() { document.getElementById('transitCalcModal').style.display = 'none'; }
 
 const pinDataCache = {}; 
 const districtCache = {}; 
@@ -4296,6 +4302,7 @@ function evaluateTransitLogic(distance) {
     return { time: "5-7 days", logic: "Distance > 1000 km" };
 }
 
+// 100% ACCURATE ORIGINAL FUNCTION
 async function fetchPinDetails(pin) {
     const cleanPin = String(pin).replace(/[^0-9]/g, '').trim();
     if (cleanPin.length !== 6) return { district: "Invalid", state: "Invalid", lat: null, lng: null };
@@ -4400,7 +4407,9 @@ async function handleFileUpload(event) {
     const file = event.target.files[0]; if (!file) return;
     const bulkError = document.getElementById('bulkError'); const bulkStatus = document.getElementById('bulkStatus'); const bulkStatusText = document.getElementById('bulkStatusText');
     
-    bulkError.style.display = 'none'; bulkStatus.style.display = 'flex'; bulkStatusText.textContent = "Reading Excel file...";
+    bulkError.style.display = 'none'; bulkStatus.style.display = 'flex'; bulkStatusText.innerHTML = `<span class="spinner" style="display:inline-block; margin-right:5px; border-top-color:var(--primary);"></span> Reading Excel file...`;
+    
+    // UI un-freeze trick
     await new Promise(r => setTimeout(r, 50)); 
     const reader = new FileReader();
     
@@ -4413,13 +4422,19 @@ async function handleFileUpload(event) {
             let processedData = [];
             for (let i = 0; i < json.length; i++) {
                 const row = json[i];
-                if (i % 2 === 0) { bulkStatusText.innerHTML = `<span class="spinner"></span> Geocoding record ${i + 1} of ${json.length}...`; await new Promise(r => setTimeout(r, 0)); }
+                
+                // UI un-freeze trick per record
+                bulkStatusText.innerHTML = `<span class="spinner" style="display:inline-block; margin-right:5px; border-top-color:var(--primary);"></span> Geocoding record ${i + 1} of ${json.length}...`;
+                await new Promise(r => setTimeout(r, 10)); 
+
                 let destKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'destination pin');
                 let origKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'origin pin');
                 if (!destKey) throw new Error("Missing 'Destination PIN' column.");
 
                 const origin = row[origKey] ? String(row[origKey]).trim() : "250001"; const dest = String(row[destKey]).trim();
+                
                 const oDetails = await fetchPinDetails(origin); const dDetails = await fetchPinDetails(dest);
+                
                 let distance = null;
                 if (oDetails.lat && dDetails.lat) { distance = calculateHaversine(oDetails.lat, oDetails.lng, dDetails.lat, dDetails.lng); }
 
@@ -4430,6 +4445,7 @@ async function handleFileUpload(event) {
             const newWs = XLSX.utils.json_to_sheet(processedData);
             newWs['!cols'] = [{wch: 12}, {wch: 15}, {wch: 22}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 25}];
             const newWb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(newWb, newWs, "Calculated Results"); XLSX.writeFile(newWb, "Transit_Times_Calculated.xlsx");
+            
             bulkStatus.style.color = 'var(--success)'; bulkStatus.style.background = '#f0fdf4'; bulkStatus.style.borderColor = '#bbf7d0';
             bulkStatusText.innerHTML = `✅ Successfully calculated ${processedData.length} records!`;
         } catch (error) {
