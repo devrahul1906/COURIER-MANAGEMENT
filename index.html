@@ -632,13 +632,16 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="assignedTable" style="min-width: 1000px;">
-			<thead><tr>
-    <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
-    <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Assign Time</th><th>Status</th>
-</tr></thead>
-                        <tbody id="assignedTableBody"></tbody>
-                    </table>
+			<table id="assignedTable" style="min-width: 1200px;">
+    <thead><tr>
+        <th><input type="checkbox" id="selectAllDispatch" onclick="toggleAllDispatch(this)" style="cursor: pointer;"></th>
+        <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Assign Time</th>
+        <th>SDD</th>
+        <th>Tentative Delivery Date</th>
+        <th>Status</th>
+    </tr></thead>
+    <tbody id="assignedTableBody"></tbody>
+</table>
                 </div>
                 <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
                     <button class="action-btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="openConfirmDispatchModal()">Submit - Physical Dispatch</button>
@@ -666,12 +669,14 @@
                         <button class="btn-outline" onclick="showDashboardCards()">Back</button>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="podTable" style="min-width: 1000px;">
-                        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Dispatch Time</th><th>Status</th><th>Action</th></tr></thead>
-                        <tbody id="podTableBody"></tbody>
-                    </table>
-                </div>
+			<div class="table-responsive">
+    <table id="podTable" style="min-width: 1100px;">
+        <thead><tr><th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Courier Partner</th><th>Docket No.</th><th>Boxes</th><th>Dispatch Time</th>
+        <th>Tentative Delivery Date</th> <!-- 🚀 NAYA COLUMN YAHAN ADD KIYA -->
+        <th>Status</th><th>Action</th></tr></thead>
+        <tbody id="podTableBody"></tbody>
+    </table>
+</div>
             </div>
             <div id="delivered-list-section" class="table-wrapper">
                 <div class="table-header">
@@ -943,6 +948,81 @@
                     </table>
                 </div>
             </div>
+					<!-- 🚀 TRANSIT TIME CALCULATOR SECTION (Isolated like Ledger Master) -->
+<div id="transit-calc-section" class="table-wrapper" style="background: transparent; border: none; box-shadow: none;">
+    <div class="table-header" style="background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px;">
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+            Transit Time Calculator 
+            <span style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 20px; font-weight: 700;">100% ACCURACY MODE</span>
+        </h2>
+        <div class="table-actions">
+            <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
+        </div>
+    </div>
+    
+    <!-- Calculator UI Structure -->
+    <div style="max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+        <div class="calc-tabs">
+            <button id="tabSingleBtn" onclick="switchTab('single')" class="calc-tab-btn active">Single Calculation</button>
+            <button id="tabBulkBtn" onclick="switchTab('bulk')" class="calc-tab-btn">Bulk Upload (.xlsx)</button>
+        </div>
+
+        <div style="padding: 30px;">
+            <!-- SINGLE TAB -->
+            <div id="tabSingle" style="display: block;">
+                <div class="two-col">
+                    <div class="form-group">
+                        <label>Origin PIN Code <span style="color: red;">*</span></label>
+                        <input type="text" id="originPin" inputmode="numeric" value="250001" placeholder="e.g. 250001" maxlength="6" oninput="handlePinInput(this, 'originLocation')">
+                        <div id="originLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Destination PIN Code <span style="color: red;">*</span></label>
+                        <input type="text" id="destPin" inputmode="numeric" placeholder="e.g. 400080" maxlength="6" oninput="handlePinInput(this, 'destLocation')">
+                        <div id="destLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="inline-error" style="text-align: center;"></div>
+
+                <button onclick="calculateSingleTime()" id="calcBtn" class="btn-login" style="margin-top: 10px;">
+                    <span id="btnSpinner" class="spinner" style="display: none;"></span>
+                    <span id="btnText">Calculate Transit Time</span>
+                </button>
+
+                <div id="resultCard" class="calc-result-box">
+                    <h4 style="font-size: 12px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; font-weight: 700;">Estimated Transit Time</h4>
+                    <div style="font-size: 32px; font-weight: 800; color: #1e3a8a; margin-bottom: 10px;" id="resultDays">--</div>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                        <span id="resultDistance" style="background: var(--primary); color: white; font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; display: none;"></span>
+                        <span id="routeDetails" style="font-size: 12px; color: #3b82f6; font-weight: 600;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BULK TAB -->
+            <div id="tabBulk" style="display: none; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                    Upload Excel (.xlsx) with <b>"Origin PIN"</b> and <b>"Destination PIN"</b> columns.
+                </p>
+                <button onclick="downloadTemplate()" class="btn-outline" style="margin: 0 auto 15px auto; color: var(--primary); border-color: var(--primary);">
+                    Download Format Template
+                </button>
+                
+                <div class="file-input-box" style="position: relative; cursor: pointer;">
+                    <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10;" onchange="handleFileUpload(event)">
+                    <svg class="icon-lg" style="color: #94a3b8; margin: 0 auto 10px auto; width: 36px; height: 36px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-main);">Click to browse or drag file here</div>
+                </div>
+
+                <div id="bulkError" class="inline-error" style="margin-top: 15px;"></div>
+                <div id="bulkStatus" style="display: none; margin-top: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; gap: 10px;">
+                    <span id="bulkStatusText">Processing...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
         </div>
 
@@ -1243,82 +1323,6 @@
             </div>
         </div>
     </div>
-
-		<!-- 🚀 TRANSIT TIME CALCULATOR SECTION (Isolated like Ledger Master) -->
-<div id="transit-calc-section" class="table-wrapper" style="background: transparent; border: none; box-shadow: none;">
-    <div class="table-header" style="background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px;">
-        <h2 style="display: flex; align-items: center; gap: 10px;">
-            Transit Time Calculator 
-            <span style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 20px; font-weight: 700;">100% ACCURACY MODE</span>
-        </h2>
-        <div class="table-actions">
-            <button class="btn-outline" onclick="showDashboardCards()">Back to Dashboard</button>
-        </div>
-    </div>
-    
-    <!-- Calculator UI Structure -->
-    <div style="max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
-        <div class="calc-tabs">
-            <button id="tabSingleBtn" onclick="switchTab('single')" class="calc-tab-btn active">Single Calculation</button>
-            <button id="tabBulkBtn" onclick="switchTab('bulk')" class="calc-tab-btn">Bulk Upload (.xlsx)</button>
-        </div>
-
-        <div style="padding: 30px;">
-            <!-- SINGLE TAB -->
-            <div id="tabSingle" style="display: block;">
-                <div class="two-col">
-                    <div class="form-group">
-                        <label>Origin PIN Code <span style="color: red;">*</span></label>
-                        <input type="text" id="originPin" inputmode="numeric" value="250001" placeholder="e.g. 250001" maxlength="6" oninput="handlePinInput(this, 'originLocation')">
-                        <div id="originLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Destination PIN Code <span style="color: red;">*</span></label>
-                        <input type="text" id="destPin" inputmode="numeric" placeholder="e.g. 400080" maxlength="6" oninput="handlePinInput(this, 'destLocation')">
-                        <div id="destLocation" class="pin-status-text" style="color: var(--text-muted);"></div>
-                    </div>
-                </div>
-
-                <div id="errorMessage" class="inline-error" style="text-align: center;"></div>
-
-                <button onclick="calculateSingleTime()" id="calcBtn" class="btn-login" style="margin-top: 10px;">
-                    <span id="btnSpinner" class="spinner" style="display: none;"></span>
-                    <span id="btnText">Calculate Transit Time</span>
-                </button>
-
-                <div id="resultCard" class="calc-result-box">
-                    <h4 style="font-size: 12px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; font-weight: 700;">Estimated Transit Time</h4>
-                    <div style="font-size: 32px; font-weight: 800; color: #1e3a8a; margin-bottom: 10px;" id="resultDays">--</div>
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                        <span id="resultDistance" style="background: var(--primary); color: white; font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; display: none;"></span>
-                        <span id="routeDetails" style="font-size: 12px; color: #3b82f6; font-weight: 600;"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BULK TAB -->
-            <div id="tabBulk" style="display: none; text-align: center;">
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
-                    Upload Excel (.xlsx) with <b>"Origin PIN"</b> and <b>"Destination PIN"</b> columns.
-                </p>
-                <button onclick="downloadTemplate()" class="btn-outline" style="margin: 0 auto 15px auto; color: var(--primary); border-color: var(--primary);">
-                    Download Format Template
-                </button>
-                
-                <div class="file-input-box" style="position: relative; cursor: pointer;">
-                    <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10;" onchange="handleFileUpload(event)">
-                    <svg class="icon-lg" style="color: #94a3b8; margin: 0 auto 10px auto; width: 36px; height: 36px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-main);">Click to browse or drag file here</div>
-                </div>
-
-                <div id="bulkError" class="inline-error" style="margin-top: 15px;"></div>
-                <div id="bulkStatus" style="display: none; margin-top: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; gap: 10px;">
-                    <span id="bulkStatusText">Processing...</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
     <div id="confirmReturnPickupModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 450px;">
@@ -1799,7 +1803,7 @@
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZmswv-2SBtzdkV3TYetHO4OUijng5-eZs82POeyuYketeSfiZLT2MfcMS1yl9WeBH/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7nkihu6dAP0v4r-uipoQOiMdvTz8f3ndcgSzxXe8H7BaGQ370zCy-fNYSLmks866s/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -2924,27 +2928,34 @@ function updateLastSyncTime() {
             hideAllLists(); document.getElementById('assigned-list-section').style.display = 'block'; 
             activeTableContext = { reqType: 'assigned', renderFn: renderAssignedTable }; loadAndRenderTable('assigned', activeTableContext.renderFn);
         }
+	
 	function renderAssignedTable(dataList) {
-            if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
-            let html = []; 
-            dataList.forEach((item, index) => { 
-                html.push(`<tr>
-                    <td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.partner}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td><span class="badge bg-assigned">Assigned</span></td>
-                </tr>`); 
-            }); 
-            renderLargeHtml('assignedTableBody', html);
-        }
+    if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='14' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
+    let html = []; 
+    dataList.forEach((item, index) => { 
+        let sddDisplay = item.sdd ? item.sdd : '-';
+        let tenDateDisplay = item.tentativeDate ? item.tentativeDate : '-';
+        
+        html.push(`<tr>
+            <td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td>
+            <td>${index + 1}</td>
+            <td><b>${item.invoiceNo}</b></td>
+            <td>${item.drName || '-'}</td>
+            <td>${item.ledgerName || '-'}</td>
+            <td>${item.city || '-'}</td>
+            <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+            <td>${item.partner}</td>
+            <td>${item.docket || '-'}</td>
+            <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+            <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+            <td style="font-weight: 700;">${sddDisplay}</td>
+            <td style="color:#15803d; font-weight: 700;">${tenDateDisplay}</td>
+            <td><span class="badge bg-assigned">Assigned</span></td>
+        </tr>`); 
+    }); 
+    renderLargeHtml('assignedTableBody', html);
+}
+
         function toggleAllDispatch(source) { document.querySelectorAll('.dispatch-checkbox').forEach(cb => cb.checked = source.checked); }
 
         function showPodList() {
@@ -2972,42 +2983,64 @@ function updateLastSyncTime() {
             if (document.getElementById('countOfdTransit')) document.getElementById('countOfdTransit').innerText = ofd;
         }
 
-        function renderPodTable(dataList) {
-            updateTransitCounts(dataList); // 🚀 Table load ya search filter hote hi counts update honge
+	function renderPodTable(dataList) {
+    updateTransitCounts(dataList); // Counts update
 
-            if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
-            
-            let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Nearest Hub", "Out for Delivery"];
-            let html = []; 
-            
-            dataList.forEach((item, index) => { 
-                let currentSt = item.transitStatus || "Normal - In Transit";
-                if (currentSt === "Hold at Hub") currentSt = "Hold at Nearest Hub";
-                if (!statusOptions.includes(currentSt)) currentSt = "Normal - In Transit";
-                let color = getTransitStatusColor(currentSt);
-
-                html.push(`<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.invoiceNo}</b></td>
-                    <td>${item.drName || '-'}</td>
-                    <td>${item.ledgerName || '-'}</td>
-                    <td>${item.city || '-'}</td>
-                    <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
-                    <td>${item.partner}</td>
-                    <td>${item.docket || '-'}</td>
-                    <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-                    <td>
-                        <select id="transit_sel_${index}" data-original="${currentSt}" onchange="changeTransitStatus(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
-                        style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: ${color}; background: #fff; cursor: pointer; outline: none;">
-                            ${statusOptions.map(opt => `<option value="${opt}" ${currentSt === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td>
-                </tr>`); 
-            }); 
-            renderLargeHtml('podTableBody', html);
+    if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='13' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+    
+    let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Nearest Hub", "Out for Delivery"];
+    let html = []; 
+    
+    // Function Date formatter for <input type="date"> (html demands yyyy-mm-dd format)
+    function formatForInput(dateStr) {
+        if (!dateStr || dateStr === "-" || dateStr === "Unknown") return "";
+        let parts = dateStr.split(/[- :\/]/);
+        if (parts.length >= 3) {
+            // check if DD-MM-YYYY format
+            if(parts[0].length === 2 && parts[2].length === 4) {
+               return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
         }
+        return dateStr;
+    }
+
+    dataList.forEach((item, index) => { 
+        let currentSt = item.transitStatus || "Normal - In Transit";
+        if (currentSt === "Hold at Hub") currentSt = "Hold at Nearest Hub";
+        if (!statusOptions.includes(currentSt)) currentSt = "Normal - In Transit";
+        let color = getTransitStatusColor(currentSt);
+        
+        let tDateOriginal = item.tentativeDate || "";
+        let inputDateVal = formatForInput(tDateOriginal);
+
+        html.push(`<tr>
+            <td>${index + 1}</td>
+            <td><b>${item.invoiceNo}</b></td>
+            <td>${item.drName || '-'}</td>
+            <td>${item.ledgerName || '-'}</td>
+            <td>${item.city || '-'}</td>
+            <td>${item.pinCode ? item.pinCode.replace(/'/g, '') : '-'}</td>
+            <td>${item.partner}</td>
+            <td>${item.docket || '-'}</td>
+            <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
+            <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+            <!-- 🚀 NAYA: Editable Date Input -->
+            <td>
+                <input type="date" id="tdate_sel_${index}" value="${inputDateVal}" 
+                onchange="changeTentativeDate(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
+                style="padding: 5px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: #15803d; background: #fff; cursor: pointer; outline: none; width: 130px;">
+            </td>
+            <td>
+                <select id="transit_sel_${index}" data-original="${currentSt}" onchange="changeTransitStatus(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
+                style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: ${color}; background: #fff; cursor: pointer; outline: none;">
+                    ${statusOptions.map(opt => `<option value="${opt}" ${currentSt === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+            </td>
+            <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-info" onclick="openPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}')">Update Status</button></div></td>
+        </tr>`); 
+    }); 
+    renderLargeHtml('podTableBody', html);
+}
 
         function getTransitStatusColor(statusVal) {
             if (statusVal === 'Delayed') return 'var(--danger)';
@@ -3052,7 +3085,52 @@ function updateLastSyncTime() {
                 selectEl.value = originalStatus;
                 selectEl.style.color = getTransitStatusColor(originalStatus);
             });
-        }	
+        }
+
+	// 🚀 NAYA FUNCTION: Tentative Date change handle karne ke liye
+function changeTentativeDate(inputEl, invoiceNo, docketNo) {
+    const newDateVal = inputEl.value; // format: yyyy-mm-dd
+    const originalDate = inputEl.defaultValue;
+    
+    // Formatting back to dd-mm-yyyy for display if needed
+    let formattedDateToSave = newDateVal;
+    if (newDateVal) {
+        let parts = newDateVal.split("-");
+        if (parts.length === 3) {
+            formattedDateToSave = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+    }
+    
+    inputEl.disabled = true;
+
+    safeFetch({
+        action: 'updateTentativeDate',
+        invoiceNo: invoiceNo,
+        docketNo: docketNo,
+        newDate: formattedDateToSave
+    }).then(res => {
+        inputEl.disabled = false;
+        if (res && res.status === 'success') {
+            showToast("Date Updated", `Tentative date for Invoice ${invoiceNo} updated.`, "success");
+            inputEl.defaultValue = newDateVal; // update baseline
+            
+            // Cache locally update karein bina full reload kiye
+            if (tableCache['transit']) {
+                let target = tableCache['transit'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                if (target) target.tentativeDate = formattedDateToSave;
+                try { localStorage.setItem("cms_table_transit", JSON.stringify(tableCache['transit'])); } catch(e) {}
+            }
+        } else {
+            showToast("Error", (res && res.message) || "Failed to update date", "error");
+            inputEl.value = originalDate;
+        }
+    }).catch(err => {
+        inputEl.disabled = false;
+        showToast("Error", err.message || "Network error while updating.", "error");
+        inputEl.value = originalDate;
+    });
+}
+	
         function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
             hideAllLists(); document.getElementById('delivered-list-section').style.display = 'block'; 
@@ -4048,91 +4126,170 @@ function isDateInRange(dateStr, start, end) {
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
-	function processBulkUpload() {
-            const fileInput = document.getElementById('bulkExcelFile'); 
-            if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
-            const file = fileInput.files[0]; 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result); 
-                const workbook = XLSX.read(data, {type: 'array'}); 
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]]; 
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
-                if (jsonData.length === 0) { showToast("Error", "Excel file is empty.", "error"); return; }
-                const groupedData = {};
-                for (let row of jsonData) {
-                    const rowUpper = {}; 
-                    for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
-                    const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); 
-                    const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
-                    
-                    // 🚀 Read "No of Boxes" (fallback to Dimension if old sheet is used)
-                    const rawBoxes = String(rowUpper["NO OF BOXES"] || rowUpper["NO. OF BOXES"] || rowUpper["BOXES"] || rowUpper["TOTAL BOXES"] || rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || "").trim();
+	// Date calculate karne ka function
+function calculateTentativeDate(scanTimeStr, sddString) {
+    if (!scanTimeStr || !sddString || sddString === '-' || sddString === 'Unknown') return '-';
+    
+    let match = sddString.match(/\d+/g);
+    if (!match) return '-';
+    let daysToAdd = Math.max(...match.map(Number));
 
-                    if (invNo) {
-                        const isPending = tableCache['pending'] ? tableCache['pending'].find(b => String(b.invoiceNo).trim() === invNo) : true; 
-                        if (isPending) {
-                            const uniqueKey = invNo + "_" + excelDocket;
-                            if (!groupedData[uniqueKey]) { 
-                                groupedData[uniqueKey] = { 
-                                    invoiceNo: invNo, 
-                                    partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", 
-                                    weight: String(rowUpper["WEIGHT"] || ""), 
-                                    size: rawBoxes, // Column D me No of Boxes save hoga
-                                    origin: "Meerut", 
-                                    city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", 
-                                    drName: rowUpper["DR NAME"] || "", 
-                                    ledgerName: rowUpper["LEDGER NAME"] || "", 
-                                    pinCode: String(rowUpper["PIN CODE"] || ""), 
-                                    docketNo: excelDocket 
-                                }; 
-                            } else { 
-                                if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; 
-                                if(rawBoxes) {
-                                    // Agar dono numbers hain toh unhe add kar do, warna join kar do
-                                    let existingNum = Number(groupedData[uniqueKey].size);
-                                    let newNum = Number(rawBoxes);
-                                    if (!isNaN(existingNum) && !isNaN(newNum) && groupedData[uniqueKey].size !== "") {
-                                        groupedData[uniqueKey].size = String(existingNum + newNum);
-                                    } else {
-                                        groupedData[uniqueKey].size = groupedData[uniqueKey].size ? (groupedData[uniqueKey].size + " | " + rawBoxes) : rawBoxes;
-                                    }
+    let parts = scanTimeStr.split(/[- :]/);
+    if (parts.length < 3) return '-';
+    
+    let scanDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    if (isNaN(scanDate)) return '-';
+
+    scanDate.setDate(scanDate.getDate() + daysToAdd);
+    
+    return `${String(scanDate.getDate()).padStart(2, '0')}-${String(scanDate.getMonth() + 1).padStart(2, '0')}-${scanDate.getFullYear()}`;
+}
+
+// Bulk Upload Function jisme logic add kiya gya hai
+async function processBulkUpload() {
+    const fileInput = document.getElementById('bulkExcelFile'); 
+    if (!fileInput.files.length) { showToast("Error", "Please select a file first.", "error"); return; }
+    
+    const btn = document.getElementById('uploadExcelBtn');
+    const origText = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner" style="display:inline-block; border-top-color:var(--primary); margin-right:5px;"></span> Processing...`;
+    btn.disabled = true;
+
+    const file = fileInput.files[0]; 
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result); 
+            const workbook = XLSX.read(data, {type: 'array'}); 
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]]; 
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
+            if (jsonData.length === 0) { showToast("Error", "Excel file is empty.", "error"); btn.innerHTML = origText; btn.disabled = false; return; }
+            
+            const groupedData = {};
+            const ORIGIN_PIN = "250001"; 
+            
+            const oDetails = await fetchPinDetails(ORIGIN_PIN);
+            
+            for (let i = 0; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                const rowUpper = {}; 
+                for(let key in row) { rowUpper[key.trim().toUpperCase()] = row[key]; }
+                
+                const invNo = String(rowUpper["INVOICE NO"] || rowUpper["INVOICE NUMBER"] || "").trim(); 
+                const excelDocket = String(rowUpper["DOCKET NO"] || "").trim();
+                const rawBoxes = String(rowUpper["NO OF BOXES"] || rowUpper["NO. OF BOXES"] || rowUpper["BOXES"] || rowUpper["TOTAL BOXES"] || rowUpper["DIMENSION"] || rowUpper["DIMENSIONS"] || "").trim();
+                const destPin = String(rowUpper["PIN CODE"] || rowUpper["PIN"] || "").trim();
+
+                if (invNo) {
+                    const pendingItem = tableCache['pending'] ? tableCache['pending'].find(b => String(b.invoiceNo).trim() === invNo) : null; 
+                    
+                    if (pendingItem || !tableCache['pending']) {
+                        const uniqueKey = invNo + "_" + excelDocket;
+                        
+                        if (!groupedData[uniqueKey]) { 
+                            let sddResult = "-";
+                            let tentativeDate = "-";
+                            
+                            if (destPin && destPin.length === 6) {
+                                const dDetails = await fetchPinDetails(destPin);
+                                if (oDetails.lat && dDetails.lat) {
+                                    let distance = calculateHaversine(oDetails.lat, oDetails.lng, dDetails.lat, dDetails.lng);
+                                    let transitData = evaluateTransitLogic(distance);
+                                    sddResult = transitData.time; 
+                                    
+                                    let scanTime = pendingItem ? pendingItem.scanTime : getCurrentFormattedDate();
+                                    tentativeDate = calculateTentativeDate(scanTime, sddResult);
+                                }
+                            }
+                        
+                            groupedData[uniqueKey] = { 
+                                invoiceNo: invNo, 
+                                partner: rowUpper["COURIER PARTNER"] || rowUpper["PARTNER"] || "", 
+                                weight: String(rowUpper["WEIGHT"] || ""), 
+                                size: rawBoxes, 
+                                origin: "Meerut", 
+                                city: rowUpper["CITY"] || rowUpper["DESTINATION"] || "", 
+                                drName: rowUpper["DR NAME"] || "", 
+                                ledgerName: rowUpper["LEDGER NAME"] || "", 
+                                pinCode: destPin, 
+                                docketNo: excelDocket,
+                                sdd: sddResult,
+                                tentativeDate: tentativeDate
+                            }; 
+                        } else { 
+                            if(rowUpper["WEIGHT"]) groupedData[uniqueKey].weight += " + " + rowUpper["WEIGHT"]; 
+                            if(rawBoxes) {
+                                let existingNum = Number(groupedData[uniqueKey].size);
+                                let newNum = Number(rawBoxes);
+                                if (!isNaN(existingNum) && !isNaN(newNum) && groupedData[uniqueKey].size !== "") {
+                                    groupedData[uniqueKey].size = String(existingNum + newNum);
+                                } else {
+                                    groupedData[uniqueKey].size = groupedData[uniqueKey].size ? (groupedData[uniqueKey].size + " | " + rawBoxes) : rawBoxes;
                                 }
                             }
                         }
                     }
                 }
-                const assignments = Object.values(groupedData); 
-                if(assignments.length === 0) { showToast("Error", "No matching pending invoices found.", "error"); return; }
-                pendingBulkAssignments = assignments; 
-                populateConfirmBulkModal(assignments);
-            };
-            reader.readAsArrayBuffer(file);
+            }
+            const assignments = Object.values(groupedData); 
+            if(assignments.length === 0) { 
+                showToast("Error", "No matching pending invoices found.", "error"); 
+                btn.innerHTML = origText; btn.disabled = false;
+                return; 
+            }
+            pendingBulkAssignments = assignments; 
+            populateConfirmBulkModal(assignments);
+            
+        } catch (error) {
+            console.error(error);
+            showToast("Error", "Failed to parse excel file. Check format.", "error");
+        } finally {
+            btn.innerHTML = origText; btn.disabled = false;
         }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Server par bhejne wala function
+function submitBulkAssignment(assignments) {
+    const btn = document.getElementById('finalConfirmBulkBtn'); 
+    btn.innerHTML = "Processing..."; btn.disabled = true;
+    
+    safeFetch({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }).then(data => {
+        if(data.status === 'success') {
+            showToast("Success", `${data.processed} invoices assigned!`);
+            closeConfirmBulkModal();
+            const assignedInvs = assignments.map(a => a.invoiceNo);
+            
+            moveItemsAndRefresh('pending', 'assigned',
+                (item) => assignedInvs.includes(item.invoiceNo),
+                (item) => {
+                    let matched = assignments.find(a => a.invoiceNo === item.invoiceNo);
+                    return { 
+                        invoiceNo: item.invoiceNo, 
+                        partner: matched.partner, 
+                        docket: matched.docketNo, 
+                        city: matched.city, 
+                        drName: matched.drName, 
+                        ledgerName: matched.ledgerName, 
+                        pinCode: matched.pinCode, 
+                        actionTime: "Just Now", 
+                        status: "Assigned",
+                        sdd: matched.sdd, 
+                        tentativeDate: matched.tentativeDate 
+                    };
+                }
+            );
+        } else showToast("Error", data.message, "error");
+    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
+}
 
         function populateConfirmBulkModal(assignments) {
             const tbody = document.getElementById('confirmBulkTableBody'); tbody.innerHTML = ''; assignments.forEach((a, index) => { tbody.innerHTML += `<tr><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${index + 1}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;"><b>${a.invoiceNo}</b></td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.partner}</td><td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${a.docketNo || '-'}</td></tr>`; }); document.getElementById('confirmBulkModal').style.display = 'flex'; closeBulkUploadModal();
         }
         function closeConfirmBulkModal() { document.getElementById('confirmBulkModal').style.display = 'none'; pendingBulkAssignments = []; }
         function executeBulkAssignment() { if(pendingBulkAssignments.length === 0) return; submitBulkAssignment(pendingBulkAssignments); }
-
-	function submitBulkAssignment(assignments) {
-    const btn = document.getElementById('finalConfirmBulkBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
-    safeFetch({ action: 'bulkAssignCourier', data: assignments, assignedBy: loggedInUser }).then(data => {
-        if(data.status === 'success') {
-            showToast("Success", `${data.processed} invoices assigned!`);
-            closeConfirmBulkModal();
-            const assignedInvs = assignments.map(a => a.invoiceNo);
-            moveItemsAndRefresh('pending', 'assigned',
-                (item) => assignedInvs.includes(item.invoiceNo),
-                (item) => {
-                    let matched = assignments.find(a => a.invoiceNo === item.invoiceNo);
-                    return { invoiceNo: item.invoiceNo, partner: matched.partner, docket: matched.docketNo, city: matched.city, drName: matched.drName, ledgerName: matched.ledgerName, pinCode: matched.pinCode, actionTime: "Just Now", status: "Assigned" };
-                }
-            );
-        } else showToast("Error", data.message, "error");
-    }).catch(err => showToast("Error", err.message, "error")).finally(() => { btn.innerHTML = "Confirm & Assign"; btn.disabled = false; });
-}
 
         function openConfirmDispatchModal() { if(document.querySelectorAll('.dispatch-checkbox:checked').length === 0) { showToast("Warning", "Please select at least one invoice to dispatch.", "warning"); return; } document.getElementById('confirmDispatchModal').style.display = 'flex'; }
         function closeConfirmDispatchModal() { document.getElementById('confirmDispatchModal').style.display = 'none'; }
@@ -4258,10 +4415,13 @@ async function submitResolveDispute(e) {
 
 function showTransitCalcSection() {
     hideAllLists(); // Baaki sab hide ho jayega
-    document.getElementById('transit-calc-section').style.display = 'block';
-    handlePinInput(document.getElementById('originPin'), 'originLocation');
+    
+    // Thodi der baad sidhe element ko block kar denge, bina kisi shart (if condition) ke
+    setTimeout(() => {
+        document.getElementById('transit-calc-section').style.display = 'block';
+        handlePinInput(document.getElementById('originPin'), 'originLocation');
+    }, 50); // Delay thoda badha diya hai taaki UI ko render hone ka time mile
 }
-
 const pinDataCache = {}; 
 const districtCache = {}; 
 
