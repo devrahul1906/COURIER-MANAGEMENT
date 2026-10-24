@@ -107,6 +107,89 @@
         .btn-logout { background: none; border: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
         .btn-logout:hover { background: #fef2f2; color: var(--danger); }
 
+	/* Profile Dropdown Styles */
+        .user-nav { position: relative; display: flex; align-items: center; gap: 15px; }
+        .dropdown-menu { 
+            position: absolute; 
+            top: 100%; 
+            right: 0; 
+            margin-top: 10px; 
+            background: #fff; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 260px; 
+            display: none; 
+            flex-direction: column; 
+            z-index: 1000; 
+            overflow: hidden;
+        }
+        .dropdown-menu.show { display: flex; animation: slideDown 0.2s ease-out; }
+        .dropdown-item { 
+            padding: 12px 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            color: var(--text-main); 
+            text-decoration: none; 
+            font-size: 13px; 
+            font-weight: 600; 
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
+        .dropdown-item.danger:hover { background: #fef2f2; color: var(--danger); }
+        
+	/* Time Badge in Header */
+        .header-time-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+            font-size: 12px; font-weight: 600; color: var(--text-main); background: #f8fafc;
+            margin-right: 15px; 
+        }
+
+	/* 🚀 Top Navbar ko Transparent aur Clean banane ke liye */
+        .top-navbar { 
+            background: rgba(255, 255, 255, 0.85) !important; /* Halka sa translucent white taaki text clear dikhe */
+            backdrop-filter: blur(8px); /* Modern glassmorphism blur effect */
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important; 
+            padding: 12px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
+        }
+
+	/* 🚀 Background Image Edge-to-Edge Adjustments */
+        .welcome-banner {
+            position: relative;
+            background-image: url('https://i.postimg.cc/Jh682RT7/VAN.png') !important;
+            background-size: 100% 100% !important; /* Image ko poori tarah stretch karke fit karega bina kate */
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            border-radius: 0px !important; /* Corner gaps hatane ke liye rounded corners hata diye hain */
+            padding: 50px 60px !important;
+            margin: -30px -30px 25px -30px !important; /* Workspace ki padding ko override karke left-right aur upar se edge tak stretch karega */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 220px !important;
+            color: #143482 !important;
+        }
+        
+        .welcome-banner h2 { font-size: 34px !important; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; margin-top: 0; }
+        .welcome-banner p { font-size: 16px !important; font-weight: 500; opacity: 0.9; max-width: 55%; margin: 0; }
+
+        @media (max-width: 768px) {
+            .welcome-banner { margin: -20px -20px 20px -20px !important; padding: 35px !important; }
+            .welcome-banner p { max-width: 100%; }
+        }
+
         .main-workspace { padding: 30px; max-width: 1400px; margin: 0 auto; width: 100%; flex-grow: 1; }
         .welcome-text { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
         .welcome-text h2 { font-size: 24px; color: #111827; font-weight: 700; margin-bottom: 4px; }
@@ -396,8 +479,9 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
 
     <!-- Dashboard View -->
     <div id="dashboard-view">
-        <div class="top-navbar">
+		<div class="top-navbar">
             <div class="brand">
+                <!-- Original Logo & Title as exactly requested -->
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" style="height: 40px; border-radius: 2px;">
                 <div class="brand-text">
                     <h1>HATVET PHARMA PVT. LTD.</h1>
@@ -406,52 +490,67 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
             </div>
             
             <div class="user-nav">
-                <select id="adminModuleSwitcher" style="display: none; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); margin-right: 10px; background: #f8fafc; outline: none; cursor: pointer;" onchange="handleModuleSwitch()">
-                    <option value="All">All Modules View</option>
-                    <option value="Dispatch Courier Management">Dispatch Management Only</option>
-                    <option value="Return Courier Management">Return Management Only</option>
-                </select>
+                <!-- Date & Time Badge (Aligned properly) -->
+                <div class="header-time-badge" style="margin-right: 15px;">
+                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; color: var(--primary);" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span id="headerCompactTime">--</span>
+                </div>
 
-		<!-- Refresh Button & Last Sync Time Container -->
-<!-- 🚀 Maintenance Mode Toggle Switch (Visible strictly for ADMIN role) -->
-<div id="maintenanceSwitchContainer" style="display: none; align-items: center; gap: 8px; margin-right: 15px; background: #fffbeb; padding: 4px 10px; border-radius: 8px; border: 1px solid #fde68a;">
-    <span style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase;">Maintenance</span>
-    <label style="position: relative; display: inline-block; width: 34px; height: 18px; margin-bottom: 0; cursor: pointer;">
-        <input type="checkbox" id="maintenanceToggle" onchange="toggleSystemMaintenance(this)" style="opacity: 0; width: 0; height: 0;">
-        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 18px;" id="maintenanceSlider"></span>
-    </label>
-</div>
-
-<div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px;">
-    <button class="btn-outline" id="syncBtn" onclick="refreshDataAndView()" style="padding: 6px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--success); border-color: #cbd5e1;" title="Refresh Latest Data">
-        <svg id="syncIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-        <span id="syncText">Refresh</span>
-    </button>
-    <span id="lastSyncTimeLabel" style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">Last Sync: Pending...</span>
-</div>
-                
-                <div class="user-profile">
-                    <div class="avatar" id="avatarInitial">U</div>
+                <!-- Profile with Clickable Dropdown -->
+                <div class="user-profile" id="profileDropdownBtn" onclick="toggleProfileDropdown()" style="border: none; background: transparent; padding: 0;">
+                    <div class="avatar" id="avatarInitial" style="width: 36px; height: 36px; font-size: 16px;">U</div>
                     <div class="user-info">
-                        <span class="user-name" id="userNameDisplay">User Name</span>
-                        <span class="role-badge" id="userRoleDisplay">Role</span>
+                        <span class="user-name" id="userNameDisplay" style="font-size: 14px; font-weight: 700; color: var(--primary);">User Name</span>
+                        <span class="role-badge" id="userRoleDisplay" style="font-size: 11px; background: transparent; padding: 0; color: var(--text-muted); text-transform: capitalize;">Role</span>
+                    </div>
+                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; color: var(--primary); margin-left: 5px;" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+
+                <!-- The Dropdown Menu for Modules, Refresh, Maintenance, Logout -->
+                <div id="profileDropdownMenu" class="dropdown-menu">
+                    <!-- Module Switcher inside Dropdown -->
+                    <div style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;">
+                        <select id="adminModuleSwitcher" style="display: none; width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--primary); background: #f8fafc; outline: none; cursor: pointer;" onchange="handleModuleSwitch()">
+                            <option value="All">All Modules View</option>
+                            <option value="Dispatch Courier Management">Dispatch Management Only</option>
+                            <option value="Return Courier Management">Return Management Only</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Maintenance Switch -->
+                    <div id="maintenanceSwitchContainer" class="dropdown-item" style="display: none; justify-content: space-between;">
+                        <span style="font-size: 13px; font-weight: 700; color: #b45309;">Maintenance Mode</span>
+                        <label style="position: relative; display: inline-block; width: 34px; height: 18px; margin-bottom: 0; cursor: pointer;">
+                            <input type="checkbox" id="maintenanceToggle" onchange="toggleSystemMaintenance(this)" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 18px;" id="maintenanceSlider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Sync / Refresh -->
+                    <div class="dropdown-item" id="syncBtn" onclick="refreshDataAndView()">
+                        <svg id="syncIcon" style="width: 16px; height: 16px; color: var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                        <div style="display: flex; flex-direction: column;">
+                            <span id="syncText">Sync Latest Data</span>
+                            <span id="lastSyncTimeLabel" style="font-size: 10px; color: var(--text-muted); font-weight: 500;">Last Sync: Pending...</span>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <div class="dropdown-item danger" onclick="logoutSystem()">
+                        <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span>Logout Safely</span>
                     </div>
                 </div>
-                <button class="btn-logout" onclick="logoutSystem()" title="Logout">
-                    <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                </button>
             </div>
         </div>
 
-        <div class="main-workspace">
-            <div class="welcome-text">
-                <div>
-                    <h2 id="welcomeGreeting">Greeting</h2>
-                    <p id="welcomeDesc">Here is your combined overview for Dispatch and Return operations.</p>
-                </div>
-                <div class="date-display" id="dashCompactTime"></div>
+		<div class="main-workspace">
+            <!-- 🚀 NAYA IMAGE BACKGROUND BANNER -->
+            <div class="welcome-banner">
+                <h2 id="welcomeGreeting">Welcome, User</h2>
+                <p id="welcomeDesc">Here is your courier operations overview. Manage dispatches, returns and track all shipments efficiently.</p>
             </div>
-
+            
             <div id="dashboard-unified-cards">
                 
                 <!-- DISPATCH MANAGEMENT SECTION -->
@@ -1935,6 +2034,49 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
     refreshCountsInBackground();
 }
 
+		// Dropdown Toggle Function
+function toggleProfileDropdown() {
+    var menu = document.getElementById("profileDropdownMenu");
+    menu.classList.toggle("show");
+}
+
+// Kahin aur click karne par dropdown band ho jaye
+window.onclick = function(event) {
+    if (!event.target.closest('#profileDropdownBtn') && !event.target.closest('#profileDropdownMenu')) {
+        var dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+}
+
+// Time Update (Header aur Dashboard dono ke liye ek hi function)
+function updateDateTime() {
+    const now = new Date(); 
+    let hours = now.getHours();
+    let ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 ko 12 banaye
+    
+    const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${hours}:${String(now.getMinutes()).padStart(2, '0')} ${ampm}`;
+    
+    // Naye Header Badge ke liye
+    let timeEl = document.getElementById('headerCompactTime');
+    if(timeEl) timeEl.innerText = timeStr;
+    
+    // Purane Dashboard View ke liye (agar kahi bacha ho)
+    let compactEl = document.getElementById('dashCompactTime');
+    if(compactEl) compactEl.innerText = timeStr;
+}
+
+// Page load hote hi time start karne ke liye
+document.addEventListener("DOMContentLoaded", function() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+});
 
         function renderLargeHtml(tbodyId, htmlArray) {
             const tbody = document.getElementById(tbodyId);
@@ -2215,11 +2357,11 @@ function removeItemsFromCacheAndRefresh(reqType, filterFn, refreshTabs) {
                     const welcomeDesc = document.getElementById('welcomeDesc');
                     if (welcomeDesc) {
                         if (loggedInUserType === 'Dispatch Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Dispatch operations.';
+                            welcomeDesc.innerText = 'Here is your courier operations overview. Manage dispatches and track all shipments efficiently.';
                         } else if (loggedInUserType === 'Return Courier Management') {
-                            welcomeDesc.innerText = 'Here is your overview for Return operations.';
+                            welcomeDesc.innerText = 'Here is your courier operations overview. Manage returns and track all shipments efficiently.';
                         } else {
-                            welcomeDesc.innerText = 'Here is your combined overview for Dispatch and Return operations.';
+                            welcomeDesc.innerText = 'Here is your courier operations overview. Manage dispatches, returns and track all shipments efficiently.';
                         }
                     }
 
@@ -4422,11 +4564,6 @@ async function submitResolveDispute(e) {
     }).catch(err => { showToast("Error", err.message || "Request failed", "error"); })
     .finally(() => { btn.innerHTML = "Close Case"; btn.disabled = false; });
 }
-
-        function updateDateTime() {
-            const now = new Date(); const timeStr = `${String(now.getDate()).padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][now.getMonth()]} ${now.getFullYear()} | ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`; document.getElementById('dashCompactTime').innerText = timeStr;
-        }
-        updateDateTime(); setInterval(updateDateTime, 1000);
 		
 		// =====================================================================
 // 🚀 TRANSIT TIME CALCULATOR LOGIC (ISOLATED FULL-PAGE SECTION)
