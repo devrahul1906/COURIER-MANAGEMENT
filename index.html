@@ -38,26 +38,18 @@
 
 	#login-view { display: flex; height: 100vh; width: 100vw; background: #ffffff; }
 
-/* FIX: Yahan z-index: 1 add kiya gaya hai taaki background gayab na ho */
-.login-left { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 40px; position: relative; z-index: 1; text-align: center; background: transparent; }
+        .login-left { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 40px; position: relative; z-index: 1; text-align: center; background: transparent; }
 
-/* Dotted Pattern aur Fade Effect */
-.login-left::before { 
-    content: ''; 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 140%; 
-    height: 100%; 
-    background: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px), linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); 
-    background-size: 25px 25px, 100% 100%; 
-    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%); 
-    mask-image: linear-gradient(to right, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%); 
-    z-index: -1; 
-}
+        .login-left::before { 
+            content: ''; position: absolute; top: 0; left: 0; width: 140%; height: 100%; 
+            background: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px), linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); 
+            background-size: 25px 25px, 100% 100%; 
+            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%); 
+            mask-image: linear-gradient(to right, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%); 
+            z-index: -1; 
+        }
 
-/* FIX: Yahan z-index: 2 add kiya gaya hai taaki login form hamesha upar rahe */
-.login-right { flex: 1; display: flex; justify-content: center; align-items: center; background: transparent; position: relative; z-index: 2; }
+        .login-right { flex: 1; display: flex; justify-content: center; align-items: center; background: transparent; position: relative; z-index: 99; /* 🚀 Fixed Z-index taaki input fields kaam karein */ }
 
 .login-box { width: 100%; max-width: 420px; padding: 45px; background: #fff; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); border: 1px solid #f1f5f9; position: relative; z-index: 10; }
 
@@ -437,6 +429,95 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
     to { background-position: right 10px center; } 
 }
 
+	/* 🚀 SMART SIDEBAR STYLES */
+        .sidebar-wrapper {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .hamburger-menu {
+            display: flex; flex-direction: column; justify-content: space-between;
+            width: 22px; height: 16px; cursor: pointer; margin-right: 15px;
+        }
+        .hamburger-menu span {
+            display: block; height: 2.5px; width: 100%; background-color: var(--primary);
+            border-radius: 2px; transition: transform 0.3s ease;
+        }
+        .sidebar-wrapper:hover .hamburger-menu span:nth-child(1) { transform: translateY(-1px); }
+        .sidebar-wrapper:hover .hamburger-menu span:nth-child(3) { transform: translateY(1px); }
+
+        .sidebar-panel {
+            position: fixed; top: 0; left: 0; width: 300px; height: 100vh;
+            background: #fff; z-index: 10000; box-shadow: 4px 0 25px rgba(0,0,0,0.15);
+            transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; overflow-y: auto;
+            padding-bottom: 30px;
+        }
+	/* Cursor le jane par patti khulegi aur Right-Click par lock rahegi */
+        .sidebar-wrapper:hover .sidebar-panel,
+        .sidebar-wrapper.force-open .sidebar-panel {
+            transform: translateX(0);
+        }
+        
+        .sidebar-header {
+            padding: 20px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; margin-bottom: 10px; background: #f8fafc;
+        }
+        .sidebar-section-title {
+            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; padding: 15px 20px 5px 20px; letter-spacing: 0.8px;
+        }
+        .sidebar-item {
+            padding: 12px 20px 12px 30px; font-size: 14px; font-weight: 600;
+            color: var(--text-main); cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+            text-decoration: none; border-left: 4px solid transparent;
+        }
+        .sidebar-item:hover {
+            background: #f1f5f9; color: var(--primary);
+            border-left: 4px solid var(--primary); padding-left: 26px;
+        }
+        /* Item ke aage jo number dikhega uska design */
+        .sidebar-badge {
+            background: #e2e8f0; color: #475569; font-size: 12px; font-weight: 800;
+            padding: 2px 10px; border-radius: 20px; min-width: 35px; text-align: center;
+        }
+        .sidebar-badge.primary { background: #dbeafe; color: #1d4ed8; }
+        .sidebar-badge.warning { background: #fef3c7; color: #b45309; }
+        .sidebar-badge.success { background: #dcfce7; color: #15803d; }
+        .sidebar-badge.danger { background: #fee2e2; color: #991b1b; }
+
+	/* 🚀 CUSTOM RIGHT-CLICK CONTEXT MENU STYLES */
+        #customContextMenu {
+            display: none;
+            position: absolute;
+            z-index: 10006; /* Sidebar se upar dikhne ke liye */
+            background: #fff;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 6px 0;
+            min-width: 200px;
+            overflow: hidden;
+            animation: slideDown 0.2s ease-out;
+        }
+        .context-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .context-item:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
   </style>
 </head>
 <body>
@@ -537,8 +618,96 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
     <!-- Dashboard View -->
     <div id="dashboard-view">
 		<div class="top-navbar">
-            <div class="brand">
-                <!-- Original Logo & Title as exactly requested -->
+		<div class="brand">
+                <!-- 🚀 NAYA HAMBURGER & SIDEBAR WRAPPER -->
+                <div class="sidebar-wrapper">
+                    <!-- 3 Lines Icon -->
+                    <div class="hamburger-menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    
+                    <!-- Hidden Sidebar Panel (Patti) -->
+                    <div class="sidebar-panel">
+                        <div class="sidebar-header">
+                            <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Logo" style="height: 35px;">
+                            <span style="font-weight: 800; color: var(--primary); margin-left: 10px; font-size: 16px;">MAIN MENU</span>
+                        </div>
+                        
+                        <div id="side-dispatch-section">
+                            <div class="sidebar-section-title">Dispatch Management</div>
+                            <div class="sidebar-item" onclick="showInvoiceList('today')" data-tab-name="Today's Pending">
+                                <span>Today's Pending</span> <span class="sidebar-badge warning" id="side_todayPendingCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showInvoiceList('total')" data-tab-name="Total Pending">
+                                <span>Total Pending</span> <span class="sidebar-badge warning" id="side_totalPendingCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showAssignedList()" data-tab-name="Courier Assigned">
+                                <span>Courier Assigned</span> <span class="sidebar-badge primary" id="side_assignedCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showPodList()" data-tab-name="In Transit">
+                                <span>In Transit</span> <span class="sidebar-badge primary" id="side_transitCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="openDateRangeModal('delivered')" data-tab-name="Delivered Bills">
+                                <span>Delivered Bills</span> <span class="sidebar-badge success" id="side_deliveredCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showDisputedList()" data-tab-name="Disputed / Exceptions">
+                                <span>Disputed / Exceptions</span> <span class="sidebar-badge danger" id="side_disputedCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="openDateRangeModal('dispatched')" data-tab-name="Dispatched Bills">
+                                <span>Dispatched Bills</span> <span class="sidebar-badge" id="side_dispatchCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showDispatchStatusList()" data-tab-name="Search Entry">
+                                <span>Track Dispatch Status</span> <span class="sidebar-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                            </div>
+                        </div>
+
+                        <div id="side-return-section">
+                            <div class="sidebar-section-title">Return Management</div>
+                            <div class="sidebar-item" onclick="openUnplannedReturnModal()" data-tab-name="Surprise Entry">
+                                <span>Surprise Entry</span> <span class="sidebar-badge" style="background:#fdf4ff; color:#c026d3;">+</span>
+                            </div>
+                            <div class="sidebar-item" onclick="openGenerateReturnModal()" data-tab-name="New Request">
+                                <span>Generate Request</span> <span class="sidebar-badge" style="background:#e0e7ff; color:#4f46e5;">+</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnPendingList()" data-tab-name="Pending Return">
+                                <span>Pending Return</span> <span class="sidebar-badge warning" id="side_pendingReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnAssignedList()" data-tab-name="Courier Assigned">
+                                <span>Courier Assigned</span> <span class="sidebar-badge primary" id="side_assignedReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnTransitList()" data-tab-name="In Transit (Return)">
+                                <span>In Transit</span> <span class="sidebar-badge primary" id="side_transitReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnReceivedList()" data-tab-name="Return Received">
+                                <span>Return Received</span> <span class="sidebar-badge success" id="side_receivedReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="openDateRangeModal('returnProcessed')" data-tab-name="Return Processed">
+                                <span>Return Processed</span> <span class="sidebar-badge" style="background:#fdf4ff; color:#86198f;" id="side_processedReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnDisputedList()" data-tab-name="Dispute (Return)">
+                                <span>Disputed (Return)</span> <span class="sidebar-badge danger" id="side_disputedReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showUnplannedList()" data-tab-name="Unplanned Received">
+                                <span>Unplanned Received</span> <span class="sidebar-badge" style="background:#fff1f2; color:#e11d48;" id="side_unplannedReturnCount">0</span>
+                            </div>
+                            <div class="sidebar-item" onclick="showReturnStatusList()" data-tab-name="Search Entry">
+                                <span>Track Return Status</span> <span class="sidebar-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-section-title">Tools</div>
+                        <div class="sidebar-item" onclick="showLedgerMasterList()" data-tab-name="Ledger Master">
+                            <span>Ledger Master</span> <span class="sidebar-badge">Manage</span>
+                        </div>
+                        <div class="sidebar-item" onclick="showTransitCalcSection()" data-tab-name="Transit Calculator">
+                            <span>Transit Calculator</span> <span class="sidebar-badge">SLA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Original Logo & Title -->
                 <img src="https://i.postimg.cc/XNwPRcH7/LOGO-2.jpg" alt="Hatvet Pharma Logo" style="height: 40px; border-radius: 2px;">
                 <div class="brand-text">
                     <h1>HATVET PHARMA PVT. LTD.</h1>
@@ -1981,6 +2150,14 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
             </div>
         </div>
     </div>
+	
+	<!-- 🚀 Right-Click Context Menu -->
+    <div id="customContextMenu">
+        <div class="context-item" onclick="togglePinStatus()">
+            <svg id="contextActionIcon" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"></svg>
+            <span id="contextActionText">Add to Dashboard</span>
+        </div>
+    </div>
 
 <script>
         // =====================================================================================
@@ -2012,8 +2189,8 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         <svg style="width:64px; height:64px; color:#cbd5e1; margin-bottom:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path>
         </svg>
-        <div style="color: #475569; font-size: 16px; font-weight: 600;">No Data Found</div>
-        <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">There are currently no records matching this view.</div>
+        <div style="color: #475569; font-size: 16px; font-weight: 600;">No Record Found</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;"></div>
     </td>
 </tr>`;
 
@@ -2328,6 +2505,78 @@ function debouncedFilterTable(inputId) {
             } finally {
                 if (timeoutId) clearTimeout(timeoutId);
             }
+        }
+	
+	// =====================================================================
+        // 🚀 RIGHT-CLICK CONTEXT MENU & PIN TO DASHBOARD LOGIC
+        // =====================================================================
+        let contextTargetTab = "";
+
+	// 1. Right Click Event Listener
+        document.addEventListener('contextmenu', function(e) {
+            const sidebarItem = e.target.closest('.sidebar-item');
+            
+            // Agar right click sidebar item par hua hai
+            if (sidebarItem) {
+                e.preventDefault(); // Browser ka default menu roko
+                
+                // 🚀 NAYA FIX: Sidebar ko "Lock" kar do taaki wo bhage nahi
+                const wrapper = document.querySelector('.sidebar-wrapper');
+                if(wrapper) wrapper.classList.add('force-open');
+                
+                contextTargetTab = sidebarItem.getAttribute('data-tab-name');
+                if(!contextTargetTab) return;
+
+                let pinnedCards = JSON.parse(localStorage.getItem('cms_pinned_cards')) || [];
+                const menu = document.getElementById('customContextMenu');
+                const actionText = document.getElementById('contextActionText');
+                const actionIcon = document.getElementById('contextActionIcon');
+
+                // Check if already pinned
+                if (pinnedCards.includes(contextTargetTab)) {
+                    actionText.innerText = "Remove from Dashboard";
+                    actionIcon.innerHTML = '<path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>'; // Trash Icon
+                    actionIcon.style.color = "var(--danger)";
+                } else {
+                    actionText.innerText = "Add to Dashboard";
+                    actionIcon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>'; // Plus Icon
+                    actionIcon.style.color = "var(--success)";
+                }
+
+                menu.style.display = 'block';
+                menu.style.left = e.pageX + 'px';
+                menu.style.top = e.pageY + 'px';
+            }
+        });
+
+        // 2. Kahi aur click karne par menu band ho jaye
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('customContextMenu');
+            if(menu && e.target.id !== 'customContextMenu') {
+                menu.style.display = 'none';
+                
+                // 🚀 NAYA FIX: Sidebar ko "Unlock" kar do taaki mouse hatne par wo smooth tareeqe se wapas chala jaye
+                const wrapper = document.querySelector('.sidebar-wrapper');
+                if(wrapper) wrapper.classList.remove('force-open');
+            }
+        });
+
+        // 3. Pin/Unpin function
+        function togglePinStatus() {
+            let pinnedCards = JSON.parse(localStorage.getItem('cms_pinned_cards')) || [];
+            
+            if (pinnedCards.includes(contextTargetTab)) {
+                // Remove
+                pinnedCards = pinnedCards.filter(tab => tab !== contextTargetTab);
+                showToast("Removed", `"${contextTargetTab}" removed from Dashboard`, "info");
+            } else {
+                // Add
+                pinnedCards.push(contextTargetTab);
+                showToast("Added", `"${contextTargetTab}" pinned to Dashboard`, "success");
+            }
+            
+            localStorage.setItem('cms_pinned_cards', JSON.stringify(pinnedCards));
+            applyAccessControl(); // Dashboard ko turant update (re-render) karega
         }
 
         function safeStr(val) { return String(val || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
@@ -2833,10 +3082,9 @@ function exportTableToCSV(tableId, filename) {
         
 	function updateDashboardCounts(c) {
             if(!c) return;
-            
-            // 🚀 NAYA HACK: Dashboard ke counts ko local browser memory me turant save kar lo
             localStorage.setItem("saved_dashboard_counts", JSON.stringify(c));
             
+            // Dashboard KPI Cards
             document.getElementById('todayPendingCount').innerText = c.todayPending;
             document.getElementById('totalPendingCount').innerText = c.totalPending;
             document.getElementById('assignedCount').innerText = c.assigned;
@@ -2844,7 +3092,6 @@ function exportTableToCSV(tableId, filename) {
             document.getElementById('deliveredCount').innerText = c.delivered;
             document.getElementById('dispatchCount').innerText = c.dispatched;
             document.getElementById('disputedCount').innerText = c.disputed;
-
             document.getElementById('pendingReturnCount').innerText = c.returnPending;
             document.getElementById('assignedReturnCount').innerText = c.returnAssigned;
             document.getElementById('transitReturnCount').innerText = c.returnTransit;
@@ -2852,6 +3099,22 @@ function exportTableToCSV(tableId, filename) {
             if (document.getElementById('processedReturnCount')) document.getElementById('processedReturnCount').innerText = c.returnProcessed;
             document.getElementById('disputedReturnCount').innerText = c.returnDisputed;
             if (document.getElementById('unplannedReturnCount')) document.getElementById('unplannedReturnCount').innerText = c.unplanned;
+
+            // 🚀 NAYA: Sidebar Badges Live Update
+            if(document.getElementById('side_todayPendingCount')) document.getElementById('side_todayPendingCount').innerText = c.todayPending;
+            if(document.getElementById('side_totalPendingCount')) document.getElementById('side_totalPendingCount').innerText = c.totalPending;
+            if(document.getElementById('side_assignedCount')) document.getElementById('side_assignedCount').innerText = c.assigned;
+            if(document.getElementById('side_transitCount')) document.getElementById('side_transitCount').innerText = c.transit;
+            if(document.getElementById('side_deliveredCount')) document.getElementById('side_deliveredCount').innerText = c.delivered;
+            if(document.getElementById('side_dispatchCount')) document.getElementById('side_dispatchCount').innerText = c.dispatched;
+            if(document.getElementById('side_disputedCount')) document.getElementById('side_disputedCount').innerText = c.disputed;
+            if(document.getElementById('side_pendingReturnCount')) document.getElementById('side_pendingReturnCount').innerText = c.returnPending;
+            if(document.getElementById('side_assignedReturnCount')) document.getElementById('side_assignedReturnCount').innerText = c.returnAssigned;
+            if(document.getElementById('side_transitReturnCount')) document.getElementById('side_transitReturnCount').innerText = c.returnTransit;
+            if(document.getElementById('side_receivedReturnCount')) document.getElementById('side_receivedReturnCount').innerText = c.returnReceived;
+            if(document.getElementById('side_processedReturnCount')) document.getElementById('side_processedReturnCount').innerText = c.returnProcessed;
+            if(document.getElementById('side_disputedReturnCount')) document.getElementById('side_disputedReturnCount').innerText = c.returnDisputed;
+            if(document.getElementById('side_unplannedReturnCount')) document.getElementById('side_unplannedReturnCount').innerText = c.unplanned;
         }
 
 	// 🚀 NAYA FUNCTION: Last Sync Time show aur update karne ke liye
@@ -2887,40 +3150,87 @@ function updateLastSyncTime() {
             const returnSection = document.getElementById('return-management-section');
             const allCards = document.querySelectorAll('.kpi-card');
 
-            if (loggedInUserType === "Dispatch Courier Management") { 
-                dispatchSection.style.display = 'block'; 
-                returnSection.style.display = 'none'; 
-            } else if (loggedInUserType === "Return Courier Management") { 
-                dispatchSection.style.display = 'none'; 
-                returnSection.style.display = 'block'; 
-            } else { 
-                dispatchSection.style.display = 'block'; 
-                returnSection.style.display = 'block'; 
-            }
+            // 🚀 NAYA: Pinned Cards ko localStorage se fetch karna
+            let pinnedCards = JSON.parse(localStorage.getItem('cms_pinned_cards')) || [];
+            let anyCardVisible = false;
 
             const allowedTabs = loggedInUserPermissions.split(',').map(p => p.trim().toLowerCase());
             
             allCards.forEach(card => {
-                const tabName = (card.getAttribute('data-tab-name') || "").trim().toLowerCase();
+                const tabName = (card.getAttribute('data-tab-name') || "").trim();
+                const tabNameLower = tabName.toLowerCase();
                 
+                // 1. Pehle check karein ki Role ke hisaab se access hai ya nahi
+                let hasRoleAccess = false;
                 if (loggedInUserPermissions.toLowerCase() === "all" || allowedTabs.includes("all")) { 
-                    card.style.display = 'flex'; 
+                    hasRoleAccess = true; 
+                } else if (tabNameLower && allowedTabs.includes(tabNameLower)) { 
+                    hasRoleAccess = true; 
+                }
+
+                // 2. Agar access hai AUR user ne pin kiya hai, tabhi Dashboard par dikhayein
+                if (hasRoleAccess && pinnedCards.includes(tabName)) {
+                    card.style.display = 'flex';
+                    anyCardVisible = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // 🚀 NAYA: Agar Dashboard par ek bhi card nahi hai (Empty State UI)
+            let emptyMsg = document.getElementById('emptyDashboardMsg');
+            if (!emptyMsg) {
+                emptyMsg = document.createElement('div');
+                emptyMsg.id = 'emptyDashboardMsg';
+                emptyMsg.innerHTML = '<svg style="width:54px;height:54px;color:#cbd5e1;margin-bottom:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4v16m8-8H4"></path></svg><br><h3 style="color:#334155; margin-bottom:5px;">Your Workspace is Empty</h3><span style="font-size:13px;font-weight:500;color:#64748b;">Right-click on any TAB in the Main Menu and select "Add to Dashboard" to pin it here.</span>';
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.padding = '50px 20px';
+                emptyMsg.style.background = '#fff';
+                emptyMsg.style.border = '2px dashed var(--border)';
+                emptyMsg.style.borderRadius = '12px';
+                emptyMsg.style.marginTop = '10px';
+                document.getElementById('dashboard-unified-cards').appendChild(emptyMsg);
+            }
+            emptyMsg.style.display = anyCardVisible ? 'none' : 'block';
+
+            // Hide/Show Section Titles based on visible cards
+            if(dispatchSection) dispatchSection.querySelector('.section-title').style.display = dispatchSection.querySelectorAll('.kpi-card[style*="display: flex"]').length ? 'flex' : 'none';
+            if(returnSection) returnSection.querySelector('.section-title').style.display = returnSection.querySelectorAll('.kpi-card[style*="display: flex"]').length ? 'flex' : 'none';
+
+            // Sidebar Access Control (as it was)
+            const sideDispatchSec = document.getElementById('side-dispatch-section');
+            const sideReturnSec = document.getElementById('side-return-section');
+            
+            if (loggedInUserType === "Dispatch Courier Management") { 
+                if(sideDispatchSec) sideDispatchSec.style.display = 'block'; 
+                if(sideReturnSec) sideReturnSec.style.display = 'none'; 
+            } else if (loggedInUserType === "Return Courier Management") { 
+                if(sideDispatchSec) sideDispatchSec.style.display = 'none'; 
+                if(sideReturnSec) sideReturnSec.style.display = 'block'; 
+            } else { 
+                if(sideDispatchSec) sideDispatchSec.style.display = 'block'; 
+                if(sideReturnSec) sideReturnSec.style.display = 'block'; 
+            }
+
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                const tabName = (item.getAttribute('data-tab-name') || "").trim().toLowerCase();
+                if (loggedInUserPermissions.toLowerCase() === "all" || allowedTabs.includes("all")) { 
+                    item.style.display = 'flex'; 
                 } else { 
                     if (tabName && allowedTabs.includes(tabName)) { 
-                        card.style.display = 'flex'; 
+                        item.style.display = 'flex'; 
                     } else { 
-                        card.style.display = 'none'; 
+                        item.style.display = 'none'; 
                     } 
                 }
             });
 
-            // 🚀 Show/Hide Maintenance Switch (Strictly for ADMIN role only)
             const maintContainer = document.getElementById('maintenanceSwitchContainer');
             if (maintContainer) {
                 let userRoleStr = (loggedInUserRole || "").trim().toLowerCase();
                 if (userRoleStr === 'admin') {
                     maintContainer.style.display = 'flex';
-                    // Server se current maintenance status check karein taaki switch hamesha sync rahe
                     safeFetch({ action: 'checkMaintenanceStatus' }, 0).then(res => {
                         if (res && res.status === 'success') {
                             const toggle = document.getElementById('maintenanceToggle');
@@ -3139,13 +3449,24 @@ function updateLastSyncTime() {
     return refreshRequestPromise;
 }
 
-        function hideAllLists() {
+	function hideAllLists() {
             document.getElementById('dashboard-unified-cards').style.display = 'none';
+            
+            // 🚀 NAYA: Kisi bhi tab/table ko kholte hi Welcome Banner hide ho jayega
+            const banner = document.querySelector('.welcome-banner');
+            if (banner) banner.style.display = 'none';
+
             document.querySelectorAll('.table-wrapper').forEach(el => el.style.display = 'none');
         }
 
         function showDashboardCards() { 
-            hideAllLists(); activeTableContext = null;
+            hideAllLists(); 
+            activeTableContext = null;
+            
+            // 🚀 NAYA: Jab user wapas Dashboard par aayega, toh Welcome Banner wapas dikhega
+            const banner = document.querySelector('.welcome-banner');
+            if (banner) banner.style.display = 'flex'; // Flex isliye kyunki iski CSS mein display flex tha
+
             document.getElementById('dashboard-unified-cards').style.display = 'block'; 
             applyAccessControl(); 
         }
