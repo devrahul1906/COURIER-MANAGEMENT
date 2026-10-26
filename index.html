@@ -583,6 +583,12 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
                         </label>
                     </div>
 
+		    <!-- User Manual (SOP) -->
+                    <div class="dropdown-item" onclick="showUserManual()">
+                        <svg style="width: 16px; height: 16px; color: var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        <span style="font-weight: 700; color: var(--primary);">User Manual (SOP)</span>
+                    </div>
+
                     <!-- Sync / Refresh -->
                     <div class="dropdown-item" id="syncBtn" onclick="refreshDataAndView()">
                         <svg id="syncIcon" style="width: 16px; height: 16px; color: var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
@@ -1227,6 +1233,25 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
                         <button type="submit" id="saveUnplannedBtn" class="action-btn btn-primary" style="background:#c026d3;">Submit Surprise Entry</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+	
+	<!-- 🚀 User Manual (SOP) Modal -->
+    <div id="sopModal" class="modal-overlay" style="z-index: 10005;">
+        <div class="modal-box" style="max-height: 85vh; overflow-y: auto; max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="sopTitle" style="display: flex; align-items: center; gap: 8px;">
+                    <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>USER SOP</span>
+                </h3>
+                <button type="button" class="close-btn" onclick="closeUserManualModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 14px; line-height: 1.7; color: var(--text-main);" id="sopContent">
+                <!-- Data JS se aayega -->
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn-outline" onclick="closeUserManualModal()" style="width: 100%; justify-content: center; font-weight: bold;">Close Manual</button>
             </div>
         </div>
     </div>
@@ -4843,6 +4868,162 @@ async function handleFileUpload(event) {
     };
     reader.readAsArrayBuffer(file);
 }
+
+	function closeUserManualModal() {
+            document.getElementById('sopModal').style.display = 'none';
+        }
+
+        function showUserManual() {
+            // Close dropdown menu instantly
+            document.getElementById("profileDropdownMenu").classList.remove("show");
+
+            const role = (loggedInUserRole || "").toLowerCase();
+            const module = loggedInUserType || "All";
+            let sopTitleText = "";
+            let sopHtml = "";
+
+            // 1. ADMIN / MASTER USER FULL WORKFLOW
+            if (role.includes("admin") || role.includes("master")) {
+                sopTitleText = "ADMINISTRATOR WORKFLOW & SOP";
+                sopHtml = `
+                    <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <b style="color: var(--primary);">Access Level:</b> Unrestricted System Control & Global Oversight.<br>
+                        <b style="color: var(--primary);">Objective:</b> Manage global configurations, oversee both Dispatch and Return pipelines, and resolve escalated disputes.
+                    </div>
+                    
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">1. Global System Management</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Module Switcher:</b> Utilize the dropdown menu in your profile to seamlessly toggle your dashboard view between 'Dispatch Courier Management' and 'Return Courier Management'.</li>
+                        <li style="margin-bottom: 8px;"><b>Maintenance Mode:</b> Before system updates, activate the Maintenance Mode toggle from your profile. <i>Outcome:</i> All standard users will be safely logged out and restricted from entering data until deactivated.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">2. Ledger Master Management</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Navigate to the 'Ledger Master' card. Search for a specific client ledger and update its lifecycle status (Current, Old, In Active, Closed).</li>
+                        <li style="margin-bottom: 8px;"><b>Closure Protocol:</b> When marking a ledger as 'Closed', you are mandated to select the authorized Approver's Name (e.g., MD Sir, Accounts) and input closing remarks. <i>Outcome:</i> The ledger status is globally locked and synchronized across all portals.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">3. Bulk Operations & Dispute Resolution</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Transit Calculator:</b> Access the Transit Time Calculator to upload Excel sheets containing bulk PIN codes. <i>Outcome:</i> The system will geocode and generate estimated delivery SLAs for thousands of shipments simultaneously.</li>
+                        <li style="margin-bottom: 8px;"><b>Executive Overrides:</b> Admins have the exclusive authority to access the 'Disputed / Exceptions' tab to manually pass claims, update receiver details, and forcefully close unresolved courier cases.</li>
+                    </ul>
+                `;
+            } 
+            // 2. DISPATCH USER FULL WORKFLOW
+            else if (module === "Dispatch Courier Management") {
+                sopTitleText = "DISPATCH MANAGEMENT WORKFLOW & SOP";
+                sopHtml = `
+                    <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <b style="color: var(--primary);">Access Level:</b> Dispatch & Outward Operations.<br>
+                        <b style="color: var(--primary);">Objective:</b> Process outbound shipments seamlessly from the Pending queue through to Final Delivery and POD upload.
+                    </div>
+                    
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 1: Courier Assignment (Pending Stage)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Open the 'Total Pending' list. Click on 'Upload Invoices Details' to import your prepared Format.xlsx file containing Courier Partner, Docket No, and Box Dimensions.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> The system validates the data against pending invoices. Upon clicking 'Confirm & Assign', the invoices are officially attached to the courier partner and moved to the 'Courier Assigned' queue.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 2: Physical Handover (Assigned Stage)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Navigate to the 'Courier Assigned' card. Select the checkboxes for the parcels that have been physically handed over to the courier pickup agent.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> Click 'Submit - Physical Dispatch'. The system timestamps the exact handover time and transitions the shipments into the live 'In Transit' tracking pipeline.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 3: Tracking & Intermediate Statuses (In Transit)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> In the 'In Transit' module, monitor active shipments. You can use the inline dropdowns to update intermediate statuses (e.g., Delayed, Hold at Nearest Hub, Out for Delivery) or update the Tentative Delivery Date.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> These updates provide real-time visibility to management and customer support teams regarding shipment health.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 4: Final Closure & POD Upload</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Once a parcel is delivered, go to 'In Transit', click 'Update Status', select the outcome (Delivered/RTO/Misplaced), and upload the initial Proof of Delivery (POD) image.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> The bill moves to 'Delivered Bills' (awaiting final Accounts closure) or 'Disputed' if an exception occurred. Final verification requires uploading the physical signed POD in the Delivered module to permanently archive the journey in the 'Dispatched Bills' log.</li>
+                    </ul>
+                `;
+            } 
+            // 3. RETURN USER FULL WORKFLOW
+            else if (module === "Return Courier Management") {
+                sopTitleText = "RETURN MANAGEMENT WORKFLOW & SOP";
+                sopHtml = `
+                    <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <b style="color: var(--primary);">Access Level:</b> Return & Inward Operations.<br>
+                        <b style="color: var(--primary);">Objective:</b> Log incoming return requests, track reverse logistics, receive goods at the warehouse, and process Credit Notes (CN).
+                    </div>
+                    
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 1: Initiation (Planned vs Unplanned)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Planned Request:</b> Click 'New Request', fill in the Doctor/Ledger details, pickup address, and submit. <i>Outcome:</i> Generates a tracking ID and pushes the request to the 'Pending Return' queue.</li>
+                        <li style="margin-bottom: 8px;"><b>Surprise Entry:</b> If a parcel arrives without prior intimation, click 'Surprise Entry', enter the box count, and upload the parcel photo. <i>Outcome:</i> It sits in 'Unplanned Received' awaiting BDM verification before it can be processed.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 2: Reverse Pickup Execution</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> In 'Pending Return', click 'Assign Courier'. Select the courier partner, enter the return Docket No., and declare the expected boxes.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> The request moves to 'Courier Assigned'. Once the courier successfully picks up the parcel from the client, check the box and click 'Confirm Pickup' to transition the shipment into 'In Transit (Return)'.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 3: Warehouse Receiving & Dispute Auto-Generation</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> When the parcel arrives at the warehouse, locate it in 'In Transit (Return)' and click 'Received'. Input the *actual* physical boxes received and upload a photo of the received parcel.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> If Actual Boxes match Expected Boxes, it moves to 'Return Received'. If Actual Boxes are *less* than Expected, the system automatically splits the entry and routes the missing boxes to the 'Dispute (Return)' queue for investigation.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">Step 4: CN Generation & Dispute Resolution</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>CN Processing:</b> Go to 'Return Received'. Check the verified returns and click 'Fill CN Details' to input the formal Credit Note Number, Date, and Creator Name. This formally closes the loop and moves it to 'Return Processed'.</li>
+                        <li style="margin-bottom: 8px;"><b>Resolution:</b> Investigate missing items in the 'Dispute (Return)' tab. Once resolved with the courier/client, click 'Resolve', enter final remarks/approvals, and close the case.</li>
+                    </ul>
+                `;
+            } 
+            // 4. BDM / STANDARD CUSTOM USER FULL WORKFLOW
+            else {
+                sopTitleText = "STANDARD / BDM USER WORKFLOW & SOP";
+                sopHtml = `
+                    <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <b style="color: var(--primary);">Access Level:</b> Core Operations & Business Development.<br>
+                        <b style="color: var(--primary);">Objective:</b> Manage client return requests, verify unplanned inventory, maintain ledger accuracy, and track live shipments.
+                    </div>
+                    
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">1. Generating Return Requests</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Navigate to the <b>'New Request'</b> card under Return Courier Management. Fill out the Doctor's name, Ledger details (auto-populated via search), Contact Info, and Pickup Address.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> Upon submission, the system generates a unique Return ID. The request is instantly routed to the central dispatch team's 'Pending Return' queue for formal courier assignment and reverse pickup scheduling.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">2. Verifying Unplanned Returns (Surprise Entries)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Click on the <b>'Unplanned Received' (Confirmation Pending)</b> card. This list contains parcels that arrived at the warehouse without prior intimation.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> Click 'Confirm' on a record. You must verify the actual received box count against the sender's claim, select the authorizing person (e.g., Doctor/Assistant), and submit. This formalizes the return and pushes it to the final receiving/dispute stage.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">3. Ledger Master Management</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Access the <b>'Manage' (Ledger Master)</b> card to view the central database of all clients. Use the search bar to locate specific ledgers by Name, Code, or City.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> You can update the operational status of a ledger (Current Ledger, Old Ledger, In Active). This ensures that dispatch and return teams only process requests for valid, active clients.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">4. Transit Time Calculator</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Click on the <b>'Transit Calculator'</b> module. Input the Origin PIN Code (e.g., Warehouse) and the Destination PIN Code (Client).</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> The system utilizes geocoding to calculate the aerial distance and provides a highly accurate Service Level Agreement (SLA) / Estimated Delivery Time (e.g., 2-3 Days). Use this to set accurate expectations with clients.</li>
+                    </ul>
+
+                    <h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size: 15px;">5. Global Shipment Tracking (Track Status)</h4>
+                    <ul style="padding-left: 24px; margin-bottom: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 8px;"><b>Action:</b> Use the <b>'Search Entry' (Track Status)</b> cards available in both Dispatch and Return sections. Type any Invoice No, Docket No, or Doctor Name.</li>
+                        <li style="margin-bottom: 8px;"><b>Outcome:</b> Instantly displays the complete real-time lifecycle of the shipment—from Pending, Assigned, Transit, right through to Final Delivery or Dispute Resolution—without needing to manually browse through multiple tabs.</li>
+                    </ul>
+                `;
+            }
+
+            document.getElementById('sopTitle').innerHTML = `<svg style="width: 20px; height: 20px; margin-right: 8px; color: var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> <span style="font-weight: 800; color: var(--primary); letter-spacing: 0.5px;">${sopTitleText}</span>`;
+            document.getElementById('sopContent').innerHTML = sopHtml;
+            document.getElementById('sopModal').style.display = 'flex';
+        }
+
     </script>
 </body>
 </html>
