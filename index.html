@@ -380,7 +380,64 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
 .calc-result-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px; text-align: center; margin-top: 20px; display: none; }
 .calc-result-box.show { display: block; animation: slideDown 0.3s ease-out; }
 .pin-status-text { font-size: 11px; font-weight: 600; margin-top: 4px; min-height: 16px; }
-    </style>
+  
+	/* --- 1. Mobile Screens ke liye Full-Screen Modals --- */
+@media (max-width: 768px) {
+    .modal-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .modal-body {
+        flex-grow: 1;
+        max-height: none !important;
+        overflow-y: auto;
+    }
+    .modal-footer {
+        padding-bottom: 25px; /* Mobile safe area ke liye */
+    }
+}
+
+/* --- 2. Massive Tables ke liye Sticky Columns (Invoice No.) --- */
+/* Nth-child(2) kyunki pehla column '#' ya 'Checkbox' hota hai */
+.table-responsive th:nth-child(2) {
+    position: sticky;
+    left: 0;
+    background: #f8fafc; /* Header background color */
+    z-index: 12;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+.table-responsive td:nth-child(2) {
+    position: sticky;
+    left: 0;
+    background: #fff; /* Cell background color */
+    z-index: 11;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+/* Hover row effect ko sticky column par bhi apply karne ke liye */
+.table-responsive tbody tr:hover td:nth-child(2) {
+    background: #f1f5f9;
+}
+	.search-box {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+.search-box.is-searching {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23143482" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>');
+    animation: search-spin 1s linear infinite;
+}
+@keyframes search-spin { 
+    from { background-position: right 10px center; } 
+    to { background-position: right 10px center; } 
+}
+
+  </style>
 </head>
 <body>
 
@@ -555,7 +612,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
                 
                 <!-- DISPATCH MANAGEMENT SECTION -->
                 <div id="dispatch-management-section">
-                    <div class="section-title">Dispatch Management</div>
+                    <div class="section-title">Dispatch Courier Management</div>
                     <div class="kpi-grid">
                         <div class="kpi-card card-pending" onclick="showInvoiceList('today')" data-tab-name="Today's Pending">
                             <div class="kpi-header"><span class="kpi-title">Today's Pending</span><div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>
@@ -1923,6 +1980,17 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         let activeTableContext = null;
         let fetchVersion = 0; 
         let lastWriteTime = 0; 
+	
+	const premiumEmptyStateHTML = `
+<tr>
+    <td colspan="100%" style="text-align:center; padding: 50px 20px; background:#fff;">
+        <svg style="width:64px; height:64px; color:#cbd5e1; margin-bottom:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path>
+        </svg>
+        <div style="color: #475569; font-size: 16px; font-weight: 600;">No Data Found</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">There are currently no records matching this view.</div>
+    </td>
+</tr>`;
 
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
             return new Promise((resolve, reject) => {
@@ -2108,13 +2176,17 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        let filterTimer;
-             
-        function debouncedFilterTable(inputId) {
-            clearTimeout(filterTimer);
-            filterTimer = setTimeout(() => applyJsonFilter(inputId), 300);
-        }
-
+let filterTimer;
+function debouncedFilterTable(inputId) {
+    clearTimeout(filterTimer);
+    let inputEl = document.getElementById(inputId);
+    if(inputEl) inputEl.classList.add('is-searching');
+    
+    filterTimer = setTimeout(() => {
+        applyJsonFilter(inputId);
+        if(inputEl) inputEl.classList.remove('is-searching');
+    }, 400); 
+}
         // 🚀 NAYA JSON FILTER LOGIC (SUPER FAST)
 		function applyJsonFilter(inputId) {
     let inputVal = document.getElementById(inputId).value.toLowerCase().trim();
@@ -3063,7 +3135,7 @@ function updateLastSyncTime() {
         
         function renderPendingTable(dataList, type) {
             let listToDisplay = (type === 'today') ? dataList.filter(b => checkIsToday(b.scanTime)) : dataList;
-            if(listToDisplay.length === 0) { document.getElementById('invoiceTableBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>No pending bills found.</td></tr>"; return; }
+	     if(listToDisplay.length === 0) { document.getElementById('invoiceTableBody').innerHTML = premiumEmptyStateHTML; return; }
             let html = []; listToDisplay.forEach((item, index) => { html.push(`<tr><td>${index + 1}</td><td><b>${item.invoiceNo}</b></td><td>${item.scanTime}</td><td><span class="badge bg-pending">Pending</span></td></tr>`); }); 
             renderLargeHtml('invoiceTableBody', html);
         }
@@ -3130,7 +3202,7 @@ function updateLastSyncTime() {
 	function renderPodTable(dataList) {
     updateTransitCounts(dataList); // Counts update
 
-    if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = "<tr><td colspan='13' style='text-align:center;'>No Invoices in Transit.</td></tr>"; return; }
+if(dataList.length === 0) { document.getElementById('podTableBody').innerHTML = premiumEmptyStateHTML; return; }
     
     let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Nearest Hub", "Out for Delivery"];
     let html = []; 
@@ -3282,7 +3354,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
         }
 	function renderDeliveredTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = "<tr><td colspan='12' style='text-align:center;'>No Delivered bills found.</td></tr>"; return; }
+		if(listToDisplay.length === 0) { document.getElementById('deliveredTableBody').innerHTML = premiumEmptyStateHTML; return; }
             let html = []; 
             dataList.forEach((item, index) => { 
                 html.push(`<tr>
@@ -3308,7 +3380,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
             activeTableContext = { reqType: 'disputed', renderFn: renderDisputedTable }; loadAndRenderTable('disputed', activeTableContext.renderFn);
         }
 	function renderDisputedTable(dataList) {
-            if(dataList.length === 0) { document.getElementById('disputedTableBody').innerHTML = "<tr><td colspan='13' style='text-align:center;'>No disputed/exception bills.</td></tr>"; return; }
+		if(dataList.length === 0) { document.getElementById('disputedTableBody').innerHTML = premiumEmptyStateHTML; return; }
             let html = []; 
             dataList.forEach((item, index) => { 
                 html.push(`<tr>
@@ -3338,7 +3410,7 @@ function changeTentativeDate(inputEl, invoiceNo, docketNo) {
 
         function renderDispatchedTable(dataList, startDate, endDate) {
             let listToDisplay = dataList; if(startDate || endDate) { listToDisplay = dataList.filter(item => isDateInRange(item.actionTime, startDate, endDate)); }
-            if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = "<tr><td colspan='16' style='text-align:center;'>No Completed / Exception bills found.</td></tr>"; return; }
+		if(listToDisplay.length === 0) { document.getElementById('dispatchedTableBody').innerHTML = premiumEmptyStateHTML; return; }
             let html = []; 
             listToDisplay.forEach((item, index) => { 
                 let sTag = (item.status.includes('RTO') || item.status.includes('Closed')) ? '<span class="badge bg-rto">' + item.status + '</span>' : `<span class="badge bg-delivered">${item.status}</span>`; 
