@@ -1986,7 +1986,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyxcbql3o1e_MhvmqZh9JQDK0-J1lLRI1f-thQO6OuQkHYqhy8gLVhpy4Agco4aO5gw/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxGeGH00OueY5JEeegFA40REIp4PlWcHGHeq69Fj23N2mUPgRf03rE9vPZxCj_6MxLE/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -3170,12 +3170,34 @@ function updateLastSyncTime() {
             activeTableContext = { reqType: 'assigned', renderFn: renderAssignedTable }; loadAndRenderTable('assigned', activeTableContext.renderFn);
         }
 	
+	function formatDateDDMMYYYY(value) {
+    if (!value || value === '-' || value === 'Unknown') return '-';
+
+    let str = String(value).trim();
+
+    // ISO format: YYYY-MM-DD
+    let iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+    if (iso) {
+        return `${String(iso[3]).padStart(2, '0')}-${String(iso[2]).padStart(2, '0')}-${iso[1]}`;
+    }
+
+    // Existing DD-MM-YYYY format
+    let dmy = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+
+    if (dmy) {
+        return `${String(dmy[1]).padStart(2, '0')}-${String(dmy[2]).padStart(2, '0')}-${dmy[3]}`;
+    }
+
+    return str;
+}
+
 	function renderAssignedTable(dataList) {
     if(dataList.length === 0) { document.getElementById('assignedTableBody').innerHTML = "<tr><td colspan='14' style='text-align:center;'>No assigned invoices pending.</td></tr>"; return; }
     let html = []; 
     dataList.forEach((item, index) => { 
         let sddDisplay = item.sdd ? item.sdd : '-';
-        let tenDateDisplay = item.tentativeDate ? item.tentativeDate : '-';
+        let tenDateDisplay = formatDateDDMMYYYY(item.tentativeDate);
         
         html.push(`<tr>
             <td><input type="checkbox" class="dispatch-checkbox" value="${item.invoiceNo}|${item.docket || ''}"></td>
@@ -4384,23 +4406,60 @@ function isDateInRange(dateStr, start, end) {
         function openBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'flex'; }
         function closeBulkUploadModal() { document.getElementById('bulkUploadModal').style.display = 'none'; document.getElementById('bulkExcelFile').value = ''; }
         
-	// Date calculate karne ka function
-function calculateTentativeDate(scanTimeStr, sddString) {
-    if (!scanTimeStr || !sddString || sddString === '-' || sddString === 'Unknown') return '-';
-    
-    let match = sddString.match(/\d+/g);
+	function calculateTentativeDate(scanTimeStr, sddString) {
+
+    if (!scanTimeStr || !sddString ||
+        sddString === '-' || sddString === 'Unknown') {
+        return '-';
+    }
+
+    // Maximum SDD days
+    let match = String(sddString).match(/\d+/g);
+
     if (!match) return '-';
+
     let daysToAdd = Math.max(...match.map(Number));
 
-    let parts = scanTimeStr.split(/[- :]/);
-    if (parts.length < 3) return '-';
-    
-    let scanDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    if (isNaN(scanDate)) return '-';
+    let str = String(scanTimeStr).trim();
 
+    // Expected SCANTIME: DD-MM-YYYY HH:mm:ss
+    let parts = str.split(/[- :]/);
+
+    if (parts.length < 3) return '-';
+
+    let day = parseInt(parts[0], 10);
+    let month = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+
+    if (
+        !Number.isInteger(day) ||
+        !Number.isInteger(month) ||
+        !Number.isInteger(year) ||
+        day < 1 || day > 31 ||
+        month < 0 || month > 11
+    ) {
+        return '-';
+    }
+
+    let scanDate = new Date(year, month, day);
+
+    // Invalid calendar date protection
+    if (
+        scanDate.getDate() !== day ||
+        scanDate.getMonth() !== month ||
+        scanDate.getFullYear() !== year
+    ) {
+        return '-';
+    }
+
+    // Add maximum SDD days
     scanDate.setDate(scanDate.getDate() + daysToAdd);
-    
-    return `${String(scanDate.getDate()).padStart(2, '0')}-${String(scanDate.getMonth() + 1).padStart(2, '0')}-${scanDate.getFullYear()}`;
+
+    let dd = String(scanDate.getDate()).padStart(2, '0');
+    let mm = String(scanDate.getMonth() + 1).padStart(2, '0');
+    let yyyy = scanDate.getFullYear();
+
+    return `${dd}-${mm}-${yyyy}`;
 }
 
 // Bulk Upload Function jisme logic add kiya gya hai
@@ -4456,7 +4515,7 @@ async function processBulkUpload() {
                                     let transitData = evaluateTransitLogic(distance);
                                     sddResult = transitData.time; 
                                     
-                                    let scanTime = pendingItem ? pendingItem.scanTime : getCurrentFormattedDate();
+                                    let scanTime = getCurrentFormattedDate();
                                     tentativeDate = calculateTentativeDate(scanTime, sddResult);
                                 }
                             }
