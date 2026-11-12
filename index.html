@@ -3881,11 +3881,21 @@ function updateLastSyncTime() {
 
 		// 🚀 NAYA LOGIC: Status ke hisaab se Dynamic Label set karna
                 let actionLabel = "Action Time:";
-                if (s.includes('pending') && !s.includes('pod') && !s.includes('resolution')) actionLabel = "Inventory Scanned:";
-                else if (s.includes('assigned')) actionLabel = "Courier Assigned:";
-                else if (s.includes('transit') || s.includes('delayed') || s.includes('hold') || s.includes('out for delivery')) actionLabel = "Physically Dispatched:";
-                else if (s.includes('delivered') || s.includes('pod') || s.includes('otp')) actionLabel = "Delivery / POD Logged:";
-                else if (s.includes('disput') || s.includes('resol') || s.includes('short') || s.includes('missing')) actionLabel = "Exception Logged:";
+                if (s.includes('pending') && !s.includes('pod') && !s.includes('resolution')) {
+                    actionLabel = "Inventory Scanned:";
+                } else if (s.includes('assigned')) {
+                    actionLabel = "Courier Assigned:";
+                } else if (s.includes('transit') || s.includes('delayed') || s.includes('hold') || s.includes('out for delivery')) {
+                    actionLabel = "Physically Dispatched:";
+                } else if (s.includes('dispatched') || (s.includes('closed') && !s.includes('pending'))) {
+                    // 🚀 NEW: Specifically for final archived/dispatched bills
+                    actionLabel = "Final Closure:";
+                } else if (s.includes('delivered') || s.includes('pod') || s.includes('otp')) {
+                    // This now only applies to intermediate 'Delivered (Action Pending)'
+                    actionLabel = "Initial POD Logged:";
+                } else if (s.includes('disput') || s.includes('resol') || s.includes('short') || s.includes('missing')) {
+                    actionLabel = "Exception Logged:";
+                }
 
                 let actionDisplay = `<div style="line-height:1.35; font-size:10px; color:#475569;"><b style="color:#334155">${actionLabel}</b><br><span style="font-weight: 600; font-size:12px;">${item.actionTime || '-'}</span></div>`;
                 
