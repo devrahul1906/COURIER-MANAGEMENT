@@ -1986,7 +1986,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyaynLyN1UOtAeWrbi1c_SnIRLtxxY5FaiZXw4bgx4fd2CDYjVm2EprtilKZ5poD7Zo/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwhwx8kxCMNk2wErW81viAI20I7lr2TBD5SQruC3VHV2bUnnjk6vQbShNDaREJozDg/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -3246,6 +3246,27 @@ function updateLastSyncTime() {
             if (document.getElementById('countOfdTransit')) document.getElementById('countOfdTransit').innerText = ofd;
         }
 
+	// 🚀 Helper Functions: 2nd Image jaisa 2-line format banane ke liye
+	function getFormattedUserStamp() {
+	    const now = new Date();
+	    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	    const dd = String(now.getDate()).padStart(2, '0');
+	    const mmm = months[now.getMonth()];
+	    const yyyy = now.getFullYear();
+	    let hh = now.getHours();
+	    const ampm = hh >= 12 ? 'PM' : 'AM';
+	    hh = hh % 12;
+	    hh = hh ? hh : 12;
+	    const min = String(now.getMinutes()).padStart(2, '0');
+	    const uname = loggedInUser || "User";
+	    return `Updated: ${dd}-${mmm}-${yyyy} | ${String(hh).padStart(2, '0')}:${min} ${ampm} · ${uname}`;
+	}
+
+	function formatStampForUI(stampStr) {
+	    if (!stampStr || stampStr === "-" || stampStr === "undefined") return "";
+	    return String(stampStr).replace(" | ", "<br>");
+	}
+
 	function renderPodTable(dataList) {
     updateTransitCounts(dataList); // Counts update
 
@@ -3254,12 +3275,10 @@ function updateLastSyncTime() {
     let statusOptions = ["Normal - In Transit", "Delayed", "Hold at Nearest Hub", "Out for Delivery"];
     let html = []; 
     
-    // Function Date formatter for <input type="date"> (html demands yyyy-mm-dd format)
     function formatForInput(dateStr) {
         if (!dateStr || dateStr === "-" || dateStr === "Unknown") return "";
         let parts = dateStr.split(/[- :\/]/);
         if (parts.length >= 3) {
-            // check if DD-MM-YYYY format
             if(parts[0].length === 2 && parts[2].length === 4) {
                return `${parts[2]}-${parts[1]}-${parts[0]}`;
             }
@@ -3276,7 +3295,6 @@ function updateLastSyncTime() {
         let tDateOriginal = item.tentativeDate || "";
         let inputDateVal = formatForInput(tDateOriginal);
 
-        // 🚀 NAYA: Check existing timestamps
         let tDateStamp = (item.tentativeDateStamp && item.tentativeDateStamp !== "-") ? item.tentativeDateStamp : "";
         let stStamp = (item.statusStamp && item.statusStamp !== "-") ? item.statusStamp : "";
 
@@ -3291,26 +3309,26 @@ function updateLastSyncTime() {
             <td>${item.docket || '-'}</td>
             <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
             <td style="color:#c2410c;">${item.actionTime || '-'}</td>
-            <!-- 🚀 Editable Date Input + Chota Timestamp Niche -->
+            <!-- 🚀 Editable Date Input + 2-Line User Timestamp -->
             <td>
                 <div style="display: flex; flex-direction: column; align-items: flex-start;">
                     <input type="date" id="tdate_sel_${index}" value="${inputDateVal}" 
                     onchange="changeTentativeDate(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
                     style="padding: 5px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: #15803d; background: #fff; cursor: pointer; outline: none; width: 130px;">
-                    <span class="stamp-label" style="font-size: 10px; color: #64748b; margin-top: 3px; font-weight: 600; display: ${tDateStamp ? 'block' : 'none'};">
-                        🕒 ${tDateStamp}
+                    <span class="stamp-label" style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 400; line-height: 1.35; display: ${tDateStamp ? 'block' : 'none'};">
+                        ${formatStampForUI(tDateStamp)}
                     </span>
                 </div>
             </td>
-            <!-- 🚀 Status Dropdown + Chota Timestamp Niche -->
+            <!-- 🚀 Status Dropdown + 2-Line User Timestamp -->
             <td>
                 <div style="display: flex; flex-direction: column; align-items: flex-start;">
                     <select id="transit_sel_${index}" data-original="${currentSt}" onchange="changeTransitStatus(this, '${safeStr(item.invoiceNo)}', '${safeStr(item.docket || '')}')" 
                     style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; color: ${color}; background: #fff; cursor: pointer; outline: none;">
                         ${statusOptions.map(opt => `<option value="${opt}" ${currentSt === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                     </select>
-                    <span class="stamp-label" style="font-size: 10px; color: #64748b; margin-top: 3px; font-weight: 600; display: ${stStamp ? 'block' : 'none'};">
-                        🕒 ${stStamp}
+                    <span class="stamp-label" style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 400; line-height: 1.35; display: ${stStamp ? 'block' : 'none'};">
+                        ${formatStampForUI(stStamp)}
                     </span>
                 </div>
             </td>
@@ -3326,6 +3344,7 @@ function updateLastSyncTime() {
             if (statusVal === 'Out for Delivery') return 'var(--success)';
             return '#c2410c';
         }
+	
 	function changeTransitStatus(selectEl, invoiceNo, docketNo) {
             const newStatus = selectEl.value;
             const originalStatus = selectEl.dataset.original;
@@ -3337,32 +3356,43 @@ function updateLastSyncTime() {
                 action: 'updateTransitStatus',
                 invoiceNo: invoiceNo,
                 docketNo: docketNo,
-                newStatus: newStatus
+                newStatus: newStatus,
+                actionBy: loggedInUser
             }).then(res => {
                 selectEl.disabled = false;
                 if (res && res.status === 'success') {
                     showToast("Status Updated", `Invoice ${invoiceNo} marked as "${newStatus}".`, "success");
                     selectEl.dataset.original = newStatus;
                     
-                    // 🚀 NAYA: Dropdown ke niche turant Date/Time Stamp dikhayein
-                    const stampText = res.timestamp || getCurrentFormattedDate();
+                    const stampText = res.timestamp || getFormattedUserStamp();
                     const stampEl = selectEl.nextElementSibling;
                     if (stampEl) {
-                        stampEl.innerText = "🕒 " + stampText;
+                        stampEl.innerHTML = formatStampForUI(stampText);
                         stampEl.style.display = "block";
                     }
 
+                    // Update 'In Transit' Cache
                     if (tableCache['transit']) {
                         let target = tableCache['transit'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
                         if (target) {
                             target.transitStatus = newStatus;
-                            target.statusStamp = stampText; // Cache me bhi save karein
+                            target.statusStamp = stampText;
                         }
                         updateTransitCounts(tableCache['transit']);
                         try { localStorage.setItem("cms_table_transit", JSON.stringify(tableCache['transit'])); } catch(e) {}
                     }
-                    delete tableCache['dispatchStatus'];
-                    localStorage.removeItem("cms_table_dispatchStatus");
+                    
+                    // 🚀 NAYA: Update 'Track Dispatch Status' Cache as well
+                    if (tableCache['dispatchStatus']) {
+                        let dsTarget = tableCache['dispatchStatus'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                        if (dsTarget) {
+                            dsTarget.status = newStatus;
+                            dsTarget.statusStamp = stampText;
+                        }
+                        try { localStorage.setItem("cms_table_dispatchStatus", JSON.stringify(tableCache['dispatchStatus'])); } catch(e) {}
+                    } else {
+                        localStorage.removeItem("cms_table_dispatchStatus");
+                    }
                 } else {
                     showToast("Error", (res && res.message) || "Failed to update status", "error");
                     selectEl.value = originalStatus;
@@ -3377,58 +3407,69 @@ function updateLastSyncTime() {
         }
 
 	function changeTentativeDate(inputEl, invoiceNo, docketNo) {
-    const newDateVal = inputEl.value; // format: yyyy-mm-dd
-    const originalDate = inputEl.defaultValue;
-    
-    // Formatting back to dd-mm-yyyy for display if needed
-    let formattedDateToSave = newDateVal;
-    if (newDateVal) {
-        let parts = newDateVal.split("-");
-        if (parts.length === 3) {
-            formattedDateToSave = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-    }
-    
-    inputEl.disabled = true;
-
-    safeFetch({
-        action: 'updateTentativeDate',
-        invoiceNo: invoiceNo,
-        docketNo: docketNo,
-        newDate: formattedDateToSave
-    }).then(res => {
-        inputEl.disabled = false;
-        if (res && res.status === 'success') {
-            showToast("Date Updated", `Tentative date for Invoice ${invoiceNo} updated.`, "success");
-            inputEl.defaultValue = newDateVal; // update baseline
+            const newDateVal = inputEl.value;
+            const originalDate = inputEl.defaultValue;
             
-            // 🚀 NAYA: Date box ke niche turant Date/Time Stamp dikhayein
-            const stampText = res.timestamp || getCurrentFormattedDate();
-            const stampEl = inputEl.nextElementSibling;
-            if (stampEl) {
-                stampEl.innerText = "🕒 " + stampText;
-                stampEl.style.display = "block";
-            }
-
-            // Cache locally update karein bina full reload kiye
-            if (tableCache['transit']) {
-                let target = tableCache['transit'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
-                if (target) {
-                    target.tentativeDate = formattedDateToSave;
-                    target.tentativeDateStamp = stampText; // Cache me bhi save karein
+            let formattedDateToSave = newDateVal;
+            if (newDateVal) {
+                let parts = newDateVal.split("-");
+                if (parts.length === 3) {
+                    formattedDateToSave = `${parts[2]}-${parts[1]}-${parts[0]}`;
                 }
-                try { localStorage.setItem("cms_table_transit", JSON.stringify(tableCache['transit'])); } catch(e) {}
             }
-        } else {
-            showToast("Error", (res && res.message) || "Failed to update date", "error");
-            inputEl.value = originalDate;
+            
+            inputEl.disabled = true;
+
+            safeFetch({
+                action: 'updateTentativeDate',
+                invoiceNo: invoiceNo,
+                docketNo: docketNo,
+                newDate: formattedDateToSave,
+                actionBy: loggedInUser
+            }).then(res => {
+                inputEl.disabled = false;
+                if (res && res.status === 'success') {
+                    showToast("Date Updated", `Tentative date for Invoice ${invoiceNo} updated.`, "success");
+                    inputEl.defaultValue = newDateVal;
+                    
+                    const stampText = res.timestamp || getFormattedUserStamp();
+                    const stampEl = inputEl.nextElementSibling;
+                    if (stampEl) {
+                        stampEl.innerHTML = formatStampForUI(stampText);
+                        stampEl.style.display = "block";
+                    }
+
+                    // Update 'In Transit' Cache
+                    if (tableCache['transit']) {
+                        let target = tableCache['transit'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                        if (target) {
+                            target.tentativeDate = formattedDateToSave;
+                            target.tentativeDateStamp = stampText;
+                        }
+                        try { localStorage.setItem("cms_table_transit", JSON.stringify(tableCache['transit'])); } catch(e) {}
+                    }
+                    
+                    // 🚀 NAYA: Update 'Track Dispatch Status' Cache as well
+                    if (tableCache['dispatchStatus']) {
+                        let dsTarget = tableCache['dispatchStatus'].find(i => i.invoiceNo === invoiceNo && (i.docket || '') === docketNo);
+                        if (dsTarget) {
+                            dsTarget.tentativeDate = formattedDateToSave;
+                            dsTarget.tentativeDateStamp = stampText;
+                        }
+                        try { localStorage.setItem("cms_table_dispatchStatus", JSON.stringify(tableCache['dispatchStatus'])); } catch(e) {}
+                    } else {
+                        localStorage.removeItem("cms_table_dispatchStatus");
+                    }
+                } else {
+                    showToast("Error", (res && res.message) || "Failed to update date", "error");
+                    inputEl.value = originalDate;
+                }
+            }).catch(err => {
+                inputEl.disabled = false;
+                showToast("Error", err.message || "Network error while updating.", "error");
+                inputEl.value = originalDate;
+            });
         }
-    }).catch(err => {
-        inputEl.disabled = false;
-        showToast("Error", err.message || "Network error while updating.", "error");
-        inputEl.value = originalDate;
-    });
-}
 	
         function showDeliveredList(startDate = null, endDate = null) {
             if (isStandardUser()) { showToast("Access Denied", "You are not authorized.", "error"); return; } 
@@ -3644,7 +3685,7 @@ function updateLastSyncTime() {
             }
 
             if (!hasLocalData && tbody) {
-                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Active Dispatch Status...</span></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 30px;"><span class="spinner" style="display:inline-block; width:20px; height:20px; border:3px solid rgba(20,52,130,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle;"></span> <span style="color:var(--text-muted); font-weight:600;">Loading Active Dispatch Status...</span></td></tr>`;
             }
 
             try {
@@ -3684,7 +3725,7 @@ function updateLastSyncTime() {
                     }
                 });
 
-		// 3. In Transit (Normal - In Transit & Custom Statuses)
+                // 3. In Transit (Normal - In Transit & Custom Statuses)
                 tranRes.forEach(item => {
                     let k = item.invoiceNo + "_" + (item.docket || "");
                     processedInvs.add(item.invoiceNo);
@@ -3706,7 +3747,9 @@ function updateLastSyncTime() {
                             boxes: item.boxes || '-',
                             status: finalStatusDisplay, 
                             actionTime: item.actionTime || '-', 
-                            tentativeDate: item.tentativeDate || '-', // 🚀 NAYA: Fetching Tentative Date
+                            tentativeDate: item.tentativeDate || '-',
+                            tentativeDateStamp: item.tentativeDateStamp || '-', // 🚀 FIXED: Passing Date Stamp
+                            statusStamp: item.statusStamp || '-',               // 🚀 FIXED: Passing Status Stamp
                             remark: '-' 
                         });
                     }
@@ -3728,11 +3771,12 @@ function updateLastSyncTime() {
                             boxes: item.boxes || '-', 
                             status: "Courier Assigned (Awaiting Physical Dispatch)", 
                             actionTime: item.actionTime || '-', 
-                            tentativeDate: item.tentativeDate || '-', // 🚀 NAYA: Fetching Tentative Date
+                            tentativeDate: item.tentativeDate || '-',
                             remark: '-' 
                         });
                     }
                 });
+
                 // 5. Total Pending (Action Required)
                 pendRes.forEach(item => {
                     if (item.invoiceNo && !processedInvs.has(item.invoiceNo)) {
@@ -3750,7 +3794,7 @@ function updateLastSyncTime() {
             } catch (err) {
                 console.error(err);
                 if (!hasLocalData && tbody) {
-                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger); font-weight:600;">Failed to load data. Please click Refresh button.</td></tr>`;
                 }
             }
         }
@@ -3832,8 +3876,19 @@ function updateLastSyncTime() {
                     ? `<b>${item.partner}</b><div style="font-size:11px; color:#64748b;">${item.docket || '-'}</div>` 
                     : '-';
 
-                // Naya tentative date dikhane ke liye
-                let tenDateDisplay = item.tentativeDate ? item.tentativeDate : '-';
+                // Tentative Date se " 00:00:00" hatane ke liye (sirf date show hogi)
+                let tenDateDisplay = item.tentativeDate && item.tentativeDate !== '-' ? String(item.tentativeDate).split(" ")[0] : '-';
+
+                // 🚀 NAYA LOGIC: Action Time column me stamps ko neatly stack karna
+                let actionDisplay = `<div style="font-weight: 600; font-size:12px;">${item.actionTime || '-'}</div>`;
+                
+                if (item.tentativeDateStamp && item.tentativeDateStamp !== '-') {
+                    actionDisplay += `<div style="margin-top:6px; padding-top:5px; border-top:1px dashed #cbd5e1; font-size:10px; color:#15803d; line-height:1.35;"><b style="color:#166534">Date Change:</b><br>${formatStampForUI(item.tentativeDateStamp)}</div>`;
+                }
+                
+                if (item.statusStamp && item.statusStamp !== '-') {
+                    actionDisplay += `<div style="margin-top:6px; padding-top:5px; border-top:1px dashed #cbd5e1; font-size:10px; color:var(--primary); line-height:1.35;"><b style="color:#1e3a8a">Status Change:</b><br>${formatStampForUI(item.statusStamp)}</div>`;
+                }
 
                 html.push(`<tr>
                     <td>${index + 1}</td>
@@ -3844,8 +3899,9 @@ function updateLastSyncTime() {
                     <td>${courierInfo}</td>
                     <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
                     <td><span class="badge ${badgeClass}">${item.status || '-'}</span></td>
-                    <td style="font-size:13px;">${item.actionTime || '-'}</td>
-                    <td style="color:#15803d; font-weight: 700; font-size:13px;">${tenDateDisplay}</td> <!-- 🚀 NAYA FIELD -->
+                    <!-- 🚀 Display Updated HTML Column (Latest Action Date) -->
+                    <td style="min-width: 150px;">${actionDisplay}</td>
+                    <td style="color:#15803d; font-weight: 700; font-size:13px;">${tenDateDisplay}</td>
                     <td style="font-size:12px; color:#64748b;">${item.remark || '-'}</td>
                 </tr>`);
             });
