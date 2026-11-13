@@ -1986,7 +1986,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwhwx8kxCMNk2wErW81viAI20I7lr2TBD5SQruC3VHV2bUnnjk6vQbShNDaREJozDg/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwNVdYjcJKQkK0MIKbgy26ozTkE-7PYs7rTgL-5bcnDt0S1GSuw2EUrjO5colct5cM/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -3894,7 +3894,7 @@ function updateLastSyncTime() {
                     // This now only applies to intermediate 'Delivered (Action Pending)'
                     actionLabel = "Initial POD Logged:";
                 } else if (s.includes('disput') || s.includes('resol') || s.includes('short') || s.includes('missing')) {
-                    actionLabel = "Exception Logged:";
+                    actionLabel = "Disput / Pending Resolution:";
                 }
 
                 let actionDisplay = `<div style="line-height:1.35; font-size:10px; color:#475569;"><b style="color:#334155">${actionLabel}</b><br><span style="font-weight: 600; font-size:12px;">${item.actionTime || '-'}</span></div>`;
