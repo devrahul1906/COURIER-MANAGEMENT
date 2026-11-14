@@ -918,7 +918,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
 			<table id="dispatchStatusTable" style="min-width: 1600px;"> <!-- thodi width badha di hai -->
                         <thead>
                             <tr>
-                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th>
+                                <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Courier / Docket</th><th>Boxes</th><th>Current Status</th><th>Latest Action </th>
                                 <th>Tentative Del. Date</th> <!-- 🚀 NAYA COLUMN -->
                                 <th>Remarks</th>
                             </tr>
@@ -1072,7 +1072,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
                     <table id="returnStatusTable" style="min-width: 1100px;">
                         <thead>
                             <tr>
-                                <th>#</th><th>ID / Type</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Current Status</th><th>Latest Action Date</th><th>Remarks</th>
+                                <th>#</th><th>ID / Type</th><th>Dr. Name</th><th>Ledger Name</th><th>Boxes</th><th>Current Status</th><th>Latest Action </th><th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="returnStatusTableBody"></tbody>
@@ -3916,7 +3916,7 @@ function updateLastSyncTime() {
                     <td>${courierInfo}</td>
                     <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
                     <td><span class="badge ${badgeClass}">${item.status || '-'}</span></td>
-                    <!-- 🚀 Display Updated HTML Column (Latest Action Date) -->
+                    <!-- 🚀 Display Updated HTML Column (Latest Action) -->
                     <td style="min-width: 150px;">${actionDisplay}</td>
                     <td style="color:#15803d; font-weight: 700; font-size:13px;">${tenDateDisplay}</td>
                     <td style="font-size:12px; color:#64748b;">${item.remark || '-'}</td>
