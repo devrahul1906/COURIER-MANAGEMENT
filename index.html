@@ -5832,140 +5832,212 @@ async function handleFileUpload(event) {
 	function showUserManual() {
     document.getElementById("profileDropdownMenu").classList.remove("show");
 
-    const role = (loggedInUserRole || "").toLowerCase();
-    const module = loggedInUserType || "All";
-    let sopTitleText = "";
-    let accessLevel = "";
-    let objective = "";
-    let steps = [];
+    const rawRole = (loggedInUserRole || "User").trim();
+    const role = rawRole.toLowerCase();
+    const isAdmin = role.includes("admin");
+    const isMaster = role.includes("master");
 
-    // 1. ADMIN / MASTER USER WORKFLOW
-    if (role.includes("admin") || role.includes("master")) {
-        sopTitleText = "ADMINISTRATOR WORKFLOW & SOP";
-        accessLevel = "Unrestricted System Control";
-        objective = "Manage global configurations, oversee Dispatch & Return pipelines, and resolve escalated disputes.";
-        steps = [
-            {
-                badge: "Module 01",
-                title: "Global System & Maintenance Control",
-                action: "Use the <b>Module Switcher</b> in your profile dropdown to toggle between Dispatch and Return views. Before system updates, turn on the <b>Maintenance Mode</b> toggle.",
-                outcome: "Standard users are safely logged out and restricted from making entries during maintenance, while Admins retain full bypass access."
-            },
-            {
-                badge: "Module 02",
-                title: "Ledger Master Lifecycle & Closure Protocol",
-                action: "Open the <b>Ledger Master</b> card, search for a client ledger, and change its status (Current, Old, In Active, Closed). Selecting 'Closed' requires choosing an Approver (MD Sir / Accounts / BDM) and remarks.",
-                outcome: "The ledger status is permanently locked for standard users and immediately synchronized across all autocomplete forms."
-            },
-            {
-                badge: "Module 03",
-                title: "Bulk SLA Geocoding & Executive Dispute Resolution",
-                action: "Upload bulk PIN code Excel sheets in the <b>Transit Calculator</b>, or review pending cases inside the <b>Disputed / Exceptions</b> tab.",
-                outcome: "Generates automated delivery SLAs in bulk and empowers Admins to pass claims, record MD approvals, and permanently close disputed shipments."
-            }
-        ];
-    } 
-    // 2. DISPATCH USER WORKFLOW
-    else if (module === "Dispatch Courier Management") {
-        sopTitleText = "DISPATCH MANAGEMENT WORKFLOW & SOP";
-        accessLevel = "Dispatch & Outward Operations";
-        objective = "Process outbound shipments seamlessly from Pending queue through to Final Delivery & POD archival.";
-        steps = [
-            {
-                badge: "Step 01",
-                title: "Courier Assignment (Pending Stage)",
-                action: "Open <b>Total Pending</b> and click <b>Upload Invoices Details</b> to import your <i>Format.xlsx</i> file containing Courier Partner, Docket No, Pin Code, and Boxes.",
-                outcome: "System validates pending invoices, calculates SDD & Tentative Delivery Date automatically, and moves bills to <b>Courier Assigned</b>."
-            },
-            {
-                badge: "Step 02",
-                title: "Physical Handover (Assigned Stage)",
-                action: "Navigate to <b>Courier Assigned</b>, tick the checkboxes for parcels physically handed over to the pickup agent, and click <b>Submit - Physical Dispatch</b>.",
-                outcome: "Captures the exact dispatch timestamp and moves shipments into the live <b>In Transit</b> tracking queue."
-            },
-            {
-                badge: "Step 03",
-                title: "Live Tracking & Intermediate Statuses (In Transit)",
-                action: "Monitor shipments in the <b>In Transit</b> tab. Update inline dropdown statuses (<i>Normal, Delayed, Hold at Nearest Hub, Out for Delivery</i>) or revise Tentative Delivery Dates.",
-                outcome: "Automatically stamps your User ID & timestamp below the field, giving real-time visibility in the <b>Track Status</b> module."
-            },
-            {
-                badge: "Step 04",
-                title: "POD Upload & Final Journey Closure",
-                action: "Click <b>Update Status</b> in Transit to mark as Delivered/RTO/Misplaced with initial proof. Next, go to <b>Delivered Bills</b> and click <b>Update Action</b> to upload the final signed POD, Short Delivery, or OTP confirmation.",
-                outcome: "Full deliveries archive into <b>Dispatched Bills</b> with total turnaround time calculated; short deliveries automatically split missing boxes into <b>Disputed</b>."
-            }
-        ];
-    } 
-    // 3. RETURN USER WORKFLOW
-    else if (module === "Return Courier Management") {
-        sopTitleText = "RETURN MANAGEMENT WORKFLOW & SOP";
-        accessLevel = "Return & Inward Operations";
-        objective = "Log incoming return requests, track reverse pickups, receive warehouse inventory, and process Credit Notes (CN).";
-        steps = [
-            {
-                badge: "Step 01",
-                title: "Return Initiation (Planned vs Surprise Entry)",
-                action: "Use <b>New Request</b> for planned returns with Doctor & Ledger details, OR click <b>Surprise Entry</b> when an unannounced parcel arrives at the warehouse with a box photo.",
-                outcome: "Planned requests enter <b>Pending Return</b> for pickup; unplanned parcels go to <b>Unplanned Received</b> awaiting BDM confirmation."
-            },
-            {
-                badge: "Step 02",
-                title: "Reverse Pickup & Courier Assignment",
-                action: "In <b>Pending Return</b>, click <b>Assign Courier</b>, enter Box count, Partner, Docket No, and tick the mandatory box-photograph confirmation. Once picked up, select items in <b>Courier Assigned</b> and click <b>Confirm Pickup</b>.",
-                outcome: "Transitions the return shipment into <b>In Transit (Return)</b> with pickup timestamps."
-            },
-            {
-                badge: "Step 03",
-                title: "Warehouse Receiving & Auto-Dispute Split",
-                action: "In <b>In Transit (Return)</b>, click <b>Received</b>, enter the <i>Actual Received Boxes</i> against Expected Boxes, and upload the receiving parcel image.",
-                outcome: "Full receipts move to <b>Return Received</b>. If actual boxes are short, the system automatically creates a <b>-SHORT</b> entry inside <b>Dispute (Return)</b>."
-            },
-            {
-                badge: "Step 04",
-                title: "Credit Note (CN) Settlement & Dispute Closure",
-                action: "Select verified items in <b>Return Received</b> and click <b>Fill CN Details</b> to log CN No., Date, and Creator. For missing boxes, use <b>Dispute (Return)</b> -> <b>Resolve</b>.",
-                outcome: "Validates against duplicate CN numbers and archives settled returns into <b>Return Processed</b>."
-            }
-        ];
-    } 
-    // 4. BDM / STANDARD USER WORKFLOW
-    else {
-        sopTitleText = "STANDARD / BDM USER WORKFLOW & SOP";
-        accessLevel = "Core Operations & Business Development";
-        objective = "Generate client return requests, verify unplanned arrivals, maintain ledger accuracy, and track shipments.";
-        steps = [
-            {
-                badge: "Task 01",
-                title: "Generating Planned Return Requests",
-                action: "Click <b>New Request</b> under Return Management. Type the Ledger Name to auto-populate City, State, PIN, Code, and Zone, then enter Doctor Name and full pickup address.",
-                outcome: "Generates a unique <b>RET-ID</b> and routes the request to the logistics team's <b>Pending Return</b> queue."
-            },
-            {
-                badge: "Task 02",
-                title: "Verifying Unplanned Returns (Surprise Entries)",
-                action: "Open <b>Unplanned Received</b>, click <b>Confirm</b>, fill in the verified Ledger details, enter Total Boxes claimed by the party, and select who confirmed the count.",
-                outcome: "Formalizes the unplanned parcel into <b>Return Received</b> (or flags a Short/Excess dispute automatically if counts mismatch)."
-            },
-            {
-                badge: "Task 03",
-                title: "Ledger Master & Transit SLA Calculator",
-                action: "Use <b>Ledger Master</b> to update active/inactive party statuses, and use <b>Transit Calculator</b> to check PIN-to-PIN distance and estimated delivery days.",
-                outcome: "Keeps client records clean and helps communicate accurate delivery timelines (90% Accuracy Mode) to doctors and parties."
-            },
-            {
-                badge: "Task 04",
-                title: "End-to-End Live Shipment Tracking",
-                action: "Open <b>Track Status (Search Entry)</b> in either Dispatch or Return sections and search by Invoice No, Docket No, Doctor Name, or Ledger.",
-                outcome: "Displays real-time shipment stage, latest action timestamps, user update stamps, and checks the completed archive automatically."
-            }
-        ];
+    const typeLower = (loggedInUserType || "All").trim().toLowerCase();
+    const hasDispatch = typeLower === "all" || typeLower.includes("dispatch");
+    const hasReturn = typeLower === "all" || typeLower.includes("return");
+
+    const permStr = (loggedInUserPermissions || "All").trim().toLowerCase();
+    const allowedTabs = permStr.split(',').map(p => p.trim()).filter(Boolean);
+    const hasAllPerms = permStr === "all" || allowedTabs.includes("all");
+
+    const canSee = (tabName) => hasAllPerms || allowedTabs.includes(tabName.toLowerCase());
+
+    // 1. Dynamic Header & Objective (Department / Role ke hisaab se)
+    const sopTitleText = `${rawRole.toUpperCase()} WORKFLOW & SOP`;
+    let accessLevel = rawRole;
+    let objective = "Follow the assigned operational steps below to manage and track your permitted workflows accurately.";
+
+    if (isAdmin || isMaster) {
+        accessLevel = `${rawRole} (Full System Control)`;
+        objective = "Manage global configurations, oversee Dispatch & Return pipelines, maintain ledgers, and resolve escalated disputes.";
+    } else if (role.includes("dispatch")) {
+        objective = "Process outbound shipments from Pending queue through physical handover, live transit updates, and final POD archival.";
+    } else if (role.includes("return")) {
+        objective = "Manage reverse pickups, warehouse receiving, missing-box disputes, and Credit Note (CN) processing.";
+    } else if (role.includes("billing")) {
+        objective = "Process Credit Notes (CN) for received returns, maintain ledger accuracy, check transit SLAs, and track shipments.";
+    } else if (role.includes("bdm")) {
+        objective = "Generate planned return requests, verify unplanned warehouse arrivals, maintain ledgers, and track client shipments.";
     }
 
-    const cardsHtml = steps.map(s => `
+    const steps = [];
+
+    // 2. Admin / Master Exclusive Controls
+    if (isAdmin || isMaster) {
+        steps.push({
+            title: "Global System & Maintenance Control",
+            action: isAdmin
+                ? "Use the <b>Module Switcher</b> in your profile dropdown to toggle views, and enable the <b>Maintenance Mode</b> toggle before pushing system updates."
+                : "Use the <b>Module Switcher</b> in your profile dropdown to switch between All Modules, Dispatch Only, and Return Only views.",
+            outcome: isAdmin
+                ? "Non-admin users are safely logged out during maintenance while Admins retain full bypass access."
+                : "Filters your dashboard cards and live counts instantly for focused monitoring."
+        });
+    }
+
+    // 3. DISPATCH MANAGEMENT TABS (Dynamic)
+    if (hasDispatch) {
+        if (canSee("Today's Pending") || canSee("Total Pending")) {
+            steps.push({
+                title: "Pending Invoices & Bulk Courier Assignment",
+                action: "Open <b>Today's Pending</b> or <b>Total Pending</b>. Click <b>Upload Invoices Details</b> to import <i>Format.xlsx</i> (Courier Partner, Docket No, Pin Code, Boxes).",
+                outcome: "Validates pending invoices, auto-calculates SDD & Tentative Delivery Date, and moves assigned bills to <b>Courier Assigned</b>."
+            });
+        }
+        if (canSee("Courier Assigned")) {
+            steps.push({
+                title: "Physical Dispatch Handover (Dispatch)",
+                action: "Open <b>Courier Assigned</b> under Dispatch Management, tick the parcels handed over to the courier agent, and click <b>Submit - Physical Dispatch</b>.",
+                outcome: "Records the exact dispatch timestamp and shifts shipments into the live <b>In Transit</b> queue."
+            });
+        }
+        if (canSee("In Transit")) {
+            steps.push({
+                title: "In Transit Tracking & Delivery Proof",
+                action: "In <b>In Transit</b>, update live statuses (<i>Normal, Delayed, Hold at Nearest Hub, Out for Delivery</i>) or revise Tentative Delivery Dates. Click <b>Update Status</b> to mark Delivered, RTO, or Misplaced with proof.",
+                outcome: "Stamps your User ID & time automatically below each update, and routes Delivered bills to <b>Delivered Bills</b> or exceptions to <b>Disputed</b>."
+            });
+        }
+        if (canSee("Delivered Bills")) {
+            steps.push({
+                title: "Final POD / Short Delivery / OTP Closure",
+                action: "Open <b>Delivered Bills</b> (select date range if needed) and click <b>Update Action</b> to upload Full Delivery POD, log Short Delivery boxes, or record OTP-based delivery.",
+                outcome: "Archives completed deliveries into <b>Dispatched Bills</b>; short deliveries automatically split missing boxes into <b>Disputed / Exceptions</b>."
+            });
+        }
+        if (canSee("Disputed / Exceptions")) {
+            steps.push({
+                title: "Dispatch Dispute & Exception Resolution",
+                action: "Open <b>Disputed / Exceptions</b>, click <b>Resolve</b> on any RTO, Misplaced, or Short-Delivered entry, select the resolution action, date, approver (if required), and final remarks.",
+                outcome: "Routes delivered cases back to <b>Delivered Bills</b> or permanently closes settled/origin-received cases into <b>Dispatched Bills</b>."
+            });
+        }
+        if (canSee("Dispatched Bills")) {
+            steps.push({
+                title: "Completed Dispatch Archive & Audit",
+                action: "Open <b>Dispatched Bills</b> with your desired date range to inspect full journey timestamps (Assign, Dispatch, Delivered, Total Time) and export CSV reports.",
+                outcome: "Provides a complete auditable delivery log and turnaround-time report for closed shipments."
+            });
+        }
+    }
+
+    // 4. RETURN MANAGEMENT TABS (Dynamic)
+    if (hasReturn) {
+        if (canSee("New Request")) {
+            steps.push({
+                title: "Generate Planned Return Request",
+                action: "Click <b>New Request</b> under Return Management. Type the Ledger Name to auto-fill City, State, PIN, Ledger Code, Zone, and Status, then enter Doctor Name and full pickup address.",
+                outcome: "Creates a unique <b>RET-ID</b> and places the request in the <b>Pending Return</b> queue for reverse pickup."
+            });
+        }
+        if (canSee("Surprise Entry")) {
+            steps.push({
+                title: "Log Unplanned Return (Surprise Entry)",
+                action: "Click <b>Surprise Entry</b> when an unannounced parcel arrives at the warehouse. Enter Dr. Name, Ledger Name, City, Boxes, and upload the mandatory parcel photo.",
+                outcome: "Logs a <b>UNP-ID</b> into <b>Unplanned Received</b> with status <i>Confirmation Pending</i> for verification."
+            });
+        }
+        if (canSee("Unplanned Received")) {
+            steps.push({
+                title: "Confirm Unplanned Received Parcels",
+                action: "Open <b>Unplanned Received</b>, click <b>Confirm</b>, verify Ledger details, enter Total Boxes claimed by the party, and select who confirmed the count.",
+                outcome: "Moves verified parcels to <b>Return Received</b> and automatically flags a <b>-SHORT / -EXCESS</b> dispute if counts mismatch."
+            });
+        }
+        if (canSee("Pending Return")) {
+            steps.push({
+                title: "Assign Reverse Pickup Courier",
+                action: "Open <b>Pending Return</b>, click <b>Assign Courier</b>, enter Box count, Courier Partner, Docket No, and tick the mandatory box-photograph confirmation checkbox.",
+                outcome: "Updates return status to <b>Courier Assigned (Return)</b> and queues it for pickup confirmation."
+            });
+        }
+        if (canSee("Courier Assigned")) {
+            steps.push({
+                title: "Confirm Return Pickup from Party",
+                action: "Open <b>Courier Assigned</b> under Return Management, tick the parcels picked up by the courier, and click <b>Confirm Pickup</b>.",
+                outcome: "Logs the pickup timestamp and transitions the return shipment into <b>In Transit (Return)</b>."
+            });
+        }
+        if (canSee("In Transit (Return)")) {
+            steps.push({
+                title: "Warehouse Receiving & Shortage Split",
+                action: "Open <b>In Transit (Return)</b>, click <b>Received</b>, enter Actual Received Boxes against Expected Boxes, and upload the receiving parcel image.",
+                outcome: "Moves received boxes to <b>Return Received</b>; if actual boxes are fewer than expected, auto-generates a <b>-SHORT</b> case in <b>Dispute (Return)</b>."
+            });
+        }
+        if (canSee("Return Received")) {
+            steps.push({
+                title: "Credit Note (CN) Entry & Processing",
+                action: "Open <b>Return Received</b>, tick the verified returns, and click <b>Fill CN Details</b> to submit CN No., CN Creation Date, CN Created By, and Delay Reason (if applicable).",
+                outcome: "Prevents duplicate CN entries and moves settled returns into <b>Return Processed</b>."
+            });
+        }
+        if (canSee("Return Processed")) {
+            steps.push({
+                title: "Processed Returns & CN History",
+                action: "Open <b>Return Processed</b> (optionally filter by date range) to review CN numbers, dates, full return turnaround times, and export CSV reports.",
+                outcome: "Maintains a complete historical register of all CN-settled returns."
+            });
+        }
+        if (canSee("Dispute (Return)")) {
+            steps.push({
+                title: "Resolve Return Missing-Box Disputes",
+                action: "Open <b>Dispute (Return)</b>, click <b>Resolve</b>, choose <i>Received at Warehouse</i> or <i>Claim Settled / Closed</i> (with MD Sir approval), enter remarks, and upload evidence photo.",
+                outcome: "Updates the dispute to <b>Return Received (SHORT)</b> or <b>Closed (Claim Settled)</b> with image proof saved."
+            });
+        }
+    }
+
+    // 5. SHARED / UTILITY TABS (Dynamic)
+    if (canSee("Search Entry") && (hasDispatch || hasReturn)) {
+        const trackScope = (hasDispatch && hasReturn)
+            ? "Dispatch & Return"
+            : (hasDispatch ? "Dispatch" : "Return");
+
+        steps.push({
+            title: `${trackScope} Live Shipment Tracking`,
+            action: `Open <b>Track Status (Search Entry)</b> under ${trackScope} Management and search by Invoice No, Docket No, Return ID, Doctor Name, or Ledger Name.`,
+            outcome: "Displays real-time shipment stage, latest action timestamps, user update stamps, and automatically checks completed archives when searching."
+        });
+    }
+
+    if (hasReturn && canSee("Ledger Master")) {
+        steps.push({
+            title: "Ledger Master Maintenance",
+            action: "Open <b>Ledger Master</b> to search client accounts, monitor live status counts, and update ledger status (<i>Current, Old, In Active, or Closed</i> with Approver confirmation).",
+            outcome: (isAdmin || isMaster)
+                ? "Synchronizes updated ledger statuses across all forms; Admin/Master roles can also modify or reopen previously Closed ledgers."
+                : "Synchronizes ledger statuses across all forms instantly (note: once marked <b>Closed</b>, only an Admin/Master can reopen it)."
+        });
+    }
+
+    if (hasReturn && canSee("Transit Calculator")) {
+        steps.push({
+            title: "Transit Time & Delivery SLA Calculator",
+            action: "Open <b>Transit Calculator</b> to check PIN-to-PIN distance and estimated delivery days using Single Calculation or Bulk Upload (<i>.xlsx</i>).",
+            outcome: "Generates estimated transit days (90% Accuracy Mode) for accurate delivery planning and client communication."
+        });
+    }
+
+    // Fallback agar kisi user ke paas koi tab select na ho
+    if (steps.length === 0) {
+        steps.push({
+            title: "No Active Modules Assigned",
+            action: "No operational tabs are currently enabled for your account.",
+            outcome: "Please contact your Administrator to configure your module and tab permissions."
+        });
+    }
+
+    // Auto-numbering: Step 01, Step 02, Step 03...
+    const cardsHtml = steps.map((s, idx) => `
         <div class="sop-step-card">
             <div class="sop-step-header">
-                <span class="sop-step-badge">${s.badge}</span>
+                <span class="sop-step-badge">Step ${String(idx + 1).padStart(2, '0')}</span>
                 <h4 class="sop-step-title">${s.title}</h4>
             </div>
             <div class="sop-io-grid">
