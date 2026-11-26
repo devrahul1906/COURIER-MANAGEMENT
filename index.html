@@ -1556,7 +1556,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
                         <thead>
                             <tr>
                                 <th>#</th><th>Invoice No.</th><th>Dr. Name</th><th>Ledger Name</th><th>City</th><th>Pin Code</th><th>Docket No.</th>
-                                <th>Courier Partner</th><th>Boxes</th><th>Delivery Time</th><th>Status</th><th>Action</th>
+                                <th>Courier Partner</th><th>Boxes</th><th>Dispatch Time</th><th>Delivery Time</th><th>Status</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="deliveredTableBody"></tbody>
@@ -2774,7 +2774,7 @@ td { padding: 10px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vert
         // =====================================================================================
         // ⚠️ CRITICAL: Replace this URL with your latest "New Deployment" Web App URL
         // =====================================================================================
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwt9_FIYLNZPpufyFXbfyYy7WIHWfMG65frwKRSBL1qQ1fEOuTvvR4VsV-r1VNBgvg/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyR0Ir0gB-dlx2s9bNqoLifVpopdmVNdO8IeUHVgzGQCJ0EApuhnVPLIprN33F2--I7/exec"; 
         // =====================================================================================
         
         let loggedInUser = ""; 
@@ -4279,7 +4279,8 @@ function updateLastSyncTime() {
                     <td>${item.docket || '-'}</td>
                     <td>${item.partner}</td>
                     <td><b style="color:var(--primary);">${item.boxes || '-'}</b></td>
-                    <td style="color:#c2410c;">${item.actionTime || '-'}</td>
+                    <td style="color:#c2410c;">${item.dispatchTime || '-'}</td>
+                    <td style="color:#15803d;">${item.actionTime || '-'}</td>
                     <td><span class="badge bg-delivered">Delivered</span></td>
                     <td><div style="display: flex; gap: 8px;"><button class="action-btn btn-warning" onclick="openFinalPodModal('${safeStr(item.invoiceNo)}', '${safeStr(item.docket)}', '${safeStr(item.boxes || '')}')">Update Action</button></div></td>
                 </tr>`); 
