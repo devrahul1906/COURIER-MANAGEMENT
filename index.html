@@ -4735,6 +4735,7 @@ function updateLastSyncTime() {
 
             // 1. Unplanned Bills -> Unplanned Received
             (dataObj.unplannedBills || []).forEach(u => { 
+                if (u.status === 'Confirmed') return; // Confirm hone ke baad Return Inventory me dikhega, duplicate nahi aayega 
                 // Agar ye unplanned return pehle hi process ho chuka hai aur user ne search nahi kiya, toh skip karo
                 let isProcessed = processedIds.has(String(u.id).trim());
                 if (isProcessed && !searchVal) return;
