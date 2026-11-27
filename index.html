@@ -4764,7 +4764,8 @@ function updateLastSyncTime() {
                 else if (exactStatus === 'Disputed (Return)') exactStatus = 'Dispute (Return)';
                 else if (exactStatus.includes('Closed') || exactStatus.includes('Settled')) exactStatus = 'Closed (Claim Settled)';
 
-                combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: r.boxes, status: exactStatus, date: latestDate, remark: r.remark || '-' }); 
+                let displayBoxes = (r.status.includes('Partial') || r.status.includes('Excess')) && r.rcvdBoxes ? r.rcvdBoxes : r.boxes;
+combinedList.push({ id: r.id, type: 'Generated Return', drName: r.drName, ledgerName: r.ledgerName, boxes: displayBoxes, status: exactStatus, date: latestDate, remark: r.remark || '-' }); 
             });
             
             if(combinedList.length === 0) { 
